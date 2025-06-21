@@ -58,7 +58,6 @@
       const previewContainer = document.getElementById("previewContainer");
 
       fileInput.addEventListener("change", function () {
-        previewContainer.innerHTML = "";
         const files = Array.from(fileInput.files);
 
         files.forEach((file) => {
@@ -95,6 +94,9 @@
           };
           reader.readAsDataURL(file);
         });
+
+        // Reset del file input per permettere di aggiungere più file successivamente
+        fileInput.value = "";
       });
 
       // Blocco click destro

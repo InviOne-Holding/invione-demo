@@ -4,130 +4,91 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>InviOne™ Upload Sicuro</title>
-  <script defer>
-    document.addEventListener("DOMContentLoaded", function () {
-      // Gestione caricamento file multipli
-      const fileInput = document.getElementById("fileInput");
-      const previewContainer = document.getElementById("previewContainer");
-
-      fileInput.addEventListener("change", function () {
-        previewContainer.innerHTML = ""; // pulizia preview
-        const files = Array.from(fileInput.files);
-
-        files.forEach((file) => {
-          const reader = new FileReader();
-          reader.onload = function (e) {
-            const previewCard = document.createElement("div");
-            previewCard.className = "preview-card";
-
-            if (file.type.startsWith("image")) {
-              const img = document.createElement("img");
-              img.src = e.target.result;
-              img.alt = "Anteprima immagine";
-              img.style.maxWidth = "100%";
-              previewCard.appendChild(img);
-            } else if (file.type.startsWith("video")) {
-              const video = document.createElement("video");
-              video.src = e.target.result;
-              video.controls = true;
-              video.style.maxWidth = "100%";
-              previewCard.appendChild(video);
-            } else {
-              const txt = document.createElement("p");
-              txt.textContent = file.name;
-              previewCard.appendChild(txt);
-            }
-
-            const removeBtn = document.createElement("button");
-            removeBtn.textContent = "Rimuovi";
-            removeBtn.className = "remove-button";
-            removeBtn.onclick = () => previewCard.remove();
-
-            previewCard.appendChild(removeBtn);
-            previewContainer.appendChild(previewCard);
-          };
-          reader.readAsDataURL(file);
-        });
-      });
-
-      // Blocco click destro
-      document.addEventListener("contextmenu", function (e) {
-        e.preventDefault();
-      });
-
-      // Blocco base strumenti cattura (SnippingTool ecc.) - simulato
-      window.addEventListener("blur", () => {
-        document.body.style.opacity = "0";
-      });
-      window.addEventListener("focus", () => {
-        document.body.style.opacity = "1";
-      });
-
-      // Pulsante invio
-      document.getElementById("submitBtn").addEventListener("click", function () {
-        const uploadedFiles = document.querySelectorAll(".preview-card");
-        if (uploadedFiles.length === 0) {
-          alert("⚠️ Nessun file selezionato.");
-        } else {
-          alert("✅ Invio completato!");
-          // Qui in futuro verrà collegato IPFS o backend reale
-        }
-      });
-    });
-  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body {
-      background: #111;
-      color: #fff;
+      background-color: #111;
+      color: white;
       font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 20px;
     }
-    .upload-zone {
-      border: 2px dashed #888;
-      padding: 20px;
-      margin-bottom: 20px;
+    .preview-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 2rem;
     }
     .preview-card {
-      background: #222;
-      padding: 10px;
-      margin: 10px;
-      display: inline-block;
-      max-width: 300px;
-      vertical-align: top;
+      background-color: #222;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      width: 300px;
+      word-wrap: break-word;
     }
-    .remove-button {
-      background: crimson;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      margin-top: 10px;
-      cursor: pointer;
-    }
-    #submitBtn {
-      background: #16a34a;
-      color: white;
-      font-weight: bold;
-      padding: 10px 20px;
-      border: none;
-      margin-top: 20px;
-      position: sticky;
-      bottom: 10px;
+    video, img {
+      max-width: 100%;
+      border-radius: 0.5rem;
     }
   </style>
 </head>
 <body>
-  <h1>Benvenuto su InviOne™</h1>
-  <p>Invia immagini e video visibili solo dal dispositivo di destinazione. Zero inoltri. Privacy totale.</p>
-  <div class="upload-zone">
-    <label for="fileInput">
-      <strong>Clicca qui o trascina file (immagini/video)</strong>
-    </label><br />
-    <input type="file" id="fileInput" accept="image/*,video/*" multiple />
+  <h1 class="text-center text-2xl font-bold mt-6">Benvenuto su InviOne™</h1>
+  <p class="text-center text-sm text-gray-400">Invia immagini e video visibili solo dal dispositivo di destinazione. Zero inoltri. Privacy totale.</p>
+
+  <div class="flex justify-center mt-6">
+    <input type="file" id="fileInput" accept="image/*,video/*" multiple class="text-white" />
   </div>
 
-  <div id="previewContainer"></div>
+  <div id="preview" class="preview-container"></div>
 
-  <button id="submitBtn">Invia</button>
+  <!-- Bottone Invia -->
+  <div style="text-align: center; margin-top: 20px;">
+    <button id="submitBtn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded">
+      Invia
+    </button>
+  </div>
+
+  <script>
+    const input = document.getElementById("fileInput");
+    const preview = document.getElementById("preview");
+
+    input.addEventListener("change", function (e) {
+      preview.innerHTML = "";
+      const files = e.target.files;
+      for (let file of files) {
+        const reader = new FileReader();
+
+        reader.onload = function (event) {
+          const card = document.createElement("div");
+          card.className = "preview-card";
+
+          if (file.type.startsWith("image")) {
+            card.innerHTML = `<img src="${event.target.result}" alt="Anteprima" /><button onclick="this.parentElement.remove()" class='mt-2 bg-red-500 hover:bg-red-600 text-white text-xs px-2 py-1 rounded'>Rimuovi</button>`;
+          } else if (file.type.startsWith("video")) {
+            card.innerHTML = `<video controls src="${event.target.result}"></video><button onclick="this.parentElement.remove()" class='mt-2 bg-red-500 hover:bg-red-600 text-white text-xs px-2 py-1 rounded'>Rimuovi</button>`;
+          }
+
+          preview.appendChild(card);
+        };
+
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Funzione eseguita al click del pulsante "Invia"
+    document.getElementById("submitBtn").addEventListener("click", function () {
+      const uploadedFiles = document.querySelectorAll('.preview-card');
+
+      if (uploadedFiles.length === 0) {
+        alert("⚠️ Nessun file selezionato.");
+      } else {
+        alert("✅ Invio completato!");
+        // In futuro qui potrai mettere il codice di invio reale
+      }
+    });
+
+    // Blocco clic destro (base)
+    document.addEventListener('contextmenu', event => event.preventDefault());
+  </script>
 </body>
 </html>

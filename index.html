@@ -1,137 +1,95 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>InviOne™</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InviOne - Upload Protetto</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #111;
-      color: #fff;
-      text-align: center;
-      margin: 5% auto;
-    }
-
-    h1 { font-size: 1.8em; }
-    p { font-size: 1.1em; margin-bottom: 2em; }
-
-    .dropzone {
-      border: 2px dashed #888;
-      background-color: #1e1e1e;
-      padding: 30px;
-      width: 300px;
-      margin: auto;
-      border-radius: 10px;
-      cursor: pointer;
-    }
-
-    .dropzone.dragover { border-color: #00ff88; }
-    input[type="file"] { display: none; }
-
-    #preview {
-      margin-top: 30px;
-      max-width: 300px;
-      max-height: 300px;
-      border: 1px solid #555;
-      border-radius: 5px;
-      display: none;
-    }
-
-    .btn {
-      margin-top: 15px;
-      padding: 10px 20px;
-      background-color: #444;
+      background-color: #0a0a0a;
       color: white;
-      border: none;
-      border-radius: 5px;
+      text-align: center;
+      padding: 30px;
+    }
+    .upload-box {
+      border: 2px dashed #ccc;
+      padding: 40px;
+      border-radius: 12px;
+      background-color: #1a1a1a;
       cursor: pointer;
+    }
+    input[type=file] {
       display: none;
     }
-
-    #status {
-      margin-top: 10px;
-      font-size: 0.9em;
-      color: #00ff88;
+    .preview {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .preview img, .preview video {
+      max-width: 200px;
+      max-height: 200px;
+      border: 2px solid #555;
+      border-radius: 10px;
     }
   </style>
 </head>
 <body>
-  <h1>Benvenuto su InviOne™</h1>
-  <p>Invia immagini visibili solo dal dispositivo di destinazione. Zero inoltri. Privacy totale.</p>
 
-  <label class="dropzone" id="dropzone">
-    Trascina qui o clicca per selezionare un’immagine
-    <input type="file" accept="image/png, image/jpeg, image/webp" id="fileInput" onchange="showPreview(event)" />
-  </label>
-
-  <img id="preview" src="" alt="Anteprima immagine">
-  <div id="status"></div>
-  <button id="sendBtn" class="btn" onclick="simulateSend()">Invia immagine</button>
-  <button id="resetBtn" class="btn" onclick="resetPreview()">Reset</button>
+  <h1>InviOne — Upload Sicuro</h1>
+  <label class="upload-box" for="upload">Clicca qui o trascina file (immagini/video)</label>
+  <input id="upload" type="file" multiple accept="image/*,video/*">
+  <div class="preview" id="preview"></div>
 
   <script>
-    const dropzone = document.getElementById('dropzone');
-    const fileInput = document.getElementById('fileInput');
+    // DISATTIVAZIONE CLICK DESTRO
+    document.addEventListener('contextmenu', event => event.preventDefault());
+
+    // RESET SU DEVTOOLS
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) {
+        alert('Azione vietata!');
+        location.reload();
+      }
+    });
+
+    // OSCURAMENTO FUORI FOCUS
+    let blurOverlay = document.createElement('div');
+    blurOverlay.style.position = 'fixed';
+    blurOverlay.style.top = 0;
+    blurOverlay.style.left = 0;
+    blurOverlay.style.width = '100%';
+    blurOverlay.style.height = '100%';
+    blurOverlay.style.backgroundColor = 'black';
+    blurOverlay.style.opacity = '0.95';
+    blurOverlay.style.zIndex = '9999';
+    blurOverlay.style.display = 'none';
+    document.body.appendChild(blurOverlay);
+
+    window.addEventListener('blur', () => blurOverlay.style.display = 'block');
+    window.addEventListener('focus', () => blurOverlay.style.display = 'none');
+
+    // CARICAMENTO MULTIPLO
+    const upload = document.getElementById('upload');
     const preview = document.getElementById('preview');
-    const status = document.getElementById('status');
-    const resetBtn = document.getElementById('resetBtn');
-    const sendBtn = document.getElementById('sendBtn');
 
-    dropzone.addEventListener('click', () => fileInput.click());
-    dropzone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      dropzone.classList.add('dragover');
+    upload.addEventListener('change', () => {
+      preview.innerHTML = ''; // pulisce la preview precedente
+      Array.from(upload.files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          const isImage = file.type.startsWith('image');
+          const element = isImage ? document.createElement('img') : document.createElement('video');
+          element.src = e.target.result;
+          if (!isImage) element.controls = true;
+          preview.appendChild(element);
+        };
+        reader.readAsDataURL(file);
+      });
     });
-
-    dropzone.addEventListener('dragleave', () => {
-      dropzone.classList.remove('dragover');
-    });
-
-    dropzone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      dropzone.classList.remove('dragover');
-      const file = e.dataTransfer.files[0];
-      if (file) {
-        fileInput.files = e.dataTransfer.files;
-        showPreview({ target: { files: [file] } });
-      }
-    });
-
-    function showPreview(event) {
-      const file = event.target.files[0];
-      if (file) {
-        preview.src = URL.createObjectURL(file);
-        preview.style.display = "block";
-        status.textContent = "Immagine pronta per l'invio.";
-        resetBtn.style.display = "inline-block";
-        sendBtn.style.display = "inline-block";
-      } else {
-        resetPreview();
-      }
-    }
-
-    function resetPreview() {
-      preview.src = "";
-      preview.style.display = "none";
-      status.textContent = "";
-      fileInput.value = "";
-      resetBtn.style.display = "none";
-      sendBtn.style.display = "none";
-    }
-
-    function simulateSend() {
-      status.textContent = "Invio in corso...";
-      sendBtn.disabled = true;
-      resetBtn.disabled = true;
-
-      setTimeout(() => {
-        status.textContent = "✅ Immagine inviata con successo!";
-        sendBtn.disabled = false;
-        resetBtn.disabled = false;
-
-        setTimeout(() => resetPreview(), 5000);
-      }, 2000);
-    }
   </script>
 </body>
 </html>

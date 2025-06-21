@@ -11,12 +11,15 @@
       font-family: Arial, sans-serif;
       text-align: center;
       padding: 20px;
+      transition: opacity 0.2s ease-in-out;
     }
+
     .upload-zone {
       border: 2px dashed #888;
       padding: 20px;
       margin-bottom: 20px;
     }
+
     .preview-card {
       background: #222;
       padding: 10px;
@@ -25,6 +28,7 @@
       max-width: 300px;
       vertical-align: top;
     }
+
     .remove-button {
       background: crimson;
       color: white;
@@ -33,6 +37,7 @@
       margin-top: 10px;
       cursor: pointer;
     }
+
     #submitBtn {
       background: #16a34a;
       color: white;
@@ -43,6 +48,7 @@
       position: sticky;
       bottom: 10px;
     }
+
     #logo-fixed {
       position: fixed;
       bottom: 20px;
@@ -51,25 +57,25 @@
       opacity: 0.9;
       z-index: 10000;
     }
-    #welcomeMsg {
-      font-size: 1.4em;
-      color: #00ff88;
+
+    #welcome-msg {
+      animation: fadeIn 2s ease-in-out;
       margin-bottom: 20px;
-      animation: pulse 2s infinite;
+      font-size: 1.1em;
     }
-    @keyframes pulse {
-      0% { opacity: 0.3; }
-      50% { opacity: 1; }
-      100% { opacity: 0.3; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
   </style>
+
   <script defer>
     document.addEventListener("DOMContentLoaded", function () {
       const fileInput = document.getElementById("fileInput");
       const previewContainer = document.getElementById("previewContainer");
 
       fileInput.addEventListener("change", function () {
-        previewContainer.innerHTML = "";
         const files = Array.from(fileInput.files);
 
         files.forEach((file) => {
@@ -106,12 +112,17 @@
           };
           reader.readAsDataURL(file);
         });
+
+        // Permette il caricamento multiplo successivo
+        fileInput.value = "";
       });
 
+      // Blocco click destro
       document.addEventListener("contextmenu", function (e) {
         e.preventDefault();
       });
 
+      // Oscuramento su cambio scheda
       window.addEventListener("blur", () => {
         document.body.style.opacity = "0";
       });
@@ -119,20 +130,46 @@
         document.body.style.opacity = "1";
       });
 
+      // Timeout inattività (5 min)
+      let inactivityTimer = setTimeout(() => {
+        alert("Sessione terminata per inattività.");
+        location.reload();
+      }, 300000);
+
+      document.addEventListener("mousemove", () => {
+        clearTimeout(inactivityTimer);
+        inactivityTimer = setTimeout(() => {
+          alert("Sessione terminata per inattività.");
+          location.reload();
+        }, 300000);
+      });
+
+      // Pulsante invia
       document.getElementById("submitBtn").addEventListener("click", function () {
         const uploadedFiles = document.querySelectorAll(".preview-card");
         if (uploadedFiles.length === 0) {
-          alert("\u26a0\ufe0f Nessun file selezionato.");
+          alert("⚠️ Nessun file selezionato.");
         } else {
-          alert("\u2705 Invio completato!");
+          alert("✅ Invio completato!");
+          // Collegamento a IPFS/backend qui
+        }
+      });
+
+      // (Opzionale) Blocco tasto PrintScreen
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "PrintScreen") {
+          e.preventDefault();
+          alert("🚫 Screenshot bloccato!");
         }
       });
     });
   </script>
 </head>
+
 <body>
-  <h2 id="welcomeMsg">Benvenuto su InviOne™: privacy ai massimi livelli</h2>
-  <h1>InviOne™ Upload Sicuro</h1>
+  <h1>Benvenuto su InviOne™</h1>
+  <div id="welcome-msg">🎉 Tutto ciò che invii resta visibile solo al destinatario. Niente screen, niente condivisioni.</div>
+
   <div class="upload-zone">
     <label for="fileInput">
       <strong>Seleziona immagini o video da inviare</strong>
@@ -144,6 +181,7 @@
 
   <button id="submitBtn">Invia</button>
 
+  <!-- Logo -->
   <img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne™" />
 </body>
 </html>

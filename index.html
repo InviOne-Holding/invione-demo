@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>InviOne™ Upload Sicuro</title>
   <style>
     body {
@@ -43,32 +43,18 @@
       position: sticky;
       bottom: 10px;
     }
-    #antiScreenOverlay {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: 9999;
-      pointer-events: none;
-      background: rgba(0,0,0,0);
+    #welcome-msg {
+      font-size: 1.5em;
+      animation: fadeIn 3s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
   </style>
-</head>
-<body>
-  <div id="antiScreenOverlay"></div>
-  <img src="logo-invione.png" alt="InviOne™ Logo" style="max-width: 150px; margin-bottom: 20px;">
-  <h1>Benvenuto su InviOne™</h1>
-  <p>Invia immagini e video visibili solo dal dispositivo di destinazione. Zero inoltri. Privacy totale.</p>
-  <div class="upload-zone">
-    <label for="fileInput">
-      <strong>Clicca qui o trascina file (immagini/video)</strong>
-    </label><br />
-    <input type="file" id="fileInput" accept="image/*,video/*" multiple />
-  </div>
-  <div id="previewContainer"></div>
-  <button id="submitBtn">Invia</button>
-
-  <script>
+  <script defer>
+    let inactivityTimeout;
+    
     document.addEventListener("DOMContentLoaded", function () {
       const fileInput = document.getElementById("fileInput");
       const previewContainer = document.getElementById("previewContainer");
@@ -76,17 +62,14 @@
       fileInput.addEventListener("change", function () {
         previewContainer.innerHTML = "";
         const files = Array.from(fileInput.files);
-
         files.forEach((file) => {
           const reader = new FileReader();
           reader.onload = function (e) {
             const previewCard = document.createElement("div");
             previewCard.className = "preview-card";
-
             if (file.type.startsWith("image")) {
               const img = document.createElement("img");
               img.src = e.target.result;
-              img.alt = "Anteprima immagine";
               img.style.maxWidth = "100%";
               previewCard.appendChild(img);
             } else if (file.type.startsWith("video")) {
@@ -95,17 +78,11 @@
               video.controls = true;
               video.style.maxWidth = "100%";
               previewCard.appendChild(video);
-            } else {
-              const txt = document.createElement("p");
-              txt.textContent = file.name;
-              previewCard.appendChild(txt);
             }
-
             const removeBtn = document.createElement("button");
             removeBtn.textContent = "Rimuovi";
             removeBtn.className = "remove-button";
             removeBtn.onclick = () => previewCard.remove();
-
             previewCard.appendChild(removeBtn);
             previewContainer.appendChild(previewCard);
           };
@@ -113,26 +90,62 @@
         });
       });
 
-      document.getElementById("submitBtn").addEventListener("click", function () {
-        const uploadedFiles = document.querySelectorAll(".preview-card");
-        if (uploadedFiles.length === 0) {
-          alert("⚠️ Nessun file selezionato.");
-        } else {
-          alert("✅ Invio completato!");
+      document.addEventListener("contextmenu", function (e) {
+        e.preventDefault();
+      });
+
+      window.addEventListener("blur", () => {
+        document.body.style.opacity = "0";
+      });
+      window.addEventListener("focus", () => {
+        document.body.style.opacity = "1";
+      });
+
+      // Protezione contro PrintScreen
+      window.addEventListener("keydown", function (e) {
+        if (e.key === "PrintScreen") {
+          navigator.clipboard.writeText("");
+          alert("⚠️ Screenshot bloccato!");
+          e.preventDefault();
         }
       });
 
-      document.addEventListener("contextmenu", e => e.preventDefault());
-      window.addEventListener("blur", () => document.body.style.opacity = "0");
-      window.addEventListener("focus", () => document.body.style.opacity = "1");
+      // Timeout inattività (5 minuti)
+      function resetInactivityTimer() {
+        clearTimeout(inactivityTimeout);
+        inactivityTimeout = setTimeout(() => {
+          alert("Sessione chiusa per inattività.");
+          window.location.reload();
+        }, 300000);
+      }
+      ["mousemove", "keydown", "click"].forEach(evt => {
+        document.addEventListener(evt, resetInactivityTimer);
+      });
+      resetInactivityTimer();
 
-      // Blocco PrintScreen e tasti screenshot
-      window.addEventListener("keyup", (e) => {
-        if (e.key === "PrintScreen" || e.code === "PrintScreen") {
-          navigator.clipboard.writeText("").then(() => alert("Screenshot bloccato."));
-        }
+      // Messaggio animato all'apertura
+      setTimeout(() => {
+        document.getElementById("welcome-msg").style.display = "none";
+      }, 4000);
+
+      // Pulsante invia
+      document.getElementById("submitBtn").addEventListener("click", function () {
+        alert("✅ Invio completato! (simulato)");
       });
     });
   </script>
+</head>
+<body>
+  <div id="welcome-msg">👁️‍🗨️ Benvenuto su InviOne™ – Privacy Totale</div>
+  <h1>InviOne™</h1>
+  <p>Invia immagini e video blindati. Nessuna condivisione, nessun inoltro.</p>
+  <div class="upload-zone">
+    <label for="fileInput">
+      <strong>Clicca qui o trascina file (immagini/video)</strong>
+    </label><br />
+    <input type="file" id="fileInput" accept="image/*,video/*" multiple />
+  </div>
+  <div id="previewContainer"></div>
+  <button id="submitBtn">Invia</button>
 </body>
 </html>

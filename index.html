@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>InviOne™ Upload Sicuro</title>
   <style>
     body {
@@ -51,10 +51,25 @@
       opacity: 0.9;
       z-index: 10000;
     }
-    #disclaimer {
-      font-size: 0.75rem;
-      color: #bbb;
-      margin-top: 20px;
+    .animated-welcome {
+      font-size: 1.5em;
+      margin-bottom: 20px;
+      animation: fadeInUp 2s ease-in-out;
+    }
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .disclaimer {
+      font-size: 0.8em;
+      color: #aaa;
+      margin-top: 40px;
     }
   </style>
   <script defer>
@@ -64,6 +79,7 @@
 
       fileInput.addEventListener("change", function () {
         const files = Array.from(fileInput.files);
+
         files.forEach((file) => {
           const reader = new FileReader();
           reader.onload = function (e) {
@@ -98,6 +114,7 @@
           };
           reader.readAsDataURL(file);
         });
+
         fileInput.value = "";
       });
 
@@ -121,20 +138,20 @@
         }
       });
 
-      // Firma invisibile del dispositivo (watermark base)
-      const watermarkData = {
+      // Watermark invisibile (log locale del device)
+      const deviceFingerprint = {
         userAgent: navigator.userAgent,
-        language: navigator.language,
         platform: navigator.platform,
-        timestamp: new Date().toISOString(),
+        language: navigator.language,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        timestamp: new Date().toISOString()
       };
-      console.log("[Watermark Invisibile] Firma del dispositivo:", watermarkData);
-      // In futuro questo oggetto potrà essere inviato al backend insieme al file
+      console.log("📡 Firma dispositivo:", deviceFingerprint);
     });
   </script>
 </head>
 <body>
-  <h1>Benvenuto su InviOne™</h1>
+  <h1 class="animated-welcome">Benvenuto su InviOne™</h1>
   <div class="upload-zone">
     <label for="fileInput">
       <strong>Seleziona immagini o video da inviare</strong>
@@ -145,9 +162,11 @@
   <div id="previewContainer"></div>
 
   <button id="submitBtn">Invia</button>
+
   <img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne™" />
-  <div id="disclaimer">
-    Attenzione: utenti malintenzionati possono tentare screenshot con dispositivi esterni. InviOne™ applica misure avanzate di sicurezza, ma non garantisce protezione assoluta.
+
+  <div class="disclaimer">
+    ⚠️ Gli utenti potrebbero utilizzare dispositivi esterni per acquisire immagini dello schermo. InviOne™ implementa misure avanzate di protezione, ma non è responsabile per violazioni effettuate tramite mezzi esterni o manipolazioni software.
   </div>
 </body>
 </html>

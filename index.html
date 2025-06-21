@@ -6,12 +6,10 @@
   <title>InviOne™ Upload Sicuro</title>
   <script defer>
     document.addEventListener("DOMContentLoaded", function () {
-      // Gestione caricamento file multipli
       const fileInput = document.getElementById("fileInput");
       const previewContainer = document.getElementById("previewContainer");
 
       fileInput.addEventListener("change", function () {
-        previewContainer.innerHTML = ""; // pulizia preview
         const files = Array.from(fileInput.files);
 
         files.forEach((file) => {
@@ -48,6 +46,8 @@
           };
           reader.readAsDataURL(file);
         });
+
+        fileInput.value = ""; // Reset input to allow re-selection of the same files
       });
 
       // Blocco click destro
@@ -55,7 +55,7 @@
         e.preventDefault();
       });
 
-      // Blocco base strumenti cattura (SnippingTool ecc.) - simulato
+      // Blocco base strumenti cattura
       window.addEventListener("blur", () => {
         document.body.style.opacity = "0";
       });
@@ -70,7 +70,6 @@
           alert("⚠️ Nessun file selezionato.");
         } else {
           alert("✅ Invio completato!");
-          // Qui in futuro verrà collegato IPFS o backend reale
         }
       });
     });
@@ -123,7 +122,6 @@
     <label for="fileInput">
       <strong>Clicca qui o trascina file (immagini/video)</strong>
     </label><br />
-    <!-- ✅ Modifica: aggiunto multiple -->
     <input type="file" id="fileInput" accept="image/*,video/*" multiple />
   </div>
 

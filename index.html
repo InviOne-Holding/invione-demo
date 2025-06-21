@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>InviOne™</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InviOne™ v1.4</title>
   <style>
     body {
       background-color: #111;
@@ -11,135 +11,85 @@
       font-family: Arial, sans-serif;
       text-align: center;
       margin: 0;
-      padding: 1em;
+      padding: 2em;
     }
-
-    h1 {
-      font-size: 1.8em;
-      margin-bottom: 0.5em;
-    }
-
-    p {
-      font-size: 1em;
-      margin-bottom: 2em;
-    }
-
-    #drop-area {
+    input[type="file"] {
+      padding: 12px;
       border: 2px dashed #888;
-      padding: 30px;
-      margin: auto;
-      max-width: 90%;
       background-color: #1e1e1e;
-      border-radius: 10px;
+      color: #fff;
+      border-radius: 5px;
       cursor: pointer;
+      width: 90%;
+      max-width: 800px;
     }
-
-    #drop-area:hover {
+    input[type="file"]:hover {
       border-color: #00ff88;
     }
-
-    input[type="file"] {
-      display: none;
+    #preview-container {
+      margin-top: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
     }
-
-    #preview {
-      margin-top: 30px;
-      max-width: 90%;
-      max-height: 300px;
-      border: 1px solid #555;
-      border-radius: 5px;
-      display: none;
-      box-shadow: 0 0 8px #000;
+    .preview {
+      position: relative;
+      width: 250px;
     }
-
-    #message {
-      margin-top: 10px;
-      color: #00ff88;
-      font-size: 0.9em;
+    .preview img {
+      width: 100%;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #000;
     }
-
-    .buttons {
-      margin-top: 15px;
-    }
-
-    button {
-      margin: 5px;
-      padding: 10px 20px;
-      border: none;
-      background: #444;
+    .remove-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: red;
       color: white;
-      border-radius: 5px;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
       cursor: pointer;
-    }
-
-    button:hover {
-      background: #00ff88;
-      color: #000;
-    }
-
-    @media (max-width: 600px) {
-      h1 {
-        font-size: 1.5em;
-      }
-      #drop-area {
-        padding: 20px;
-      }
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <h1>Benvenuto su InviOne™</h1>
+  <h1>Benvenuto su InviOne™ v1.4</h1>
   <p>Invia immagini visibili solo dal dispositivo di destinazione. Zero inoltri. Privacy totale.</p>
-
-  <div id="drop-area" onclick="fileInput.click()" ondragover="event.preventDefault()" ondrop="handleDrop(event)">
-    Trascina qui o clicca per selezionare un'immagine
-    <input type="file" id="fileInput" accept="image/*" onchange="showPreview(event)" />
-  </div>
-
-  <img id="preview" alt="Anteprima immagine"/>
-  <div id="message"></div>
-
-  <div class="buttons">
-    <button onclick="sendImage()">Invia immagine</button>
-    <button onclick="resetPreview()">Reset</button>
-  </div>
+  <input type="file" id="fileInput" multiple accept="image/*">
+  <div id="preview-container"></div>
 
   <script>
-    const fileInput = document.getElementById('fileInput');
-    const preview = document.getElementById('preview');
-    const message = document.getElementById('message');
+    const input = document.getElementById('fileInput');
+    const previewContainer = document.getElementById('preview-container');
 
-    function showPreview(event) {
-      const file = event.target.files[0];
-      if (file) {
-        preview.src = URL.createObjectURL(file);
-        preview.style.display = "block";
-        message.textContent = "Immagine pronta per l'invio.";
-      }
-    }
+    input.addEventListener('change', (event) => {
+      previewContainer.innerHTML = ''; // reset
+      Array.from(event.target.files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const div = document.createElement('div');
+          div.className = 'preview';
 
-    function handleDrop(event) {
-      event.preventDefault();
-      fileInput.files = event.dataTransfer.files;
-      showPreview({ target: fileInput });
-    }
+          const img = document.createElement('img');
+          img.src = e.target.result;
 
-    function sendImage() {
-      if (preview.src) {
-        message.textContent = "✅ Immagine inviata con successo!";
-        message.style.color = "#00ff88";
-      } else {
-        message.textContent = "⚠️ Nessuna immagine selezionata.";
-        message.style.color = "orange";
-      }
-    }
+          const btn = document.createElement('button');
+          btn.className = 'remove-btn';
+          btn.textContent = 'X';
+          btn.onclick = () => div.remove();
 
-    function resetPreview() {
-      preview.src = "";
-      preview.style.display = "none";
-      fileInput.value = "";
-      message.textContent = "";
-    }
+          div.appendChild(img);
+          div.appendChild(btn);
+          previewContainer.appendChild(div);
+        };
+        reader.readAsDataURL(file);
+      });
+    });
   </script>
 </body>
 </html>

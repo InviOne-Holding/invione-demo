@@ -8,8 +8,11 @@
     document.addEventListener("DOMContentLoaded", function () {
       const fileInput = document.getElementById("fileInput");
       const previewContainer = document.getElementById("previewContainer");
+      const messageBox = document.getElementById("messageBox");
 
+      // Gestione caricamento file multipli
       fileInput.addEventListener("change", function () {
+        previewContainer.innerHTML = "";
         const files = Array.from(fileInput.files);
 
         files.forEach((file) => {
@@ -46,8 +49,6 @@
           };
           reader.readAsDataURL(file);
         });
-
-        fileInput.value = ""; // Reset input to allow re-selection of the same files
       });
 
       // Blocco click destro
@@ -55,7 +56,7 @@
         e.preventDefault();
       });
 
-      // Blocco base strumenti cattura
+      // Blocco base strumenti cattura (SnippingTool ecc.) - simulato
       window.addEventListener("blur", () => {
         document.body.style.opacity = "0";
       });
@@ -63,13 +64,26 @@
         document.body.style.opacity = "1";
       });
 
+      // Funzione per mostrare messaggi
+      function showMessage(text, type = "info") {
+        messageBox.textContent = text;
+        messageBox.className = `message ${type}`;
+        messageBox.style.display = "block";
+        setTimeout(() => {
+          messageBox.style.display = "none";
+        }, 2500);
+      }
+
       // Pulsante invio
       document.getElementById("submitBtn").addEventListener("click", function () {
         const uploadedFiles = document.querySelectorAll(".preview-card");
         if (uploadedFiles.length === 0) {
-          alert("⚠️ Nessun file selezionato.");
+          showMessage("⚠️ Nessun file selezionato.", "error");
         } else {
-          alert("✅ Invio completato!");
+          showMessage("⏳ Invio in corso...");
+          setTimeout(() => {
+            showMessage("✅ Invio completato!", "success");
+          }, 1500);
         }
       });
     });
@@ -113,6 +127,25 @@
       position: sticky;
       bottom: 10px;
     }
+    .message {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 20px;
+      background: #333;
+      color: #fff;
+      border-radius: 5px;
+      z-index: 1000;
+      font-weight: bold;
+    }
+    .message.success {
+      background: #16a34a;
+    }
+    .message.error {
+      background: #dc2626;
+    }
   </style>
 </head>
 <body>
@@ -128,5 +161,6 @@
   <div id="previewContainer"></div>
 
   <button id="submitBtn">Invia</button>
+  <div id="messageBox" class="message"></div>
 </body>
 </html>

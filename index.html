@@ -9,7 +9,6 @@
       const fileInput = document.getElementById("fileInput");
       const previewContainer = document.getElementById("previewContainer");
 
-      // Gestione caricamento file multipli
       fileInput.addEventListener("change", function () {
         previewContainer.innerHTML = "";
         const files = Array.from(fileInput.files);
@@ -50,33 +49,17 @@
         });
       });
 
-      // Blocco click destro
       document.addEventListener("contextmenu", function (e) {
         e.preventDefault();
       });
 
-      // Protezione anti-screen con overlay
-      let screenOverlay = document.createElement("div");
-      screenOverlay.style.position = "fixed";
-      screenOverlay.style.top = 0;
-      screenOverlay.style.left = 0;
-      screenOverlay.style.width = "100%";
-      screenOverlay.style.height = "100%";
-      screenOverlay.style.background = "#000";
-      screenOverlay.style.opacity = "0.8";
-      screenOverlay.style.zIndex = "9999";
-      screenOverlay.style.display = "none";
-      document.body.appendChild(screenOverlay);
-
       window.addEventListener("blur", () => {
-        screenOverlay.style.display = "block";
+        document.body.style.opacity = "0";
       });
-
       window.addEventListener("focus", () => {
-        screenOverlay.style.display = "none";
+        document.body.style.opacity = "1";
       });
 
-      // Pulsante invio
       document.getElementById("submitBtn").addEventListener("click", function () {
         const uploadedFiles = document.querySelectorAll(".preview-card");
         if (uploadedFiles.length === 0) {
@@ -129,20 +112,25 @@
   </style>
 </head>
 <body>
+
+  <!-- LOGO InviOne™ -->
+  <div style="text-align: center; margin-bottom: 20px;">
+    <img src="logo-invione.png" alt="Logo InviOne™" style="max-width: 150px;" />
+  </div>
+
   <h1>Benvenuto su InviOne™</h1>
   <p>Invia immagini e video visibili solo dal dispositivo di destinazione. Zero inoltri. Privacy totale.</p>
+
   <div class="upload-zone">
     <label for="fileInput">
       <strong>Clicca qui o trascina file (immagini/video)</strong>
     </label><br />
-    <input type="file" id="fileInput" accept="image/*,video/*" multiple style="display:none" />
-    <p style="color:gray; font-size: 0.9em;">
-      🔄 Puoi trascinare più file insieme oppure cliccare e selezionare con CTRL/CMD
-    </p>
+    <input type="file" id="fileInput" accept="image/*,video/*" multiple />
   </div>
 
   <div id="previewContainer"></div>
 
   <button id="submitBtn">Invia</button>
+
 </body>
 </html>

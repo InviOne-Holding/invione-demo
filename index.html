@@ -11,15 +11,12 @@
       font-family: Arial, sans-serif;
       text-align: center;
       padding: 20px;
-      transition: opacity 0.2s ease-in-out;
     }
-
     .upload-zone {
       border: 2px dashed #888;
       padding: 20px;
       margin-bottom: 20px;
     }
-
     .preview-card {
       background: #222;
       padding: 10px;
@@ -28,7 +25,6 @@
       max-width: 300px;
       vertical-align: top;
     }
-
     .remove-button {
       background: crimson;
       color: white;
@@ -37,7 +33,6 @@
       margin-top: 10px;
       cursor: pointer;
     }
-
     #submitBtn {
       background: #16a34a;
       color: white;
@@ -48,7 +43,6 @@
       position: sticky;
       bottom: 10px;
     }
-
     #logo-fixed {
       position: fixed;
       bottom: 20px;
@@ -57,19 +51,7 @@
       opacity: 0.9;
       z-index: 10000;
     }
-
-    #welcome-msg {
-      animation: fadeIn 2s ease-in-out;
-      margin-bottom: 20px;
-      font-size: 1.1em;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-10px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
   </style>
-
   <script defer>
     document.addEventListener("DOMContentLoaded", function () {
       const fileInput = document.getElementById("fileInput");
@@ -113,7 +95,7 @@
           reader.readAsDataURL(file);
         });
 
-        // Permette il caricamento multiplo successivo
+        // Reset input per permettere ulteriori selezioni
         fileInput.value = "";
       });
 
@@ -122,7 +104,7 @@
         e.preventDefault();
       });
 
-      // Oscuramento su cambio scheda
+      // Oscuramento se cambio scheda
       window.addEventListener("blur", () => {
         document.body.style.opacity = "0";
       });
@@ -130,45 +112,25 @@
         document.body.style.opacity = "1";
       });
 
-      // Timeout inattività (5 min)
-      let inactivityTimer = setTimeout(() => {
-        alert("Sessione terminata per inattività.");
-        location.reload();
-      }, 300000);
-
-      document.addEventListener("mousemove", () => {
-        clearTimeout(inactivityTimer);
-        inactivityTimer = setTimeout(() => {
-          alert("Sessione terminata per inattività.");
-          location.reload();
-        }, 300000);
-      });
-
-      // Pulsante invia
+      // Pulsante invio
       document.getElementById("submitBtn").addEventListener("click", function () {
         const uploadedFiles = document.querySelectorAll(".preview-card");
         if (uploadedFiles.length === 0) {
           alert("⚠️ Nessun file selezionato.");
         } else {
           alert("✅ Invio completato!");
-          // Collegamento a IPFS/backend qui
-        }
-      });
-
-      // (Opzionale) Blocco tasto PrintScreen
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "PrintScreen") {
-          e.preventDefault();
-          alert("🚫 Screenshot bloccato!");
         }
       });
     });
   </script>
 </head>
-
 <body>
   <h1>Benvenuto su InviOne™</h1>
-  <div id="welcome-msg">🎉 Tutto ciò che invii resta visibile solo al destinatario. Niente screen, niente condivisioni.</div>
+
+  <!-- Disclaimer di sicurezza -->
+  <p style="color: #ffcc00; font-size: 0.95em; max-width: 600px; margin: 0 auto 20px;">
+    ⚠️ <strong>Disclaimer di Sicurezza:</strong> InviOne™ protegge i tuoi contenuti da screenshot e inoltri. Tuttavia, non possiamo impedire l'uso di dispositivi esterni (es. fotocamere). L’uso improprio o tentativi di aggiramento sono vietati. InviOne™ non si assume responsabilità per abusi esterni.
+  </p>
 
   <div class="upload-zone">
     <label for="fileInput">
@@ -181,7 +143,7 @@
 
   <button id="submitBtn">Invia</button>
 
-  <!-- Logo -->
+  <!-- Logo fisso -->
   <img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne™" />
 </body>
 </html>

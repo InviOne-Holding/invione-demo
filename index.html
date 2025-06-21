@@ -2,56 +2,88 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>InviOne™</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
       background-color: #111;
       color: #fff;
+      font-family: Arial, sans-serif;
       text-align: center;
-      margin: 5% auto;
+      margin: 0;
+      padding: 1em;
     }
 
-    h1 { font-size: 1.8em; }
-    p { font-size: 1.1em; margin-bottom: 2em; }
+    h1 {
+      font-size: 1.8em;
+      margin-bottom: 0.5em;
+    }
 
-    .dropzone {
+    p {
+      font-size: 1em;
+      margin-bottom: 2em;
+    }
+
+    #drop-area {
       border: 2px dashed #888;
-      background-color: #1e1e1e;
       padding: 30px;
-      width: 300px;
       margin: auto;
+      max-width: 90%;
+      background-color: #1e1e1e;
       border-radius: 10px;
       cursor: pointer;
     }
 
-    .dropzone.dragover { border-color: #00ff88; }
-    input[type="file"] { display: none; }
+    #drop-area:hover {
+      border-color: #00ff88;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
 
     #preview {
       margin-top: 30px;
-      max-width: 300px;
+      max-width: 90%;
       max-height: 300px;
       border: 1px solid #555;
       border-radius: 5px;
       display: none;
+      box-shadow: 0 0 8px #000;
     }
 
-    .btn {
+    #message {
+      margin-top: 10px;
+      color: #00ff88;
+      font-size: 0.9em;
+    }
+
+    .buttons {
       margin-top: 15px;
+    }
+
+    button {
+      margin: 5px;
       padding: 10px 20px;
-      background-color: #444;
-      color: white;
       border: none;
+      background: #444;
+      color: white;
       border-radius: 5px;
       cursor: pointer;
-      display: none;
     }
 
-    #status {
-      margin-top: 10px;
-      font-size: 0.9em;
-      color: #00ff88;
+    button:hover {
+      background: #00ff88;
+      color: #000;
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 1.5em;
+      }
+      #drop-area {
+        padding: 20px;
+      }
     }
   </style>
 </head>
@@ -59,78 +91,54 @@
   <h1>Benvenuto su InviOne™</h1>
   <p>Invia immagini visibili solo dal dispositivo di destinazione. Zero inoltri. Privacy totale.</p>
 
-  <label class="dropzone" id="dropzone">
-    Trascina qui o clicca per selezionare un’immagine
-    <input type="file" accept="image/png, image/jpeg, image/webp" id="fileInput" onchange="showPreview(event)" />
-  </label>
+  <div id="drop-area" onclick="fileInput.click()" ondragover="event.preventDefault()" ondrop="handleDrop(event)">
+    Trascina qui o clicca per selezionare un'immagine
+    <input type="file" id="fileInput" accept="image/*" onchange="showPreview(event)" />
+  </div>
 
-  <img id="preview" src="" alt="Anteprima immagine">
-  <div id="status"></div>
-  <button id="sendBtn" class="btn" onclick="simulateSend()">Invia immagine</button>
-  <button id="resetBtn" class="btn" onclick="resetPreview()">Reset</button>
+  <img id="preview" alt="Anteprima immagine"/>
+  <div id="message"></div>
+
+  <div class="buttons">
+    <button onclick="sendImage()">Invia immagine</button>
+    <button onclick="resetPreview()">Reset</button>
+  </div>
 
   <script>
-    const dropzone = document.getElementById('dropzone');
     const fileInput = document.getElementById('fileInput');
     const preview = document.getElementById('preview');
-    const status = document.getElementById('status');
-    const resetBtn = document.getElementById('resetBtn');
-    const sendBtn = document.getElementById('sendBtn');
-
-    dropzone.addEventListener('click', () => fileInput.click());
-    dropzone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      dropzone.classList.add('dragover');
-    });
-
-    dropzone.addEventListener('dragleave', () => {
-      dropzone.classList.remove('dragover');
-    });
-
-    dropzone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      dropzone.classList.remove('dragover');
-      const file = e.dataTransfer.files[0];
-      if (file) {
-        fileInput.files = e.dataTransfer.files;
-        showPreview({ target: { files: [file] } });
-      }
-    });
+    const message = document.getElementById('message');
 
     function showPreview(event) {
       const file = event.target.files[0];
       if (file) {
         preview.src = URL.createObjectURL(file);
         preview.style.display = "block";
-        status.textContent = "Immagine pronta per l'invio.";
-        resetBtn.style.display = "inline-block";
-        sendBtn.style.display = "inline-block";
+        message.textContent = "Immagine pronta per l'invio.";
+      }
+    }
+
+    function handleDrop(event) {
+      event.preventDefault();
+      fileInput.files = event.dataTransfer.files;
+      showPreview({ target: fileInput });
+    }
+
+    function sendImage() {
+      if (preview.src) {
+        message.textContent = "✅ Immagine inviata con successo!";
+        message.style.color = "#00ff88";
       } else {
-        resetPreview();
+        message.textContent = "⚠️ Nessuna immagine selezionata.";
+        message.style.color = "orange";
       }
     }
 
     function resetPreview() {
       preview.src = "";
       preview.style.display = "none";
-      status.textContent = "";
       fileInput.value = "";
-      resetBtn.style.display = "none";
-      sendBtn.style.display = "none";
-    }
-
-    function simulateSend() {
-      status.textContent = "Invio in corso...";
-      sendBtn.disabled = true;
-      resetBtn.disabled = true;
-
-      setTimeout(() => {
-        status.textContent = "✅ Immagine inviata con successo!";
-        sendBtn.disabled = false;
-        resetBtn.disabled = false;
-
-        setTimeout(() => resetPreview(), 5000);
-      }, 2000);
+      message.textContent = "";
     }
   </script>
 </body>

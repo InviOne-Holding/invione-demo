@@ -3,146 +3,146 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>InviOne™ – Upload Sicuro</title>
+  <title>InviOne™ Upload</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
     body {
       margin: 0;
       padding: 0;
-      font-family: Arial, sans-serif;
-      background-color: #0d0d0d;
+      background-color: #0f0f0f;
       color: white;
-      overflow-x: hidden;
-    }
-    .overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: black;
-      opacity: 0.95;
-      z-index: 9999;
-      display: none;
-    }
-    .container {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 20px;
+      justify-content: flex-start;
+      min-height: 100vh;
+      padding: 2rem 1rem;
     }
     h1 {
-      font-size: 2rem;
-      margin-bottom: 10px;
-      margin-top: 40px;
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
     }
-    .drop-zone {
-      width: 90%;
-      max-width: 600px;
-      border: 2px dashed #888;
-      border-radius: 10px;
-      padding: 20px;
+    p {
+      font-size: 0.9rem;
+      color: #aaa;
       text-align: center;
-      margin-bottom: 20px;
-      background-color: #1a1a1a;
+      max-width: 600px;
+      margin-bottom: 1rem;
     }
-    .preview-list {
+    .upload-area {
+      border: 2px dashed #777;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 600px;
+      padding: 1rem;
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .upload-area:hover {
+      border-color: #fff;
+    }
+    .preview-area {
       display: flex;
       flex-wrap: wrap;
-      gap: 20px;
       justify-content: center;
+      gap: 1rem;
     }
-    .preview-item {
-      background-color: #222;
-      border-radius: 10px;
-      padding: 10px;
-      max-width: 300px;
+    .file-preview {
+      background-color: #1e1e1e;
+      padding: 1rem;
+      border-radius: 8px;
+      max-width: 280px;
+      overflow: hidden;
+      text-align: center;
+      position: relative;
     }
-    .preview-item img,
-    .preview-item video {
-      max-width: 100%;
+    .file-preview img,
+    .file-preview video {
+      width: 100%;
       border-radius: 8px;
     }
-    .btn-remove {
-      background-color: #e60039;
+    .file-preview button {
+      margin-top: 0.5rem;
+      padding: 0.3rem 0.8rem;
+      border: none;
+      border-radius: 4px;
+      background-color: #ff3366;
+      color: white;
+      cursor: pointer;
+    }
+    .submit-button {
+      background-color: #00cc66;
       color: white;
       border: none;
-      padding: 5px 10px;
-      margin-top: 10px;
+      padding: 0.8rem 1.5rem;
+      border-radius: 6px;
+      font-size: 1rem;
       cursor: pointer;
-      border-radius: 5px;
+      margin-top: 2rem;
     }
   </style>
 </head>
 <body>
-  <div class="overlay" id="overlay"></div>
-  <div class="container">
-    <h1>Benvenuto su InviOne™</h1>
-    <p>Invia immagini e video visibili solo dal dispositivo di destinazione. Zero inoltri. Privacy totale.</p>
-    <div class="drop-zone" id="drop-zone">
-      Clicca qui o trascina file (immagini/video)
-      <input type="file" id="file-input" multiple accept="image/*,video/*" style="display: none;" />
-    </div>
-    <div class="preview-list" id="preview-list"></div>
+  <h1>Benvenuto su InviOne™</h1>
+  <p>Invia immagini e video visibili solo dal dispositivo di destinazione. Zero inoltri. Privacy totale.</p>
+  <div class="upload-area" id="upload-area">
+    <p>Clicca qui o trascina file (immagini/video)</p>
+    <input type="file" id="file-input" accept="image/*,video/*" multiple hidden />
   </div>
+  <div class="preview-area" id="preview-area"></div>
+  <button class="submit-button">Invia</button>
 
   <script>
-    const dropZone = document.getElementById("drop-zone");
-    const fileInput = document.getElementById("file-input");
-    const previewList = document.getElementById("preview-list");
+    const uploadArea = document.getElementById('upload-area');
+    const fileInput = document.getElementById('file-input');
+    const previewArea = document.getElementById('preview-area');
 
-    dropZone.addEventListener("click", () => fileInput.click());
-    dropZone.addEventListener("dragover", (e) => {
+    uploadArea.addEventListener('click', () => fileInput.click());
+
+    uploadArea.addEventListener('dragover', (e) => {
       e.preventDefault();
-      dropZone.style.borderColor = "#00e6e6";
+      uploadArea.style.borderColor = '#fff';
     });
-    dropZone.addEventListener("dragleave", () => {
-      dropZone.style.borderColor = "#888";
+
+    uploadArea.addEventListener('dragleave', () => {
+      uploadArea.style.borderColor = '#777';
     });
-    dropZone.addEventListener("drop", (e) => {
+
+    uploadArea.addEventListener('drop', (e) => {
       e.preventDefault();
-      dropZone.style.borderColor = "#888";
+      uploadArea.style.borderColor = '#777';
       handleFiles(e.dataTransfer.files);
     });
-    fileInput.addEventListener("change", () => {
-      handleFiles(fileInput.files);
-    });
+
+    fileInput.addEventListener('change', () => handleFiles(fileInput.files));
 
     function handleFiles(files) {
-      for (const file of files) {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-          const div = document.createElement("div");
-          div.classList.add("preview-item");
+      [...files].forEach(file => {
+        const preview = document.createElement('div');
+        preview.classList.add('file-preview');
 
-          if (file.type.startsWith("image/")) {
-            const img = document.createElement("img");
-            img.src = e.target.result;
-            div.appendChild(img);
-          } else if (file.type.startsWith("video/")) {
-            const video = document.createElement("video");
-            video.src = e.target.result;
-            video.controls = true;
-            div.appendChild(video);
-          }
+        if (file.type.startsWith('image/')) {
+          const img = document.createElement('img');
+          img.src = URL.createObjectURL(file);
+          preview.appendChild(img);
+        } else if (file.type.startsWith('video/')) {
+          const video = document.createElement('video');
+          video.src = URL.createObjectURL(file);
+          video.controls = true;
+          preview.appendChild(video);
+        }
 
-          const removeBtn = document.createElement("button");
-          removeBtn.textContent = "Rimuovi";
-          removeBtn.classList.add("btn-remove");
-          removeBtn.onclick = () => div.remove();
-          div.appendChild(removeBtn);
+        const btn = document.createElement('button');
+        btn.innerText = 'Rimuovi';
+        btn.onclick = () => preview.remove();
+        preview.appendChild(btn);
 
-          previewList.appendChild(div);
-        };
-        reader.readAsDataURL(file);
-      }
+        previewArea.appendChild(preview);
+      });
     }
-
-    // Antiscreenshot
-    const overlay = document.getElementById("overlay");
-    document.addEventListener("visibilitychange", () => {
-      overlay.style.display = document.hidden ? "block" : "none";
-    });
-    document.addEventListener("contextmenu", (e) => e.preventDefault());
   </script>
 </body>
 </html>

@@ -1,154 +1,137 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>InviOne™</title>
   <style>
     body {
+      font-family: Arial, sans-serif;
       background-color: #111;
-      color: white;
-      font-family: 'Segoe UI', sans-serif;
+      color: #fff;
       text-align: center;
-      padding: 2em;
+      margin: 5% auto;
     }
-    .upload-area {
+
+    h1 { font-size: 1.8em; }
+    p { font-size: 1.1em; margin-bottom: 2em; }
+
+    .dropzone {
       border: 2px dashed #888;
-      padding: 20px;
-      margin: 20px auto;
-      width: 80%;
-      max-width: 800px;
+      background-color: #1e1e1e;
+      padding: 30px;
+      width: 300px;
+      margin: auto;
       border-radius: 10px;
       cursor: pointer;
     }
-    .preview-container {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 20px;
-      margin-top: 2em;
-    }
-    .media-box {
-      background-color: #222;
-      padding: 10px;
-      border-radius: 10px;
-      position: relative;
-      max-width: 300px;
-    }
-    .media-box img,
-    .media-box video {
-      max-width: 100%;
-      border-radius: 10px;
-    }
-    .remove-btn {
-      background-color: crimson;
-      border: none;
-      color: white;
-      padding: 5px 10px;
-      margin-top: 10px;
-      cursor: pointer;
-      border-radius: 5px;
-    }
-    #send-btn {
+
+    .dropzone.dragover { border-color: #00ff88; }
+    input[type="file"] { display: none; }
+
+    #preview {
       margin-top: 30px;
-      padding: 12px 25px;
-      background-color: limegreen;
-      border: none;
+      max-width: 300px;
+      max-height: 300px;
+      border: 1px solid #555;
+      border-radius: 5px;
+      display: none;
+    }
+
+    .btn {
+      margin-top: 15px;
+      padding: 10px 20px;
+      background-color: #444;
       color: white;
-      font-size: 1rem;
-      border-radius: 8px;
+      border: none;
+      border-radius: 5px;
       cursor: pointer;
+      display: none;
     }
-    #send-btn:hover {
-      background-color: green;
-    }
-    h1 {
-      font-size: 2em;
+
+    #status {
+      margin-top: 10px;
+      font-size: 0.9em;
+      color: #00ff88;
     }
   </style>
 </head>
 <body>
-
   <h1>Benvenuto su InviOne™</h1>
-  <p>Invia immagini e video visibili solo dal dispositivo di destinazione. Zero inoltri. Privacy totale.</p>
+  <p>Invia immagini visibili solo dal dispositivo di destinazione. Zero inoltri. Privacy totale.</p>
 
-  <div class="upload-area" id="upload-area">
-    Trascina qui o clicca per selezionare immagini o video
-  </div>
-  <input type="file" id="file-input" accept="image/*,video/*" multiple style="display:none" />
-  <div class="preview-container" id="preview-container"></div>
+  <label class="dropzone" id="dropzone">
+    Trascina qui o clicca per selezionare un’immagine
+    <input type="file" accept="image/png, image/jpeg, image/webp" id="fileInput" onchange="showPreview(event)" />
+  </label>
 
-  <button id="send-btn">Invia</button>
+  <img id="preview" src="" alt="Anteprima immagine">
+  <div id="status"></div>
+  <button id="sendBtn" class="btn" onclick="simulateSend()">Invia immagine</button>
+  <button id="resetBtn" class="btn" onclick="resetPreview()">Reset</button>
 
   <script>
-    const uploadArea = document.getElementById('upload-area');
-    const fileInput = document.getElementById('file-input');
-    const previewContainer = document.getElementById('preview-container');
-    const sendBtn = document.getElementById('send-btn');
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const preview = document.getElementById('preview');
+    const status = document.getElementById('status');
+    const resetBtn = document.getElementById('resetBtn');
+    const sendBtn = document.getElementById('sendBtn');
 
-    let uploadedFiles = [];
-
-    uploadArea.addEventListener('click', () => fileInput.click());
-    uploadArea.addEventListener('dragover', e => {
+    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('dragover', (e) => {
       e.preventDefault();
-      uploadArea.style.borderColor = 'lime';
+      dropzone.classList.add('dragover');
     });
-    uploadArea.addEventListener('dragleave', () => {
-      uploadArea.style.borderColor = '#888';
+
+    dropzone.addEventListener('dragleave', () => {
+      dropzone.classList.remove('dragover');
     });
-    uploadArea.addEventListener('drop', e => {
+
+    dropzone.addEventListener('drop', (e) => {
       e.preventDefault();
-      uploadArea.style.borderColor = '#888';
-      handleFiles(e.dataTransfer.files);
+      dropzone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        fileInput.files = e.dataTransfer.files;
+        showPreview({ target: { files: [file] } });
+      }
     });
 
-    fileInput.addEventListener('change', () => {
-      handleFiles(fileInput.files);
-    });
-
-    function handleFiles(files) {
-      for (const file of files) {
-        uploadedFiles.push(file);
-
-        const reader = new FileReader();
-        reader.onload = e => {
-          const mediaBox = document.createElement('div');
-          mediaBox.className = 'media-box';
-
-          let mediaElement;
-          if (file.type.startsWith('image')) {
-            mediaElement = document.createElement('img');
-            mediaElement.src = e.target.result;
-          } else if (file.type.startsWith('video')) {
-            mediaElement = document.createElement('video');
-            mediaElement.src = e.target.result;
-            mediaElement.controls = true;
-          }
-
-          const removeBtn = document.createElement('button');
-          removeBtn.className = 'remove-btn';
-          removeBtn.textContent = 'Rimuovi';
-          removeBtn.onclick = () => {
-            previewContainer.removeChild(mediaBox);
-            uploadedFiles = uploadedFiles.filter(f => f !== file);
-          };
-
-          mediaBox.appendChild(mediaElement);
-          mediaBox.appendChild(removeBtn);
-          previewContainer.appendChild(mediaBox);
-        };
-        reader.readAsDataURL(file);
+    function showPreview(event) {
+      const file = event.target.files[0];
+      if (file) {
+        preview.src = URL.createObjectURL(file);
+        preview.style.display = "block";
+        status.textContent = "Immagine pronta per l'invio.";
+        resetBtn.style.display = "inline-block";
+        sendBtn.style.display = "inline-block";
+      } else {
+        resetPreview();
       }
     }
 
-    sendBtn.addEventListener('click', () => {
-      if (uploadedFiles.length === 0) {
-        alert('Carica almeno un file prima di inviare.');
-        return;
-      }
-      alert(`Hai selezionato ${uploadedFiles.length} file. (Simulazione invio in corso...)`);
-      // Qui in futuro integreremo l’invio reale (es. IPFS, WebRTC, LAN, ecc.)
-    });
+    function resetPreview() {
+      preview.src = "";
+      preview.style.display = "none";
+      status.textContent = "";
+      fileInput.value = "";
+      resetBtn.style.display = "none";
+      sendBtn.style.display = "none";
+    }
+
+    function simulateSend() {
+      status.textContent = "Invio in corso...";
+      sendBtn.disabled = true;
+      resetBtn.disabled = true;
+
+      setTimeout(() => {
+        status.textContent = "✅ Immagine inviata con successo!";
+        sendBtn.disabled = false;
+        resetBtn.disabled = false;
+
+        setTimeout(() => resetPreview(), 5000);
+      }, 2000);
+    }
   </script>
 </body>
 </html>

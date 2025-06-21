@@ -11,17 +11,14 @@
       background-color: #121212;
       color: #f1f1f1;
     }
-
     h1 {
       font-size: 2em;
       margin-bottom: 0.5em;
     }
-
     p {
       font-size: 1.1em;
       margin-bottom: 2em;
     }
-
     input[type="file"] {
       padding: 10px;
       border: 2px dashed #888;
@@ -30,15 +27,38 @@
       border-radius: 5px;
       cursor: pointer;
     }
-
     input[type="file"]:hover {
-      border-color: #00ff88;
+      border-color: #00f88c;
+    }
+    img {
+      margin-top: 20px;
+      max-width: 90%;
+      height: auto;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
     }
   </style>
 </head>
 <body>
   <h1>Benvenuto su InviOne™</h1>
   <p>Invia immagini visibili solo dal dispositivo di destinazione. Zero inoltri. Privacy totale.</p>
-  <input type="file" />
+  <input type="file" accept="image/*" onchange="previewImage(event)">
+  <br>
+  <img id="preview" style="display:none;" alt="Anteprima immagine"/>
+
+  <script>
+    function previewImage(event) {
+      const file = event.target.files[0];
+      const preview = document.getElementById('preview');
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          preview.src = e.target.result;
+          preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+  </script>
 </body>
 </html>

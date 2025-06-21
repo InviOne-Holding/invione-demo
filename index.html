@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>InviOne™ Upload Sicuro</title>
   <style>
     body {
@@ -51,26 +51,10 @@
       opacity: 0.9;
       z-index: 10000;
     }
-    #welcomeBanner {
-      position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #16a34a;
-      color: #fff;
-      padding: 15px 30px;
-      border-radius: 30px;
-      font-size: 16px;
-      font-weight: bold;
-      opacity: 0;
-      z-index: 10001;
-      animation: fadeInOut 5s ease-in-out forwards;
-    }
-    @keyframes fadeInOut {
-      0% { opacity: 0; top: 0px; }
-      10% { opacity: 1; top: 20px; }
-      90% { opacity: 1; top: 20px; }
-      100% { opacity: 0; top: 0px; }
+    #disclaimer {
+      font-size: 0.75rem;
+      color: #bbb;
+      margin-top: 20px;
     }
   </style>
   <script defer>
@@ -80,7 +64,6 @@
 
       fileInput.addEventListener("change", function () {
         const files = Array.from(fileInput.files);
-
         files.forEach((file) => {
           const reader = new FileReader();
           reader.onload = function (e) {
@@ -115,17 +98,13 @@
           };
           reader.readAsDataURL(file);
         });
-
-        // Reset input
         fileInput.value = "";
       });
 
-      // Blocco click destro
       document.addEventListener("contextmenu", function (e) {
         e.preventDefault();
       });
 
-      // Oscuramento se cambio scheda
       window.addEventListener("blur", () => {
         document.body.style.opacity = "0";
       });
@@ -133,7 +112,6 @@
         document.body.style.opacity = "1";
       });
 
-      // Pulsante invio
       document.getElementById("submitBtn").addEventListener("click", function () {
         const uploadedFiles = document.querySelectorAll(".preview-card");
         if (uploadedFiles.length === 0) {
@@ -142,14 +120,20 @@
           alert("✅ Invio completato!");
         }
       });
+
+      // Firma invisibile del dispositivo (watermark base)
+      const watermarkData = {
+        userAgent: navigator.userAgent,
+        language: navigator.language,
+        platform: navigator.platform,
+        timestamp: new Date().toISOString(),
+      };
+      console.log("[Watermark Invisibile] Firma del dispositivo:", watermarkData);
+      // In futuro questo oggetto potrà essere inviato al backend insieme al file
     });
   </script>
 </head>
 <body>
-  <div id="welcomeBanner">
-    👋 Benvenuto su <strong>InviOne™</strong> – La tua privacy è la nostra missione.
-  </div>
-
   <h1>Benvenuto su InviOne™</h1>
   <div class="upload-zone">
     <label for="fileInput">
@@ -161,7 +145,9 @@
   <div id="previewContainer"></div>
 
   <button id="submitBtn">Invia</button>
-
   <img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne™" />
+  <div id="disclaimer">
+    Attenzione: utenti malintenzionati possono tentare screenshot con dispositivi esterni. InviOne™ applica misure avanzate di sicurezza, ma non garantisce protezione assoluta.
+  </div>
 </body>
 </html>

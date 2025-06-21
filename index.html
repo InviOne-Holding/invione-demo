@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
@@ -49,6 +49,19 @@
       cursor: pointer;
       border-radius: 5px;
     }
+    #send-btn {
+      margin-top: 30px;
+      padding: 12px 25px;
+      background-color: limegreen;
+      border: none;
+      color: white;
+      font-size: 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    #send-btn:hover {
+      background-color: green;
+    }
     h1 {
       font-size: 2em;
     }
@@ -65,10 +78,15 @@
   <input type="file" id="file-input" accept="image/*,video/*" multiple style="display:none" />
   <div class="preview-container" id="preview-container"></div>
 
+  <button id="send-btn">Invia</button>
+
   <script>
     const uploadArea = document.getElementById('upload-area');
     const fileInput = document.getElementById('file-input');
     const previewContainer = document.getElementById('preview-container');
+    const sendBtn = document.getElementById('send-btn');
+
+    let uploadedFiles = [];
 
     uploadArea.addEventListener('click', () => fileInput.click());
     uploadArea.addEventListener('dragover', e => {
@@ -90,6 +108,8 @@
 
     function handleFiles(files) {
       for (const file of files) {
+        uploadedFiles.push(file);
+
         const reader = new FileReader();
         reader.onload = e => {
           const mediaBox = document.createElement('div');
@@ -108,7 +128,10 @@
           const removeBtn = document.createElement('button');
           removeBtn.className = 'remove-btn';
           removeBtn.textContent = 'Rimuovi';
-          removeBtn.onclick = () => previewContainer.removeChild(mediaBox);
+          removeBtn.onclick = () => {
+            previewContainer.removeChild(mediaBox);
+            uploadedFiles = uploadedFiles.filter(f => f !== file);
+          };
 
           mediaBox.appendChild(mediaElement);
           mediaBox.appendChild(removeBtn);
@@ -117,6 +140,15 @@
         reader.readAsDataURL(file);
       }
     }
+
+    sendBtn.addEventListener('click', () => {
+      if (uploadedFiles.length === 0) {
+        alert('Carica almeno un file prima di inviare.');
+        return;
+      }
+      alert(`Hai selezionato ${uploadedFiles.length} file. (Simulazione invio in corso...)`);
+      // Qui in futuro integreremo l’invio reale (es. IPFS, WebRTC, LAN, ecc.)
+    });
   </script>
 </body>
 </html>

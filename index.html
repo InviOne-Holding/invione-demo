@@ -51,6 +51,27 @@
       opacity: 0.9;
       z-index: 10000;
     }
+    #welcomeBanner {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #16a34a;
+      color: #fff;
+      padding: 15px 30px;
+      border-radius: 30px;
+      font-size: 16px;
+      font-weight: bold;
+      opacity: 0;
+      z-index: 10001;
+      animation: fadeInOut 5s ease-in-out forwards;
+    }
+    @keyframes fadeInOut {
+      0% { opacity: 0; top: 0px; }
+      10% { opacity: 1; top: 20px; }
+      90% { opacity: 1; top: 20px; }
+      100% { opacity: 0; top: 0px; }
+    }
   </style>
   <script defer>
     document.addEventListener("DOMContentLoaded", function () {
@@ -95,7 +116,7 @@
           reader.readAsDataURL(file);
         });
 
-        // Reset input per permettere ulteriori selezioni
+        // Reset input
         fileInput.value = "";
       });
 
@@ -125,13 +146,11 @@
   </script>
 </head>
 <body>
+  <div id="welcomeBanner">
+    👋 Benvenuto su <strong>InviOne™</strong> – La tua privacy è la nostra missione.
+  </div>
+
   <h1>Benvenuto su InviOne™</h1>
-
-  <!-- Disclaimer di sicurezza -->
-  <p style="color: #ffcc00; font-size: 0.95em; max-width: 600px; margin: 0 auto 20px;">
-    ⚠️ <strong>Disclaimer di Sicurezza:</strong> InviOne™ protegge i tuoi contenuti da screenshot e inoltri. Tuttavia, non possiamo impedire l'uso di dispositivi esterni (es. fotocamere). L’uso improprio o tentativi di aggiramento sono vietati. InviOne™ non si assume responsabilità per abusi esterni.
-  </p>
-
   <div class="upload-zone">
     <label for="fileInput">
       <strong>Seleziona immagini o video da inviare</strong>
@@ -143,7 +162,6 @@
 
   <button id="submitBtn">Invia</button>
 
-  <!-- Logo fisso -->
   <img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne™" />
 </body>
 </html>

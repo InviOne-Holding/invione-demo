@@ -8,17 +8,11 @@
     document.addEventListener("DOMContentLoaded", function () {
       const fileInput = document.getElementById("fileInput");
       const previewContainer = document.getElementById("previewContainer");
-      const fileCountMessage = document.getElementById("fileCountMessage");
 
+      // Gestione caricamento file multipli
       fileInput.addEventListener("change", function () {
-        previewContainer.innerHTML = ""; // pulizia preview
+        previewContainer.innerHTML = "";
         const files = Array.from(fileInput.files);
-
-        if (files.length > 0) {
-          fileCountMessage.textContent = `${files.length} file selezionati.`;
-        } else {
-          fileCountMessage.textContent = "Nessun file selezionato.";
-        }
 
         files.forEach((file) => {
           const reader = new FileReader();
@@ -47,12 +41,7 @@
             const removeBtn = document.createElement("button");
             removeBtn.textContent = "Rimuovi";
             removeBtn.className = "remove-button";
-            removeBtn.onclick = () => {
-              previewCard.remove();
-              if (previewContainer.children.length === 0) {
-                fileCountMessage.textContent = "Nessun file selezionato.";
-              }
-            };
+            removeBtn.onclick = () => previewCard.remove();
 
             previewCard.appendChild(removeBtn);
             previewContainer.appendChild(previewCard);
@@ -66,12 +55,25 @@
         e.preventDefault();
       });
 
-      // Blocco simulato cattura schermo
+      // Protezione anti-screen con overlay
+      let screenOverlay = document.createElement("div");
+      screenOverlay.style.position = "fixed";
+      screenOverlay.style.top = 0;
+      screenOverlay.style.left = 0;
+      screenOverlay.style.width = "100%";
+      screenOverlay.style.height = "100%";
+      screenOverlay.style.background = "#000";
+      screenOverlay.style.opacity = "0.8";
+      screenOverlay.style.zIndex = "9999";
+      screenOverlay.style.display = "none";
+      document.body.appendChild(screenOverlay);
+
       window.addEventListener("blur", () => {
-        document.body.style.opacity = "0";
+        screenOverlay.style.display = "block";
       });
+
       window.addEventListener("focus", () => {
-        document.body.style.opacity = "1";
+        screenOverlay.style.display = "none";
       });
 
       // Pulsante invio
@@ -81,7 +83,6 @@
           alert("⚠️ Nessun file selezionato.");
         } else {
           alert("✅ Invio completato!");
-          // In futuro: invio reale (IPFS/backend)
         }
       });
     });
@@ -125,30 +126,19 @@
       position: sticky;
       bottom: 10px;
     }
-    .custom-upload-label {
-      display: inline-block;
-      padding: 8px 15px;
-      background: #444;
-      color: #fff;
-      cursor: pointer;
-      border-radius: 4px;
-      margin-top: 10px;
-    }
-    #fileCountMessage {
-      margin-top: 5px;
-      font-size: 0.9em;
-      color: gray;
-    }
   </style>
 </head>
 <body>
   <h1>Benvenuto su InviOne™</h1>
   <p>Invia immagini e video visibili solo dal dispositivo di destinazione. Zero inoltri. Privacy totale.</p>
-
   <div class="upload-zone">
-    <label for="fileInput" class="custom-upload-label">📁 Seleziona immagini o video</label><br />
-    <input type="file" id="fileInput" accept="image/*,video/*" multiple style="display: none;" />
-    <p id="fileCountMessage">Nessun file selezionato.</p>
+    <label for="fileInput">
+      <strong>Clicca qui o trascina file (immagini/video)</strong>
+    </label><br />
+    <input type="file" id="fileInput" accept="image/*,video/*" multiple style="display:none" />
+    <p style="color:gray; font-size: 0.9em;">
+      🔄 Puoi trascinare più file insieme oppure cliccare e selezionare con CTRL/CMD
+    </p>
   </div>
 
   <div id="previewContainer"></div>

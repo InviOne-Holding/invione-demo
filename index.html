@@ -1,10 +1,74 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>InviOne™ Upload Sicuro</title>
-  <script defer>
+  <style>
+    body {
+      background: #111;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    .upload-zone {
+      border: 2px dashed #888;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .preview-card {
+      background: #222;
+      padding: 10px;
+      margin: 10px;
+      display: inline-block;
+      max-width: 300px;
+      vertical-align: top;
+    }
+    .remove-button {
+      background: crimson;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    #submitBtn {
+      background: #16a34a;
+      color: white;
+      font-weight: bold;
+      padding: 10px 20px;
+      border: none;
+      margin-top: 20px;
+      position: sticky;
+      bottom: 10px;
+    }
+    #antiScreenOverlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 9999;
+      pointer-events: none;
+      background: rgba(0,0,0,0);
+    }
+  </style>
+</head>
+<body>
+  <div id="antiScreenOverlay"></div>
+  <img src="logo-invione.png" alt="InviOne™ Logo" style="max-width: 150px; margin-bottom: 20px;">
+  <h1>Benvenuto su InviOne™</h1>
+  <p>Invia immagini e video visibili solo dal dispositivo di destinazione. Zero inoltri. Privacy totale.</p>
+  <div class="upload-zone">
+    <label for="fileInput">
+      <strong>Clicca qui o trascina file (immagini/video)</strong>
+    </label><br />
+    <input type="file" id="fileInput" accept="image/*,video/*" multiple />
+  </div>
+  <div id="previewContainer"></div>
+  <button id="submitBtn">Invia</button>
+
+  <script>
     document.addEventListener("DOMContentLoaded", function () {
       const fileInput = document.getElementById("fileInput");
       const previewContainer = document.getElementById("previewContainer");
@@ -49,17 +113,6 @@
         });
       });
 
-      document.addEventListener("contextmenu", function (e) {
-        e.preventDefault();
-      });
-
-      window.addEventListener("blur", () => {
-        document.body.style.opacity = "0";
-      });
-      window.addEventListener("focus", () => {
-        document.body.style.opacity = "1";
-      });
-
       document.getElementById("submitBtn").addEventListener("click", function () {
         const uploadedFiles = document.querySelectorAll(".preview-card");
         if (uploadedFiles.length === 0) {
@@ -68,69 +121,18 @@
           alert("✅ Invio completato!");
         }
       });
+
+      document.addEventListener("contextmenu", e => e.preventDefault());
+      window.addEventListener("blur", () => document.body.style.opacity = "0");
+      window.addEventListener("focus", () => document.body.style.opacity = "1");
+
+      // Blocco PrintScreen e tasti screenshot
+      window.addEventListener("keyup", (e) => {
+        if (e.key === "PrintScreen" || e.code === "PrintScreen") {
+          navigator.clipboard.writeText("").then(() => alert("Screenshot bloccato."));
+        }
+      });
     });
   </script>
-  <style>
-    body {
-      background: #111;
-      color: #fff;
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 20px;
-    }
-    .upload-zone {
-      border: 2px dashed #888;
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-    .preview-card {
-      background: #222;
-      padding: 10px;
-      margin: 10px;
-      display: inline-block;
-      max-width: 300px;
-      vertical-align: top;
-    }
-    .remove-button {
-      background: crimson;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      margin-top: 10px;
-      cursor: pointer;
-    }
-    #submitBtn {
-      background: #16a34a;
-      color: white;
-      font-weight: bold;
-      padding: 10px 20px;
-      border: none;
-      margin-top: 20px;
-      position: sticky;
-      bottom: 10px;
-    }
-  </style>
-</head>
-<body>
-
-  <!-- LOGO InviOne™ -->
-  <div style="text-align: center; margin-bottom: 20px;">
-    <img src="logo-invione.png" alt="Logo InviOne™" style="max-width: 150px;" />
-  </div>
-
-  <h1>Benvenuto su InviOne™</h1>
-  <p>Invia immagini e video visibili solo dal dispositivo di destinazione. Zero inoltri. Privacy totale.</p>
-
-  <div class="upload-zone">
-    <label for="fileInput">
-      <strong>Clicca qui o trascina file (immagini/video)</strong>
-    </label><br />
-    <input type="file" id="fileInput" accept="image/*,video/*" multiple />
-  </div>
-
-  <div id="previewContainer"></div>
-
-  <button id="submitBtn">Invia</button>
-
 </body>
 </html>

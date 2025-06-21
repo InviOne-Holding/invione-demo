@@ -51,6 +51,17 @@
       opacity: 0.9;
       z-index: 10000;
     }
+    #welcomeMsg {
+      font-size: 1.4em;
+      color: #00ff88;
+      margin-bottom: 20px;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { opacity: 0.3; }
+      50% { opacity: 1; }
+      100% { opacity: 0.3; }
+    }
   </style>
   <script defer>
     document.addEventListener("DOMContentLoaded", function () {
@@ -58,6 +69,7 @@
       const previewContainer = document.getElementById("previewContainer");
 
       fileInput.addEventListener("change", function () {
+        previewContainer.innerHTML = "";
         const files = Array.from(fileInput.files);
 
         files.forEach((file) => {
@@ -94,17 +106,12 @@
           };
           reader.readAsDataURL(file);
         });
-
-        // Reset del file input per permettere di aggiungere più file successivamente
-        fileInput.value = "";
       });
 
-      // Blocco click destro
       document.addEventListener("contextmenu", function (e) {
         e.preventDefault();
       });
 
-      // Oscuramento se cambio scheda
       window.addEventListener("blur", () => {
         document.body.style.opacity = "0";
       });
@@ -112,21 +119,20 @@
         document.body.style.opacity = "1";
       });
 
-      // Pulsante invio
       document.getElementById("submitBtn").addEventListener("click", function () {
         const uploadedFiles = document.querySelectorAll(".preview-card");
         if (uploadedFiles.length === 0) {
-          alert("⚠️ Nessun file selezionato.");
+          alert("\u26a0\ufe0f Nessun file selezionato.");
         } else {
-          alert("✅ Invio completato!");
-          // Da collegare in futuro al backend o IPFS
+          alert("\u2705 Invio completato!");
         }
       });
     });
   </script>
 </head>
 <body>
-  <h1>Benvenuto su InviOne™</h1>
+  <h2 id="welcomeMsg">Benvenuto su InviOne™: privacy ai massimi livelli</h2>
+  <h1>InviOne™ Upload Sicuro</h1>
   <div class="upload-zone">
     <label for="fileInput">
       <strong>Seleziona immagini o video da inviare</strong>
@@ -138,7 +144,6 @@
 
   <button id="submitBtn">Invia</button>
 
-  <!-- Logo del vermino -->
   <img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne™" />
 </body>
 </html>

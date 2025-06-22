@@ -1,64 +1,72 @@
-
 <!DOCTYPE html>
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <title>InviOne™ - Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InviOne™</title>
   <style>
     body {
       background-color: black;
       color: white;
-      font-family: sans-serif;
-      margin: 0;
+      font-family: Arial, sans-serif;
       text-align: center;
-      padding-top: 80px;
-    }
-    #denied {
-      display: none;
-      background-color: #111;
-      color: red;
       padding: 20px;
-      font-weight: bold;
     }
-    #granted {
-      display: none;
+    h1 {
       color: lime;
-      font-size: 24px;
-      font-weight: bold;
     }
-    #subtext {
-      color: violet;
-      margin-top: 10px;
+    .authorized {
+      color: #cc99ff;
+    }
+    #container {
+      display: none;
+      margin-top: 30px;
+    }
+    .hidden {
+      display: none;
     }
   </style>
 </head>
 <body>
-  <div id="granted">Benvenuto in InviOne™</div>
-  <div id="subtext">Accesso autorizzato ✔️</div>
-  <div id="denied">❌ Link non valido.</div>
+  <div id="auth"></div>
+  <div id="container">
+    <h2>Benvenuto nella piattaforma protetta</h2>
+    <input type="file" id="fileInput" multiple>
+    <div id="preview"></div>
+    <button onclick="uploadFiles()">Invia</button>
+  </div>
 
   <script>
-    const params = new URLSearchParams(window.location.search);
-    const dev = params.get("dev");
-    const id = params.get("id");
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const isDev = urlParams.get('dev') === 'on';
 
-    const granted = document.getElementById("granted");
-    const denied = document.getElementById("denied");
-    const subtext = document.getElementById("subtext");
+    const authDiv = document.getElementById('auth');
+    const container = document.getElementById('container');
 
-    if (dev === "on" || id === "demo") {
-      granted.style.display = "block";
-      subtext.style.display = "block";
-      denied.style.display = "none";
-
-      // Reindirizzamento automatico dopo 1.5 secondi
-      setTimeout(() => {
-        window.location.href = "InviOne_Site/index.html";
-      }, 1500);
+    if (isDev) {
+      authDiv.innerHTML = `<h1>Benvenuto in InviOne™</h1><p class="authorized">Accesso autorizzato ✔️</p>`;
+      container.style.display = 'block';
     } else {
-      denied.style.display = "block";
-      granted.style.display = "none";
-      subtext.style.display = "none";
+      authDiv.innerHTML = `<h3 style="color:red;">&#10060; Link non valido.</h3>`;
+    }
+
+    // Funzione anteprima file
+    const fileInput = document.getElementById('fileInput');
+    const previewDiv = document.getElementById('preview');
+
+    fileInput.addEventListener('change', () => {
+      previewDiv.innerHTML = '';
+      Array.from(fileInput.files).forEach(file => {
+        const p = document.createElement('p');
+        p.textContent = file.name;
+        previewDiv.appendChild(p);
+      });
+    });
+
+    // Funzione invio mock
+    function uploadFiles() {
+      alert('File inviati! (mock)');
     }
   </script>
 </body>

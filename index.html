@@ -1,4 +1,3 @@
-<!-- InviOne™ v1.0.0 -->
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -17,7 +16,7 @@
   </style>
 </head>
 <body>
-  <div id="accessDenied" style="display:none; padding:20px; color:red; background:#111; font-weight:bold;">❌ Link non valido.</div>
+  <div id="accessDenied" style="display:none; padding:20px; color:red; background:#111; font-weight:bold;">🔒 Accesso negato. Questo link è riservato ad un solo dispositivo.</div>
 
   <div id="mainContent" style="display:none">
     <h1>Benvenuto su InviOne™</h1>
@@ -43,19 +42,22 @@
     document.addEventListener("DOMContentLoaded", () => {
       const params = new URLSearchParams(window.location.search);
       const sessionId = params.get("id");
+      const devMode = params.get("dev") === "on";
       const fingerprint = generateFingerprint();
 
       const saved = localStorage.getItem("invione_" + sessionId);
       const main = document.getElementById("mainContent");
       const denied = document.getElementById("accessDenied");
 
-      if (!sessionId) {
+      if (!sessionId && !devMode) {
         denied.textContent = "❌ Link non valido.";
         denied.style.display = "block";
         return;
       }
 
-      if (!saved) {
+      if (devMode) {
+        main.style.display = "block";
+      } else if (!saved) {
         localStorage.setItem("invione_" + sessionId, fingerprint);
         main.style.display = "block";
       } else if (saved === fingerprint) {

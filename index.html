@@ -1,56 +1,64 @@
+
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>InviOne™ - Demo</title>
-
-  <!-- Redirect automatico per admin -->
-  <script>
-    const isAdmin = true; // imposta su false per disattivare il redirect
-    const url = new URL(window.location.href);
-    const isDev = url.searchParams.get('dev');
-    if (isAdmin && !isDev) {
-      url.searchParams.set('dev', 'on');
-      window.location.replace(url.toString());
-    }
-  </script>
-
   <style>
     body {
       background-color: black;
-      margin: 0;
-      font-family: sans-serif;
       color: white;
+      font-family: sans-serif;
+      margin: 0;
+      text-align: center;
+      padding-top: 80px;
     }
-
     #denied {
       display: none;
       background-color: #111;
       color: red;
       padding: 20px;
       font-weight: bold;
-      text-align: center;
+    }
+    #granted {
+      display: none;
+      color: lime;
+      font-size: 24px;
+      font-weight: bold;
+    }
+    #subtext {
+      color: violet;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
+  <div id="granted">Benvenuto in InviOne™</div>
+  <div id="subtext">Accesso autorizzato ✔️</div>
   <div id="denied">❌ Link non valido.</div>
 
   <script>
-    // Controllo parametri URL: deve contenere ?id= o ?dev=on
     const params = new URLSearchParams(window.location.search);
-    const id = params.get('id');
-    const dev = params.get('dev');
+    const dev = params.get("dev");
+    const id = params.get("id");
 
-    if (!id && dev !== 'on') {
-      document.getElementById('denied').style.display = 'block';
-      document.body.style.backgroundColor = 'black';
+    const granted = document.getElementById("granted");
+    const denied = document.getElementById("denied");
+    const subtext = document.getElementById("subtext");
+
+    if (dev === "on" || id === "demo") {
+      granted.style.display = "block";
+      subtext.style.display = "block";
+      denied.style.display = "none";
+
+      // Reindirizzamento automatico dopo 1.5 secondi
+      setTimeout(() => {
+        window.location.href = "InviOne_Site/index.html";
+      }, 1500);
     } else {
-      // Qui inserisci il contenuto effettivo del sito
-      document.write(`
-        <h1 style="color: lime; text-align: center; margin-top: 50px;">Benvenuto in InviOne™</h1>
-        <p style="text-align: center;">Accesso autorizzato ✔️</p>
-      `);
+      denied.style.display = "block";
+      granted.style.display = "none";
+      subtext.style.display = "none";
     }
   </script>
 </body>

@@ -47,42 +47,39 @@
       position: fixed;
       bottom: 20px;
       right: 20px;
-      width: 110px; /* Ingrandito */
+      width: 100px;
       opacity: 0.9;
       z-index: 10000;
     }
     #disclaimer {
-      color: #ffc107; /* Giallo-arancio */
-      font-size: 16px;
-      font-weight: bold;
+      color: yellow;
+      font-size: 14px;
       margin-top: 20px;
-    }
-    #overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 100vh;
-      width: 100vw;
-      background-color: rgba(0, 0, 0, 0.85);
-      color: #ff4c4c;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      font-weight: bold;
-      z-index: 9999;
-      display: none;
     }
   </style>
   <script defer>
     document.addEventListener("DOMContentLoaded", function () {
       const fileInput = document.getElementById("fileInput");
       const previewContainer = document.getElementById("previewContainer");
-      const overlay = document.getElementById("overlay");
+
+      // Blocco screenshot: oscura se cambia scheda
+      window.addEventListener("blur", () => {
+        document.body.style.opacity = "0";
+      });
+      window.addEventListener("focus", () => {
+        document.body.style.opacity = "1";
+      });
+
+      // Blocco click destro
+      document.addEventListener("contextmenu", (e) => e.preventDefault());
+
+      // Identificatore dispositivo (simulato fingerprinting)
+      const deviceId = btoa(navigator.userAgent + navigator.language + screen.width);
+      console.log("[FIRMA DISPOSITIVO]", deviceId);
+      localStorage.setItem("invioneDeviceId", deviceId);
 
       fileInput.addEventListener("change", function () {
         const files = Array.from(fileInput.files);
-
         files.forEach((file) => {
           const reader = new FileReader();
           reader.onload = function (e) {
@@ -92,7 +89,6 @@
             if (file.type.startsWith("image")) {
               const img = document.createElement("img");
               img.src = e.target.result;
-              img.alt = "Anteprima immagine";
               img.style.maxWidth = "100%";
               previewCard.appendChild(img);
             } else if (file.type.startsWith("video")) {
@@ -117,32 +113,25 @@
           };
           reader.readAsDataURL(file);
         });
-
         fileInput.value = "";
       });
 
-      // Blocco click destro
-      document.addEventListener("contextmenu", function (e) {
-        e.preventDefault();
-      });
-
-      // Overlay se cambio scheda
-      window.addEventListener("blur", () => {
-        overlay.style.display = "flex";
-      });
-      window.addEventListener("focus", () => {
-        overlay.style.display = "none";
-      });
-
-      // Pulsante invio
       document.getElementById("submitBtn").addEventListener("click", function () {
         const uploadedFiles = document.querySelectorAll(".preview-card");
         if (uploadedFiles.length === 0) {
           alert("⚠️ Nessun file selezionato.");
         } else {
-          alert("✅ Invio completato!");
+          alert("✅ Invio completato!\nContenuto vincolato a questo dispositivo.");
+          localStorage.setItem("accessAuthorized", "true");
         }
       });
+
+      // Verifica accesso
+      const allowed = localStorage.getItem("accessAuthorized") === "true";
+      if (!allowed) {
+        alert("Accesso negato. Il contenuto è riservato al dispositivo originario.");
+        document.body.innerHTML = "<h2 style='color:red;'>🔒 Accesso non autorizzato</h2>";
+      }
     });
   </script>
 </head>
@@ -156,17 +145,10 @@
   </div>
 
   <div id="previewContainer"></div>
-
   <button id="submitBtn">Invia</button>
-
   <div id="disclaimer">
-    ⚠️ L’utente può ancora scattare foto dello schermo con dispositivi esterni. InviOne™ adotta tutte le misure possibili, ma non si assume responsabilità in caso di violazioni.
+    ⚠️ Gli utenti possono comunque registrare lo schermo con dispositivi esterni. InviOne™ adotta tutte le misure possibili ma non si assume responsabilità per violazioni tramite strumenti esterni o software avanzati.
   </div>
-
-  <!-- Overlay anti-screen -->
-  <div id="overlay">🔒 Schermata protetta</div>
-
-  <!-- Logo -->
   <img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne™" />
 </body>
 </html>

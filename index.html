@@ -1,3 +1,4 @@
+<!-- InviOne™ v1.0.0 -->
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -16,7 +17,7 @@
   </style>
 </head>
 <body>
-  <div id="accessDenied" style="display:none; padding:20px; color:red; background:#111; font-weight:bold;">🔒 Accesso negato. Questo link è riservato ad un solo dispositivo.</div>
+  <div id="accessDenied" style="display:none; padding:20px; color:red; background:#111; font-weight:bold;">❌ Link non valido.</div>
 
   <div id="mainContent" style="display:none">
     <h1>Benvenuto su InviOne™</h1>
@@ -35,7 +36,6 @@
   <div id="overlay">🔒 Schermata protetta</div>
 
   <script>
-    // Funzione di fingerprint semplificata
     function generateFingerprint() {
       return navigator.userAgent + navigator.language + screen.width + screen.height;
     }
@@ -64,7 +64,6 @@
         denied.style.display = "block";
       }
 
-      // Upload preview
       const fileInput = document.getElementById("fileInput");
       const previewContainer = document.getElementById("previewContainer");
       const overlay = document.getElementById("overlay");

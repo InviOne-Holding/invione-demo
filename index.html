@@ -1,9 +1,10 @@
+<!-- InviOne: Versione estesa con protezione iniziale verso backend -->
 <!DOCTYPE html>
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>InviOne™ Upload Sicuro</title>
+  <title>InviOne™ Accesso Sicuro</title>
   <style>
     body {
       background: #111;
@@ -12,161 +13,54 @@
       text-align: center;
       padding: 20px;
     }
-    .upload-zone {
-      border: 2px dashed #888;
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-    .preview-card {
-      background: #222;
-      padding: 10px;
-      margin: 10px;
-      display: inline-block;
-      max-width: 300px;
-      vertical-align: top;
-    }
-    .remove-button {
-      background: crimson;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      margin-top: 10px;
-      cursor: pointer;
-    }
-    #submitBtn {
-      background: #16a34a;
-      color: white;
-      font-weight: bold;
-      padding: 10px 20px;
-      border: none;
-      margin-top: 20px;
-      position: sticky;
-      bottom: 10px;
-    }
-    #logo-fixed {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 110px; /* Ingrandito */
-      opacity: 0.9;
-      z-index: 10000;
-    }
-    #disclaimer {
-      color: #ffc107; /* Giallo-arancio */
-      font-size: 16px;
-      font-weight: bold;
-      margin-top: 20px;
-    }
-    #overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 100vh;
-      width: 100vw;
-      background-color: rgba(0, 0, 0, 0.85);
-      color: #ff4c4c;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      font-weight: bold;
-      z-index: 9999;
+    .hidden {
       display: none;
     }
+    #accessDenied {
+      background: #2c2c2c;
+      padding: 20px;
+      border-radius: 8px;
+      margin-top: 50px;
+      color: #ff4c4c;
+      font-weight: bold;
+      font-size: 18px;
+    }
   </style>
-  <script defer>
-    document.addEventListener("DOMContentLoaded", function () {
-      const fileInput = document.getElementById("fileInput");
-      const previewContainer = document.getElementById("previewContainer");
-      const overlay = document.getElementById("overlay");
-
-      fileInput.addEventListener("change", function () {
-        const files = Array.from(fileInput.files);
-
-        files.forEach((file) => {
-          const reader = new FileReader();
-          reader.onload = function (e) {
-            const previewCard = document.createElement("div");
-            previewCard.className = "preview-card";
-
-            if (file.type.startsWith("image")) {
-              const img = document.createElement("img");
-              img.src = e.target.result;
-              img.alt = "Anteprima immagine";
-              img.style.maxWidth = "100%";
-              previewCard.appendChild(img);
-            } else if (file.type.startsWith("video")) {
-              const video = document.createElement("video");
-              video.src = e.target.result;
-              video.controls = true;
-              video.style.maxWidth = "100%";
-              previewCard.appendChild(video);
-            } else {
-              const txt = document.createElement("p");
-              txt.textContent = file.name;
-              previewCard.appendChild(txt);
-            }
-
-            const removeBtn = document.createElement("button");
-            removeBtn.textContent = "Rimuovi";
-            removeBtn.className = "remove-button";
-            removeBtn.onclick = () => previewCard.remove();
-
-            previewCard.appendChild(removeBtn);
-            previewContainer.appendChild(previewCard);
-          };
-          reader.readAsDataURL(file);
-        });
-
-        fileInput.value = "";
-      });
-
-      // Blocco click destro
-      document.addEventListener("contextmenu", function (e) {
-        e.preventDefault();
-      });
-
-      // Overlay se cambio scheda
-      window.addEventListener("blur", () => {
-        overlay.style.display = "flex";
-      });
-      window.addEventListener("focus", () => {
-        overlay.style.display = "none";
-      });
-
-      // Pulsante invio
-      document.getElementById("submitBtn").addEventListener("click", function () {
-        const uploadedFiles = document.querySelectorAll(".preview-card");
-        if (uploadedFiles.length === 0) {
-          alert("⚠️ Nessun file selezionato.");
-        } else {
-          alert("✅ Invio completato!");
-        }
-      });
-    });
-  </script>
 </head>
 <body>
-  <h1>Benvenuto su InviOne™</h1>
-  <div class="upload-zone">
-    <label for="fileInput">
-      <strong>Seleziona immagini o video da inviare</strong>
-    </label><br />
-    <input type="file" id="fileInput" accept="image/*,video/*" multiple />
+  <div id="welcome" class="hidden">
+    <h1>Benvenuto su InviOne™</h1>
+    <p>Accesso autorizzato.</p>
+    <!-- Qui verrà caricato il contenuto protetto -->
   </div>
 
-  <div id="previewContainer"></div>
-
-  <button id="submitBtn">Invia</button>
-
-  <div id="disclaimer">
-    ⚠️ L’utente può ancora scattare foto dello schermo con dispositivi esterni. InviOne™ adotta tutte le misure possibili, ma non si assume responsabilità in caso di violazioni.
+  <div id="accessDenied">
+    <p>🔒 Accesso negato. Questo link è riservato ad un solo dispositivo.</p>
   </div>
 
-  <!-- Overlay anti-screen -->
-  <div id="overlay">🔒 Schermata protetta</div>
+  <script>
+    // Simulazione fingerprint del device (da sostituire con fingerprintJS e backend reale)
+    function getDeviceFingerprint() {
+      const ua = navigator.userAgent;
+      const lang = navigator.language;
+      const resolution = screen.width + "x" + screen.height;
+      return btoa(ua + lang + resolution); // fingerprint semplice
+    }
 
-  <!-- Logo -->
-  <img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne™" />
+    const deviceId = getDeviceFingerprint();
+    const linkId = 'demo-invio-01';
+
+    fetch(`https://tuo-backend-fittizio.com/check-access?link=${linkId}&device=${deviceId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.authorized) {
+          document.getElementById("accessDenied").classList.add("hidden");
+          document.getElementById("welcome").classList.remove("hidden");
+        }
+      })
+      .catch(() => {
+        // fallback: se il server non risponde, neghiamo l'accesso
+      });
+  </script>
 </body>
 </html>

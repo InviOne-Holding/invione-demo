@@ -3,193 +3,113 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>InviOne™ Upload Sicuro</title>
+  <title>InviOne™</title>
   <style>
-    body {
-      background: #111;
-      color: #fff;
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 20px;
-    }
-    .upload-zone {
-      border: 2px dashed #888;
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-    .preview-card {
-      background: #222;
-      padding: 10px;
-      margin: 10px;
-      display: inline-block;
-      max-width: 300px;
-      vertical-align: top;
-    }
-    .remove-button {
-      background: crimson;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      margin-top: 10px;
-      cursor: pointer;
-    }
-    #submitBtn {
-      background: #16a34a;
-      color: white;
-      font-weight: bold;
-      padding: 10px 20px;
-      border: none;
-      margin-top: 20px;
-      position: sticky;
-      bottom: 10px;
-    }
-    #logo-fixed {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 110px;
-      opacity: 0.9;
-      z-index: 10000;
-    }
-    #disclaimer {
-      color: #ffc107;
-      font-size: 16px;
-      font-weight: bold;
-      margin-top: 20px;
-    }
-    #overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 100vh;
-      width: 100vw;
-      background-color: rgba(0, 0, 0, 0.85);
-      color: #ff4c4c;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      font-weight: bold;
-      z-index: 9999;
-      display: none;
-    }
-    #block-message {
-      color: red;
-      font-size: 18px;
-      font-weight: bold;
-      padding: 20px;
-      background: #222;
-      margin-top: 50px;
-    }
+    body { background: #000; color: #fff; font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+    .upload-zone { border: 2px dashed #888; padding: 20px; margin-bottom: 20px; }
+    .preview-card { background: #111; padding: 10px; margin: 10px; display: inline-block; max-width: 300px; vertical-align: top; }
+    .remove-button { background: crimson; color: white; border: none; padding: 5px 10px; margin-top: 10px; cursor: pointer; }
+    #submitBtn { background: #16a34a; color: white; font-weight: bold; padding: 10px 20px; border: none; margin-top: 20px; }
+    #logo-fixed { position: fixed; bottom: 20px; right: 20px; width: 100px; opacity: 0.9; z-index: 10000; }
+    #disclaimer { color: #ffc107; font-size: 16px; font-weight: bold; margin-top: 20px; }
+    #overlay { position: fixed; top: 0; left: 0; height: 100vh; width: 100vw; background-color: rgba(0, 0, 0, 0.85); color: #ff4c4c; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; z-index: 9999; display: none; }
   </style>
-  <script defer>
-    async function generateFingerprint() {
-      const userAgent = navigator.userAgent;
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      ctx.textBaseline = 'top';
-      ctx.font = '14px Arial';
-      ctx.fillText(userAgent, 2, 2);
-      return btoa(canvas.toDataURL());
+</head>
+<body>
+  <div id="accessDenied" style="display:none; padding:20px; color:red; background:#111; font-weight:bold;">🔒 Accesso negato. Questo link è riservato ad un solo dispositivo.</div>
+
+  <div id="mainContent" style="display:none">
+    <h1>Benvenuto su InviOne™</h1>
+    <div class="upload-zone">
+      <label for="fileInput"><strong>Seleziona immagini o video da inviare</strong></label><br />
+      <input type="file" id="fileInput" accept="image/*,video/*" multiple />
+    </div>
+    <div id="previewContainer"></div>
+    <button id="submitBtn">Invia</button>
+    <div id="disclaimer">
+      ⚠️ L’utente può ancora scattare foto dello schermo con dispositivi esterni. InviOne™ adotta tutte le misure possibili, ma non si assume responsabilità in caso di violazioni.
+    </div>
+    <img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne™" />
+  </div>
+
+  <div id="overlay">🔒 Schermata protetta</div>
+
+  <script>
+    // Funzione di fingerprint semplificata
+    function generateFingerprint() {
+      return navigator.userAgent + navigator.language + screen.width + screen.height;
     }
 
-    document.addEventListener("DOMContentLoaded", async function () {
-      const overlay = document.getElementById("overlay");
-      const fileInput = document.getElementById("fileInput");
-      const previewContainer = document.getElementById("previewContainer");
-      const submitBtn = document.getElementById("submitBtn");
-      const storedFingerprint = localStorage.getItem("invione_fingerprint");
-      const currentFingerprint = await generateFingerprint();
+    document.addEventListener("DOMContentLoaded", () => {
+      const params = new URLSearchParams(window.location.search);
+      const sessionId = params.get("id");
+      const fingerprint = generateFingerprint();
 
-      // Blocco se fingerprint non coincide
-      if (storedFingerprint && storedFingerprint !== currentFingerprint) {
-        document.body.innerHTML = '<div id="block-message">\ud83d\udd12 Accesso negato. Questo link è riservato ad un solo dispositivo.</div>';
+      const saved = localStorage.getItem("invione_" + sessionId);
+      const main = document.getElementById("mainContent");
+      const denied = document.getElementById("accessDenied");
+
+      if (!sessionId) {
+        denied.textContent = "❌ Link non valido.";
+        denied.style.display = "block";
         return;
       }
 
-      // Salvo fingerprint se non esiste
-      if (!storedFingerprint) {
-        localStorage.setItem("invione_fingerprint", currentFingerprint);
+      if (!saved) {
+        localStorage.setItem("invione_" + sessionId, fingerprint);
+        main.style.display = "block";
+      } else if (saved === fingerprint) {
+        main.style.display = "block";
+      } else {
+        denied.style.display = "block";
       }
+
+      // Upload preview
+      const fileInput = document.getElementById("fileInput");
+      const previewContainer = document.getElementById("previewContainer");
+      const overlay = document.getElementById("overlay");
 
       fileInput.addEventListener("change", function () {
         const files = Array.from(fileInput.files);
         files.forEach((file) => {
           const reader = new FileReader();
           reader.onload = function (e) {
-            const previewCard = document.createElement("div");
-            previewCard.className = "preview-card";
-
+            const card = document.createElement("div");
+            card.className = "preview-card";
             if (file.type.startsWith("image")) {
               const img = document.createElement("img");
               img.src = e.target.result;
-              img.alt = "Anteprima immagine";
               img.style.maxWidth = "100%";
-              previewCard.appendChild(img);
+              card.appendChild(img);
             } else if (file.type.startsWith("video")) {
-              const video = document.createElement("video");
-              video.src = e.target.result;
-              video.controls = true;
-              video.style.maxWidth = "100%";
-              previewCard.appendChild(video);
-            } else {
-              const txt = document.createElement("p");
-              txt.textContent = file.name;
-              previewCard.appendChild(txt);
+              const vid = document.createElement("video");
+              vid.src = e.target.result;
+              vid.controls = true;
+              vid.style.maxWidth = "100%";
+              card.appendChild(vid);
             }
-
-            const removeBtn = document.createElement("button");
-            removeBtn.textContent = "Rimuovi";
-            removeBtn.className = "remove-button";
-            removeBtn.onclick = () => previewCard.remove();
-            previewCard.appendChild(removeBtn);
-            previewContainer.appendChild(previewCard);
+            const btn = document.createElement("button");
+            btn.textContent = "Rimuovi";
+            btn.className = "remove-button";
+            btn.onclick = () => card.remove();
+            card.appendChild(btn);
+            previewContainer.appendChild(card);
           };
           reader.readAsDataURL(file);
         });
         fileInput.value = "";
       });
 
-      document.addEventListener("contextmenu", function (e) {
-        e.preventDefault();
-      });
+      document.addEventListener("contextmenu", e => e.preventDefault());
+      window.addEventListener("blur", () => overlay.style.display = "flex");
+      window.addEventListener("focus", () => overlay.style.display = "none");
 
-      window.addEventListener("blur", () => {
-        overlay.style.display = "flex";
-      });
-      window.addEventListener("focus", () => {
-        overlay.style.display = "none";
-      });
-
-      submitBtn.addEventListener("click", function () {
-        const uploadedFiles = document.querySelectorAll(".preview-card");
-        if (uploadedFiles.length === 0) {
-          alert("\u26a0\ufe0f Nessun file selezionato.");
-        } else {
-          alert("\u2705 Invio completato!");
-        }
+      document.getElementById("submitBtn").addEventListener("click", () => {
+        const uploaded = document.querySelectorAll(".preview-card");
+        if (uploaded.length === 0) alert("⚠️ Nessun file selezionato.");
+        else alert("✅ Invio completato!");
       });
     });
   </script>
-</head>
-<body>
-  <h1>Benvenuto su InviOne™</h1>
-  <div class="upload-zone">
-    <label for="fileInput">
-      <strong>Seleziona immagini o video da inviare</strong>
-    </label><br />
-    <input type="file" id="fileInput" accept="image/*,video/*" multiple />
-  </div>
-
-  <div id="previewContainer"></div>
-
-  <button id="submitBtn">Invia</button>
-
-  <div id="disclaimer">
-    ⚠️ L’utente può ancora scattare foto dello schermo con dispositivi esterni. InviOne™ adotta tutte le misure possibili, ma non si assume responsabilità in caso di violazioni.
-  </div>
-
-  <div id="overlay">🔒 Schermata protetta</div>
-  <img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne™" />
 </body>
 </html>

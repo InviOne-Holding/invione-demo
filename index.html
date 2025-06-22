@@ -24,6 +24,9 @@
       <label for="fileInput"><strong>Seleziona immagini o video da inviare</strong></label><br />
       <input type="file" id="fileInput" accept="image/*,video/*" multiple />
     </div>
+    <label><input type="radio" name="scadenza" value="sempre" checked /> Sempre visibile</label>
+    <label><input type="radio" name="scadenza" value="1h" /> Solo per 1 ora</label>
+    <label><input type="radio" name="scadenza" value="24h" /> Solo per 24 ore</label>
     <div id="previewContainer"></div>
     <button id="submitBtn">Invia</button>
     <div id="disclaimer">
@@ -35,23 +38,39 @@
   <div id="overlay">🔒 Schermata protetta</div>
 
   <script>
-    // Funzione di fingerprint semplificata
     function generateFingerprint() {
       return navigator.userAgent + navigator.language + screen.width + screen.height;
     }
 
+    function getExpiryTimestamp(option) {
+      const now = Date.now();
+      switch (option) {
+        case '1h': return now + 60 * 60 * 1000;
+        case '24h': return now + 24 * 60 * 60 * 1000;
+        default: return null;
+      }
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
       const params = new URLSearchParams(window.location.search);
-      const sessionId = params.get("id") || "admin123";
-
+      const sessionId = params.get("id");
       const fingerprint = generateFingerprint();
 
       const saved = localStorage.getItem("invione_" + sessionId);
+      const expiry = localStorage.getItem("invione_expiry_" + sessionId);
+      const now = Date.now();
+
       const main = document.getElementById("mainContent");
       const denied = document.getElementById("accessDenied");
 
       if (!sessionId) {
         denied.textContent = "❌ Link non valido.";
+        denied.style.display = "block";
+        return;
+      }
+
+      if (expiry && now > parseInt(expiry)) {
+        denied.textContent = "⏳ Link scaduto.";
         denied.style.display = "block";
         return;
       }
@@ -65,7 +84,6 @@
         denied.style.display = "block";
       }
 
-      // Upload preview
       const fileInput = document.getElementById("fileInput");
       const previewContainer = document.getElementById("previewContainer");
       const overlay = document.getElementById("overlay");
@@ -107,12 +125,20 @@
 
       document.getElementById("submitBtn").addEventListener("click", () => {
         const uploaded = document.querySelectorAll(".preview-card");
-        if (uploaded.length === 0) alert("⚠️ Nessun file selezionato.");
-        else alert("✅ Invio completato!");
+        if (uploaded.length === 0) {
+          alert("⚠️ Nessun file selezionato.");
+        } else {
+          const scadenza = document.querySelector('input[name="scadenza"]:checked').value;
+          const expiryTimestamp = getExpiryTimestamp(scadenza);
+          if (expiryTimestamp) {
+            localStorage.setItem("invione_expiry_" + sessionId, expiryTimestamp);
+          } else {
+            localStorage.removeItem("invione_expiry_" + sessionId);
+          }
+          alert("✅ Invio completato!");
+        }
       });
     });
   </script>
 </body>
 </html>
-
-

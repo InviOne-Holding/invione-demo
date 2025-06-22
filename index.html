@@ -1,115 +1,82 @@
+<!-- InviOne™ Upload & Link Generator v1 (base IPFS integration) -->
 <!DOCTYPE html>
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>InviOne™</title>
+  <title>InviOne™ - Upload Protetto</title>
   <style>
-    body { background: #000; color: #fff; font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-    .upload-zone { border: 2px dashed #888; padding: 20px; margin-bottom: 20px; }
-    .preview-card { background: #111; padding: 10px; margin: 10px; display: inline-block; max-width: 300px; vertical-align: top; }
-    .remove-button { background: crimson; color: white; border: none; padding: 5px 10px; margin-top: 10px; cursor: pointer; }
-    #submitBtn { background: #16a34a; color: white; font-weight: bold; padding: 10px 20px; border: none; margin-top: 20px; }
-    #logo-fixed { position: fixed; bottom: 20px; right: 20px; width: 100px; opacity: 0.9; z-index: 10000; }
-    #disclaimer { color: #ffc107; font-size: 16px; font-weight: bold; margin-top: 20px; }
-    #overlay { position: fixed; top: 0; left: 0; height: 100vh; width: 100vw; background-color: rgba(0, 0, 0, 0.85); color: #ff4c4c; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; z-index: 9999; display: none; }
+    body {
+      background-color: #111;
+      color: #f0f0f0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    input[type="file"] {
+      margin-bottom: 1rem;
+    }
+    button {
+      background-color: #00b894;
+      color: white;
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #linkOutput {
+      margin-top: 2rem;
+      background: #222;
+      padding: 1rem;
+      border-radius: 5px;
+      color: #0f0;
+    }
   </style>
 </head>
 <body>
-  <div id="accessDenied" style="display:none; padding:20px; color:red; background:#111; font-weight:bold;">🔒 Accesso negato. Questo link è riservato ad un solo dispositivo.</div>
+  <h1>InviOne™</h1>
+  <p>Carica immagini o video da inviare con link unico</p>
+  <input type="file" id="fileInput" multiple accept="image/*,video/*" />
+  <button onclick="uploadToIPFS()">📤 Carica e genera link</button>
 
-  <div id="mainContent" style="display:none">
-    <h1>Benvenuto su InviOne™</h1>
-    <div class="upload-zone">
-      <label for="fileInput"><strong>Seleziona immagini o video da inviare</strong></label><br />
-      <input type="file" id="fileInput" accept="image/*,video/*" multiple />
-    </div>
-    <div id="previewContainer"></div>
-    <button id="submitBtn">Invia</button>
-    <div id="disclaimer">
-      ⚠️ L’utente può ancora scattare foto dello schermo con dispositivi esterni. InviOne™ adotta tutte le misure possibili, ma non si assume responsabilità in caso di violazioni.
-    </div>
-    <img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne™" />
-  </div>
+  <div id="linkOutput"></div>
 
-  <div id="overlay">🔒 Schermata protetta</div>
-
+  <script src="https://unpkg.com/ipfs-http-client/dist/index.min.js"></script>
   <script>
-    // Funzione di fingerprint semplificata
-    function generateFingerprint() {
-      return navigator.userAgent + navigator.language + screen.width + screen.height;
+    const ipfs = window.IpfsHttpClient.create({
+      url: 'https://ipfs.io'
+    });
+
+    async function uploadToIPFS() {
+      const files = document.getElementById('fileInput').files;
+      if (!files.length) return alert("Nessun file selezionato");
+
+      const addedFiles = [];
+      for (const file of files) {
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+          const content = reader.result;
+          const buffer = new Uint8Array(content);
+          const result = await ipfs.add(buffer);
+          addedFiles.push(`https://ipfs.io/ipfs/${result.path}`);
+
+          if (addedFiles.length === files.length) {
+            showLinks(addedFiles);
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      }
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
-      const params = new URLSearchParams(window.location.search);
-      const sessionId = params.get("id");
-      const fingerprint = generateFingerprint();
-
-      const saved = localStorage.getItem("invione_" + sessionId);
-      const main = document.getElementById("mainContent");
-      const denied = document.getElementById("accessDenied");
-
-      if (!sessionId) {
-        denied.textContent = "❌ Link non valido.";
-        denied.style.display = "block";
-        return;
-      }
-
-      if (!saved) {
-        localStorage.setItem("invione_" + sessionId, fingerprint);
-        main.style.display = "block";
-      } else if (saved === fingerprint) {
-        main.style.display = "block";
-      } else {
-        denied.style.display = "block";
-      }
-
-      // Upload preview
-      const fileInput = document.getElementById("fileInput");
-      const previewContainer = document.getElementById("previewContainer");
-      const overlay = document.getElementById("overlay");
-
-      fileInput.addEventListener("change", function () {
-        const files = Array.from(fileInput.files);
-        files.forEach((file) => {
-          const reader = new FileReader();
-          reader.onload = function (e) {
-            const card = document.createElement("div");
-            card.className = "preview-card";
-            if (file.type.startsWith("image")) {
-              const img = document.createElement("img");
-              img.src = e.target.result;
-              img.style.maxWidth = "100%";
-              card.appendChild(img);
-            } else if (file.type.startsWith("video")) {
-              const vid = document.createElement("video");
-              vid.src = e.target.result;
-              vid.controls = true;
-              vid.style.maxWidth = "100%";
-              card.appendChild(vid);
-            }
-            const btn = document.createElement("button");
-            btn.textContent = "Rimuovi";
-            btn.className = "remove-button";
-            btn.onclick = () => card.remove();
-            card.appendChild(btn);
-            previewContainer.appendChild(card);
-          };
-          reader.readAsDataURL(file);
-        });
-        fileInput.value = "";
-      });
-
-      document.addEventListener("contextmenu", e => e.preventDefault());
-      window.addEventListener("blur", () => overlay.style.display = "flex");
-      window.addEventListener("focus", () => overlay.style.display = "none");
-
-      document.getElementById("submitBtn").addEventListener("click", () => {
-        const uploaded = document.querySelectorAll(".preview-card");
-        if (uploaded.length === 0) alert("⚠️ Nessun file selezionato.");
-        else alert("✅ Invio completato!");
-      });
-    });
+    function showLinks(links) {
+      const output = document.getElementById("linkOutput");
+      output.innerHTML = `<h3>📎 Link generati:</h3>` +
+        links.map(l => `<p><a href="${l}" target="_blank">${l}</a></p>`).join('');
+    }
   </script>
 </body>
 </html>

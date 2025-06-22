@@ -1,111 +1,72 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <title>InviOne™ - Upload Sicuro</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InviOne™ - Link Demo</title>
   <style>
     body {
       background-color: #111;
       color: #fff;
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', sans-serif;
       text-align: center;
-      margin-top: 10vh;
+      padding: 40px;
     }
-    #upload-container {
-      margin: 20px auto;
+    h1 {
+      font-size: 2rem;
+      color: #0ff;
     }
-    #fileInput {
-      margin: 10px;
+    .box {
+      background: #222;
+      border-radius: 10px;
+      padding: 20px;
+      display: inline-block;
+      box-shadow: 0 0 10px rgba(0,0,0,0.4);
     }
-    #uploadBtn {
-      background-color: #02d394;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      cursor: pointer;
-      font-weight: bold;
-      border-radius: 5px;
-    }
-    #preview {
+    .img-preview {
+      max-width: 100%;
       margin-top: 20px;
+      border: 4px solid #0ff;
+      border-radius: 10px;
     }
-    #preview img, #preview video {
-      max-width: 300px;
-      margin: 10px auto;
-      display: block;
+    .disclaimer {
+      margin-top: 25px;
+      font-size: 0.85rem;
+      color: #f2b90c;
     }
-    #logo {
+    .logo-fixed {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      opacity: 0.9;
       width: 100px;
-      margin-bottom: 20px;
     }
-    #disclaimer {
-      color: orange;
-      font-size: 0.9rem;
-      margin-top: 50px;
-      max-width: 600px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-    #screen-warning {
+    .protected-overlay::after {
+      content: "Schermata protetta";
       color: red;
-      margin-top: 30px;
+      display: block;
+      margin-top: 15px;
+    }
+    .btn-copy {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #0ff;
+      border: none;
+      color: #000;
       font-weight: bold;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <img id="logo" src="logo.svg" alt="InviOne Logo">
-  <h2>InviOne™</h2>
-  <p>Carica immagini o video da inviare con link unico</p>
-
-  <div id="upload-container">
-    <input type="file" id="fileInput" multiple>
-    <button id="uploadBtn">📁 Carica e genera link</button>
+  <div class="box">
+    <h1>InviOne™ DEMO</h1>
+    <p>Contenuto inviato in forma protetta.</p>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/2/24/Red_Test.png" class="img-preview protected-overlay" alt="Contenuto inviato" />
+    <div class="disclaimer">
+      ⚠️ L'utente può ancora scattare foto dello schermo con dispositivi esterni. InviOne™ adotta tutte le misure possibili, ma non si assume responsabilità in caso di violazioni.
+    </div>
   </div>
-
-  <div id="preview"></div>
-
-  <div id="screen-warning">🔐 Schermata protetta
-  </div>
-
-  <div id="disclaimer">
-    ⚠️ L'utente può ancora scattare foto dello schermo con dispositivi esterni. InviOne™ adotta tutte le misure possibili, ma non si assume responsabilità in caso di violazioni.
-  </div>
-
-  <script>
-    // Blocca click destro
-    window.addEventListener("contextmenu", e => e.preventDefault());
-
-    // Blocca visibilità quando cambia scheda
-    document.addEventListener("visibilitychange", () => {
-      if (document.hidden) alert("❌ Blocco attivato per cambio scheda");
-    });
-
-    // Preview file
-    document.getElementById("fileInput").addEventListener("change", function(e) {
-      const preview = document.getElementById("preview");
-      preview.innerHTML = "";
-      Array.from(e.target.files).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = function(event) {
-          const result = event.target.result;
-          if (file.type.startsWith("image")) {
-            preview.innerHTML += `<img src="${result}" alt="preview">`;
-          } else if (file.type.startsWith("video")) {
-            preview.innerHTML += `<video src="${result}" controls></video>`;
-          }
-        };
-        reader.readAsDataURL(file);
-      });
-    });
-
-    // Placeholder per caricamento e link (mock)
-    document.getElementById("uploadBtn").addEventListener("click", () => {
-      alert("Caricamento in corso... (mock)");
-      setTimeout(() => {
-        prompt("Link generato:", "https://invi.one/view/abc123");
-      }, 1000);
-    });
-  </script>
+  <img src="https://upload.wikimedia.org/wikipedia/commons/f/f2/Seal_of_the_US_Department_of_Defense.svg" class="logo-fixed" alt="Logo InviOne" />
 </body>
 </html>

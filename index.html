@@ -24,9 +24,14 @@
       <label for="fileInput"><strong>Seleziona immagini o video da inviare</strong></label><br />
       <input type="file" id="fileInput" accept="image/*,video/*" multiple />
     </div>
-    <label><input type="radio" name="scadenza" value="sempre" checked /> Sempre visibile</label>
-    <label><input type="radio" name="scadenza" value="1h" /> Solo per 1 ora</label>
-    <label><input type="radio" name="scadenza" value="24h" /> Solo per 24 ore</label>
+
+    <div id="expirationOptions" style="margin-top: 20px; text-align: left; display: inline-block;">
+      <strong>Durata accesso:</strong><br>
+      <label><input type="radio" name="duration" value="always" checked> Per sempre</label><br>
+      <label><input type="radio" name="duration" value="1h"> Solo 1 ora</label><br>
+      <label><input type="radio" name="duration" value="24h"> Solo 24 ore</label>
+    </div>
+
     <div id="previewContainer"></div>
     <button id="submitBtn">Invia</button>
     <div id="disclaimer">
@@ -42,37 +47,26 @@
       return navigator.userAgent + navigator.language + screen.width + screen.height;
     }
 
-    function getExpiryTimestamp(option) {
-      const now = Date.now();
-      switch (option) {
-        case '1h': return now + 60 * 60 * 1000;
-        case '24h': return now + 24 * 60 * 60 * 1000;
-        default: return null;
-      }
-    }
-
     document.addEventListener("DOMContentLoaded", () => {
       const params = new URLSearchParams(window.location.search);
       const sessionId = params.get("id") || "admin123";
       const fingerprint = generateFingerprint();
-
       const saved = localStorage.getItem("invione_" + sessionId);
-      const expiry = localStorage.getItem("invione_expiry_" + sessionId);
-      const now = Date.now();
+      const expirationData = JSON.parse(localStorage.getItem("invione_expiration_" + sessionId) || "null");
 
       const main = document.getElementById("mainContent");
       const denied = document.getElementById("accessDenied");
 
-      if (!sessionId) {
-        denied.textContent = "❌ Link non valido.";
-        denied.style.display = "block";
-        return;
-      }
-
-      if (expiry && now > parseInt(expiry)) {
-        denied.textContent = "⏳ Link scaduto.";
-        denied.style.display = "block";
-        return;
+      // Validazione scadenza
+      if (expirationData && expirationData.duration !== "always") {
+        const now = Date.now();
+        const start = expirationData.start;
+        const diff = now - start;
+        if ((expirationData.duration === "1h" && diff > 3600000) || (expirationData.duration === "24h" && diff > 86400000)) {
+          denied.textContent = "⛔ Link scaduto.";
+          denied.style.display = "block";
+          return;
+        }
       }
 
       if (!saved) {
@@ -128,14 +122,12 @@
         if (uploaded.length === 0) {
           alert("⚠️ Nessun file selezionato.");
         } else {
-          const scadenza = document.querySelector('input[name="scadenza"]:checked').value;
-          const expiryTimestamp = getExpiryTimestamp(scadenza);
-          if (expiryTimestamp) {
-            localStorage.setItem("invione_expiry_" + sessionId, expiryTimestamp);
-          } else {
-            localStorage.removeItem("invione_expiry_" + sessionId);
-          }
-          alert("✅ Invio completato!");
+          const selected = document.querySelector('input[name="duration"]:checked').value;
+          localStorage.setItem("invione_expiration_" + sessionId, JSON.stringify({
+            duration: selected,
+            start: Date.now()
+          }));
+          alert("✅ Invio completato! Link generato.\n\n👉 Puoi ora copiare il link da URL e inviarlo.");
         }
       });
     });

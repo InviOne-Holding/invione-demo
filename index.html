@@ -1,10 +1,9 @@
-<!DOCTYPE html>
+!DOCTYPE html>
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>InviOne™</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
     body { background: #000; color: #fff; font-family: Arial, sans-serif; text-align: center; padding: 20px; }
     .upload-zone { border: 2px dashed #888; padding: 20px; margin-bottom: 20px; }
@@ -34,15 +33,6 @@
 <body>
   <div id="accessDenied" style="display:none; padding:20px; color:red; background:#111; font-weight:bold;">🔒 Accesso negato. Questo link è riservato ad un solo dispositivo.</div>
 
-  <div id="loginSection">
-    <h2>Login con Supabase</h2>
-    <input type="email" id="email" placeholder="Email" required><br>
-    <input type="password" id="password" placeholder="Password" required><br>
-    <button onclick="login()">Login</button>
-    <button onclick="signup()">Registrati</button>
-    <p id="authError" style="color: red;"></p>
-  </div>
-
   <div id="mainContent" style="display:none">
     <h1>Benvenuto su InviOne™</h1>
     <div class="upload-zone">
@@ -68,40 +58,42 @@
   <div id="overlay">🔒 Schermata protetta</div>
 
   <script>
-    const supabase = supabase.createClient("https://opsvjksjatksezmhygdz.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wc3Zqa3NqYXRrc2V6bWh5Z2R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MjIwMDUsImV4cCI6MjA2NjE5ODAwNX0.04AwPujY-uMEfjywnryX8Rf-U5HPfwc9F1-yTLBWIiw");
-
-    async function login() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        document.getElementById("authError").innerText = "Errore login: " + error.message;
-      } else {
-        document.getElementById("loginSection").style.display = "none";
-        document.getElementById("mainContent").style.display = "block";
-      }
-    }
-
-    async function signup() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      const { error } = await supabase.auth.signUp({ email, password });
-      if (error) {
-        document.getElementById("authError").innerText = "Errore registrazione: " + error.message;
-      } else {
-        alert("✅ Registrazione avvenuta. Controlla l'email per confermare.");
-      }
+    function generateFingerprint() {
+      return navigator.userAgent + navigator.language + screen.width + screen.height;
     }
 
     document.addEventListener("DOMContentLoaded", () => {
-      supabase.auth.getUser().then(({ data }) => {
-        if (data.user) {
-          document.getElementById("loginSection").style.display = "none";
-          document.getElementById("mainContent").style.display = "block";
-        }
-      });
+      const params = new URLSearchParams(window.location.search);
+      const sessionId = params.get("id") || "admin123";
+      const fingerprint = generateFingerprint();
+      const saved = localStorage.getItem("invione_" + sessionId);
+      const expirationData = JSON.parse(localStorage.getItem("invione_expiration_" + sessionId) || "null");
 
+      const main = document.getElementById("mainContent");
+      const denied = document.getElementById("accessDenied");
       const overlay = document.getElementById("overlay");
+
+      // Validazione scadenza
+      if (expirationData && expirationData.duration !== "always") {
+        const now = Date.now();
+        const start = expirationData.start;
+        const diff = now - start;
+        if ((expirationData.duration === "1h" && diff > 3600000) || (expirationData.duration === "24h" && diff > 86400000)) {
+          denied.textContent = "⛔ Link scaduto.";
+          denied.style.display = "block";
+          return;
+        }
+      }
+
+      if (!saved) {
+        localStorage.setItem("invione_" + sessionId, fingerprint);
+        main.style.display = "block";
+      } else if (saved === fingerprint) {
+        main.style.display = "block";
+      } else {
+        denied.style.display = "block";
+      }
+
       const fileInput = document.getElementById("fileInput");
       const previewContainer = document.getElementById("previewContainer");
 
@@ -146,6 +138,10 @@
           alert("⚠️ Nessun file selezionato.");
         } else {
           const selected = document.querySelector('input[name="duration"]:checked').value;
+          localStorage.setItem("invione_expiration_" + sessionId, JSON.stringify({
+            duration: selected,
+            start: Date.now()
+          }));
           alert("✅ Invio completato! Link generato.\n\n👉 Puoi ora copiare il link da URL e inviarlo.");
         }
       });

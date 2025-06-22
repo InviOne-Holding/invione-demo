@@ -11,6 +11,7 @@
       font-family: Arial, sans-serif;
       text-align: center;
       padding: 20px;
+      position: relative;
     }
     .upload-zone {
       border: 2px dashed #888;
@@ -51,31 +52,27 @@
       opacity: 0.9;
       z-index: 10000;
     }
-    .animated-welcome {
+    #overlay-block {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      color: #fff;
       font-size: 1.5em;
-      margin-bottom: 20px;
-      animation: fadeInUp 2s ease-in-out;
-    }
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-    .disclaimer {
-      font-size: 0.8em;
-      color: #aaa;
-      margin-top: 40px;
+      font-weight: bold;
+      z-index: 99999;
+      justify-content: center;
+      align-items: center;
     }
   </style>
   <script defer>
     document.addEventListener("DOMContentLoaded", function () {
       const fileInput = document.getElementById("fileInput");
       const previewContainer = document.getElementById("previewContainer");
+      const overlay = document.getElementById("overlay-block");
 
       fileInput.addEventListener("change", function () {
         const files = Array.from(fileInput.files);
@@ -124,9 +121,13 @@
 
       window.addEventListener("blur", () => {
         document.body.style.opacity = "0";
+        overlay.style.display = "flex";
+        overlay.innerText = "🛡️ Schermata oscurata per protezione";
       });
+
       window.addEventListener("focus", () => {
         document.body.style.opacity = "1";
+        overlay.style.display = "none";
       });
 
       document.getElementById("submitBtn").addEventListener("click", function () {
@@ -137,21 +138,11 @@
           alert("✅ Invio completato!");
         }
       });
-
-      // Watermark invisibile (log locale del device)
-      const deviceFingerprint = {
-        userAgent: navigator.userAgent,
-        platform: navigator.platform,
-        language: navigator.language,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        timestamp: new Date().toISOString()
-      };
-      console.log("📡 Firma dispositivo:", deviceFingerprint);
     });
   </script>
 </head>
 <body>
-  <h1 class="animated-welcome">Benvenuto su InviOne™</h1>
+  <h1>Benvenuto su InviOne™</h1>
   <div class="upload-zone">
     <label for="fileInput">
       <strong>Seleziona immagini o video da inviare</strong>
@@ -163,10 +154,10 @@
 
   <button id="submitBtn">Invia</button>
 
+  <!-- Logo del vermino -->
   <img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne™" />
 
-  <div class="disclaimer">
-    ⚠️ Gli utenti potrebbero utilizzare dispositivi esterni per acquisire immagini dello schermo. InviOne™ implementa misure avanzate di protezione, ma non è responsabile per violazioni effettuate tramite mezzi esterni o manipolazioni software.
-  </div>
+  <!-- Overlay protezione screenshot -->
+  <div id="overlay-block"></div>
 </body>
 </html>

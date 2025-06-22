@@ -1,72 +1,51 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>InviOne™</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InviOne™ - Accesso</title>
   <style>
     body {
       background-color: black;
       color: white;
       font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
       text-align: center;
-      padding: 20px;
     }
     h1 {
       color: lime;
+      margin-top: 60px;
     }
-    .authorized {
-      color: #cc99ff;
-    }
-    #container {
+    #denied {
       display: none;
-      margin-top: 30px;
+      color: red;
+      font-weight: bold;
+      margin-top: 40px;
     }
-    .hidden {
+    #welcome {
       display: none;
+      color: #bbf;
+      margin-top: 20px;
+    }
+    #accesso {
+      margin-top: 40px;
     }
   </style>
 </head>
 <body>
-  <div id="auth"></div>
-  <div id="container">
-    <h2>Benvenuto nella piattaforma protetta</h2>
-    <input type="file" id="fileInput" multiple>
-    <div id="preview"></div>
-    <button onclick="uploadFiles()">Invia</button>
-  </div>
+  <h1>Benvenuto in InviOne™</h1>
+  <div id="denied">Accesso negato 🚫</div>
+  <div id="welcome">Accesso autorizzato ✔️</div>
 
   <script>
-    const queryString = window.location.search;
-    const urlParams = new URLSearchParams(queryString);
-    const isDev = urlParams.get('dev') === 'on';
-
-    const authDiv = document.getElementById('auth');
-    const container = document.getElementById('container');
+    const params = new URLSearchParams(window.location.search);
+    const isDev = params.get('dev') === 'on';
 
     if (isDev) {
-      authDiv.innerHTML = `<h1>Benvenuto in InviOne™</h1><p class="authorized">Accesso autorizzato ✔️</p>`;
-      container.style.display = 'block';
+      document.getElementById('welcome').style.display = 'block';
     } else {
-      authDiv.innerHTML = `<h3 style="color:red;">&#10060; Link non valido.</h3>`;
-    }
-
-    // Funzione anteprima file
-    const fileInput = document.getElementById('fileInput');
-    const previewDiv = document.getElementById('preview');
-
-    fileInput.addEventListener('change', () => {
-      previewDiv.innerHTML = '';
-      Array.from(fileInput.files).forEach(file => {
-        const p = document.createElement('p');
-        p.textContent = file.name;
-        previewDiv.appendChild(p);
-      });
-    });
-
-    // Funzione invio mock
-    function uploadFiles() {
-      alert('File inviati! (mock)');
+      document.getElementById('denied').style.display = 'block';
     }
   </script>
 </body>

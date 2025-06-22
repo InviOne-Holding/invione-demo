@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>InviOne™ Upload Sicuro</title>
-  <script src="https://openfpcdn.io/fingerprintjs/v3" async></script>
   <style>
     body {
       background: #111;
@@ -48,56 +47,38 @@
       position: fixed;
       bottom: 20px;
       right: 20px;
-      width: 90px;
+      width: 110px; /* Ingrandito */
       opacity: 0.9;
       z-index: 10000;
     }
-    .disclaimer {
-      color: #ffcc00;
-      font-size: 0.9em;
+    #disclaimer {
+      color: #ffc107; /* Giallo-arancio */
+      font-size: 16px;
+      font-weight: bold;
       margin-top: 20px;
     }
+    #overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      width: 100vw;
+      background-color: rgba(0, 0, 0, 0.85);
+      color: #ff4c4c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: bold;
+      z-index: 9999;
+      display: none;
+    }
   </style>
-  <script>
-    let fingerprintId = null;
-
-    async function getFingerprint() {
-      const fp = await FingerprintJS.load();
-      const result = await fp.get();
-      return result.visitorId;
-    }
-
-    function blockAccess() {
-      document.body.innerHTML = "";
-      const overlay = document.createElement("div");
-      overlay.style.position = "fixed";
-      overlay.style.top = 0;
-      overlay.style.left = 0;
-      overlay.style.width = "100%";
-      overlay.style.height = "100%";
-      overlay.style.background = "#888";
-      overlay.style.display = "flex";
-      overlay.style.justifyContent = "center";
-      overlay.style.alignItems = "center";
-      overlay.innerHTML = `
-        <div style="background:white;color:black;padding:30px;border-radius:8px;">
-          <p><strong>Accesso negato.</strong> Il contenuto è riservato al dispositivo originario.</p>
-          <button onclick="window.location.reload()">OK</button>
-        </div>`;
-      document.body.appendChild(overlay);
-    }
-
-    document.addEventListener("DOMContentLoaded", async function () {
-      fingerprintId = await getFingerprint();
-
-      const storedId = localStorage.getItem("authorizedDeviceId");
-      if (storedId && storedId !== fingerprintId) {
-        blockAccess();
-        return;
-      }
-
+  <script defer>
+    document.addEventListener("DOMContentLoaded", function () {
       const fileInput = document.getElementById("fileInput");
       const previewContainer = document.getElementById("previewContainer");
+      const overlay = document.getElementById("overlay");
 
       fileInput.addEventListener("change", function () {
         const files = Array.from(fileInput.files);
@@ -111,6 +92,7 @@
             if (file.type.startsWith("image")) {
               const img = document.createElement("img");
               img.src = e.target.result;
+              img.alt = "Anteprima immagine";
               img.style.maxWidth = "100%";
               previewCard.appendChild(img);
             } else if (file.type.startsWith("video")) {
@@ -119,38 +101,43 @@
               video.controls = true;
               video.style.maxWidth = "100%";
               previewCard.appendChild(video);
+            } else {
+              const txt = document.createElement("p");
+              txt.textContent = file.name;
+              previewCard.appendChild(txt);
             }
 
             const removeBtn = document.createElement("button");
             removeBtn.textContent = "Rimuovi";
             removeBtn.className = "remove-button";
             removeBtn.onclick = () => previewCard.remove();
-            previewCard.appendChild(removeBtn);
 
+            previewCard.appendChild(removeBtn);
             previewContainer.appendChild(previewCard);
           };
           reader.readAsDataURL(file);
         });
 
-        localStorage.setItem("authorizedDeviceId", fingerprintId);
+        fileInput.value = "";
       });
 
-      // Blocca click destro
+      // Blocco click destro
       document.addEventListener("contextmenu", function (e) {
         e.preventDefault();
       });
 
-      // Oscura se cambio scheda
+      // Overlay se cambio scheda
       window.addEventListener("blur", () => {
-        document.body.style.opacity = "0";
+        overlay.style.display = "flex";
       });
       window.addEventListener("focus", () => {
-        document.body.style.opacity = "1";
+        overlay.style.display = "none";
       });
 
+      // Pulsante invio
       document.getElementById("submitBtn").addEventListener("click", function () {
-        const uploaded = document.querySelectorAll(".preview-card");
-        if (uploaded.length === 0) {
+        const uploadedFiles = document.querySelectorAll(".preview-card");
+        if (uploadedFiles.length === 0) {
           alert("⚠️ Nessun file selezionato.");
         } else {
           alert("✅ Invio completato!");
@@ -167,11 +154,19 @@
     </label><br />
     <input type="file" id="fileInput" accept="image/*,video/*" multiple />
   </div>
+
   <div id="previewContainer"></div>
+
   <button id="submitBtn">Invia</button>
-  <p class="disclaimer">
-    ⚠️ Il contenuto può essere visualizzato solo sul dispositivo che ha effettuato l'upload. Non siamo responsabili di eventuali tentativi di aggiramento del sistema.
-  </p>
+
+  <div id="disclaimer">
+    ⚠️ L’utente può ancora scattare foto dello schermo con dispositivi esterni. InviOne™ adotta tutte le misure possibili, ma non si assume responsabilità in caso di violazioni.
+  </div>
+
+  <!-- Overlay anti-screen -->
+  <div id="overlay">🔒 Schermata protetta</div>
+
+  <!-- Logo -->
   <img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne™" />
 </body>
 </html>

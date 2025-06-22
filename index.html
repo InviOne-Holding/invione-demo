@@ -11,7 +11,6 @@
       font-family: Arial, sans-serif;
       text-align: center;
       padding: 20px;
-      position: relative;
     }
     .upload-zone {
       border: 2px dashed #888;
@@ -48,31 +47,38 @@
       position: fixed;
       bottom: 20px;
       right: 20px;
-      width: 80px;
+      width: 110px; /* Ingrandito */
       opacity: 0.9;
       z-index: 10000;
     }
-    #overlay-block {
-      display: none;
+    #disclaimer {
+      color: #ffc107; /* Giallo-arancio */
+      font-size: 16px;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+    #overlay {
       position: fixed;
       top: 0;
       left: 0;
-      width: 100vw;
       height: 100vh;
-      background: rgba(0, 0, 0, 0.85);
-      color: #fff;
-      font-size: 1.5em;
-      font-weight: bold;
-      z-index: 99999;
-      justify-content: center;
+      width: 100vw;
+      background-color: rgba(0, 0, 0, 0.85);
+      color: #ff4c4c;
+      display: flex;
       align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: bold;
+      z-index: 9999;
+      display: none;
     }
   </style>
   <script defer>
     document.addEventListener("DOMContentLoaded", function () {
       const fileInput = document.getElementById("fileInput");
       const previewContainer = document.getElementById("previewContainer");
-      const overlay = document.getElementById("overlay-block");
+      const overlay = document.getElementById("overlay");
 
       fileInput.addEventListener("change", function () {
         const files = Array.from(fileInput.files);
@@ -115,21 +121,20 @@
         fileInput.value = "";
       });
 
+      // Blocco click destro
       document.addEventListener("contextmenu", function (e) {
         e.preventDefault();
       });
 
+      // Overlay se cambio scheda
       window.addEventListener("blur", () => {
-        document.body.style.opacity = "0";
         overlay.style.display = "flex";
-        overlay.innerText = "🛡️ Schermata oscurata per protezione";
       });
-
       window.addEventListener("focus", () => {
-        document.body.style.opacity = "1";
         overlay.style.display = "none";
       });
 
+      // Pulsante invio
       document.getElementById("submitBtn").addEventListener("click", function () {
         const uploadedFiles = document.querySelectorAll(".preview-card");
         if (uploadedFiles.length === 0) {
@@ -154,10 +159,14 @@
 
   <button id="submitBtn">Invia</button>
 
-  <!-- Logo del vermino -->
-  <img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne™" />
+  <div id="disclaimer">
+    ⚠️ L’utente può ancora scattare foto dello schermo con dispositivi esterni. InviOne™ adotta tutte le misure possibili, ma non si assume responsabilità in caso di violazioni.
+  </div>
 
-  <!-- Overlay protezione screenshot -->
-  <div id="overlay-block"></div>
+  <!-- Overlay anti-screen -->
+  <div id="overlay">🔒 Schermata protetta</div>
+
+  <!-- Logo -->
+  <img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne™" />
 </body>
 </html>

@@ -51,28 +51,80 @@
 
 <script>
 const supabaseUrl = 'https://opsvjksjatksezmhygdz.supabase.co';
-const supabaseKey = 'INSERISCI_LA_TUA_CHIAVE_QUI';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wc3Zqa3NqYXRrc2V6bWh5Z2R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MjIwMDUsImV4cCI6MjA2NjE5ODAwNX0.04AwPujY-uMEfjywnryX8Rf-U5HPfwc9F1-yTLBWIiw';
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 function generateFingerprint() {
   return navigator.userAgent + navigator.language + screen.width + screen.height;
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", () => {
   const params = new URLSearchParams(window.location.search);
-  const sessionId = params.get("id");
+  const sessionId = params.get("id") || "admin123";
   const fingerprint = generateFingerprint();
+  const saved = localStorage.getItem("invione_" + sessionId);
+  const expirationData = JSON.parse(localStorage.getItem("invione_expiration_" + sessionId) || "null");
   const main = document.getElementById("mainContent");
   const denied = document.getElementById("accessDenied");
+  const overlay = document.getElementById("overlay");
 
-  if (sessionId) {
-    const { data } = await supabaseClient.from("access_control").select("*").eq("id", sessionId).single();
-    if (!data || data.fingerprint !== fingerprint || (data.duration !== "always" && Date.now() - data.start > getMillis(data.duration))) {
+  if (expirationData && expirationData.duration !== "always") {
+    const now = Date.now();
+    const start = expirationData.start;
+    const diff = now - start;
+    if ((expirationData.duration === "1h" && diff > 3600000) || (expirationData.duration === "24h" && diff > 86400000)) {
       denied.style.display = "block";
       return;
     }
   }
-  main.style.display = "block";
+
+  if (!saved) {
+    localStorage.setItem("invione_" + sessionId, fingerprint);
+    main.style.display = "block";
+  } else if (saved === fingerprint) {
+    main.style.display = "block";
+  } else {
+    denied.style.display = "block";
+  }
+
+  const fileInput = document.getElementById("fileInput");
+  const previewContainer = document.getElementById("previewContainer");
+  const linkOutput = document.getElementById("linkOutput");
+
+  fileInput.addEventListener("change", () => {
+    const files = Array.from(fileInput.files);
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const card = document.createElement("div");
+        card.className = "preview-card";
+        if (file.type.startsWith("image")) {
+          const img = document.createElement("img");
+          img.src = e.target.result;
+          img.style.maxWidth = "100%";
+          card.appendChild(img);
+        } else if (file.type.startsWith("video")) {
+          const vid = document.createElement("video");
+          vid.src = e.target.result;
+          vid.controls = true;
+          vid.style.maxWidth = "100%";
+          card.appendChild(vid);
+        }
+        const btn = document.createElement("button");
+        btn.textContent = "Rimuovi";
+        btn.className = "remove-button";
+        btn.onclick = () => card.remove();
+        card.appendChild(btn);
+        previewContainer.appendChild(card);
+      };
+      reader.readAsDataURL(file);
+    });
+    fileInput.value = "";
+  });
+
+  document.addEventListener("contextmenu", e => e.preventDefault());
+  window.addEventListener("blur", () => overlay.style.display = "flex");
+  window.addEventListener("focus", () => overlay.style.display = "none");
 
   document.getElementById("submitBtn").addEventListener("click", async () => {
     const mediaElements = document.querySelectorAll(".preview-card img, .preview-card video");
@@ -80,28 +132,23 @@ document.addEventListener("DOMContentLoaded", async () => {
       alert("⚠️ Nessun file selezionato.");
       return;
     }
-    const id = Math.random().toString(36).substring(2);
+
     const selected = document.querySelector('input[name="duration"]:checked').value;
-    const start = Date.now();
+    localStorage.setItem("invione_expiration_" + sessionId, JSON.stringify({ duration: selected, start: Date.now() }));
 
     for (const media of mediaElements) {
       const blob = await fetch(media.src).then(r => r.blob());
-      const fileName = id + "/" + Date.now() + ".dat";
+      const fileName = Date.now() + "_" + Math.random().toString(36).substring(2);
       await supabaseClient.storage.from("uploads").upload(fileName, blob);
     }
-    await supabaseClient.from("access_control").insert([{ id, fingerprint: generateFingerprint(), duration: selected, start }]);
-    const link = window.location.origin + window.location.pathname + "?id=" + id;
-    document.getElementById("linkOutput").textContent = "🔗 Link generato: " + link;
+
+    const link = window.location.origin + window.location.pathname + "?id=" + sessionId;
+    linkOutput.textContent = "🔗 Link generato: " + link;
     navigator.clipboard.writeText(link);
-    alert("✅ File caricati. Link copiato.");
+    alert("✅ File caricati su InviOne™. Link copiato negli appunti.");
+    previewContainer.innerHTML = "";
   });
 });
-
-function getMillis(duration) {
-  if (duration === "1h") return 3600000;
-  if (duration === "24h") return 86400000;
-  return Infinity;
-}
 </script>
 </body>
 </html>

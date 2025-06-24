@@ -28,7 +28,6 @@
 </head>
 <body>
   <div id="accessDenied" style="display:none; padding:20px; color:red; background:#111; font-weight:bold;">🔒 Accesso negato. Questo link è riservato ad un solo dispositivo.</div>
-
   <div id="mainContent" style="display:none">
     <h1>Benvenuto su InviOne™</h1>
     <div class="upload-zone">
@@ -46,13 +45,12 @@
     <div id="disclaimer">⚠️ L'utente può ancora scattare foto dello schermo con dispositivi esterni. InviOne™ adotta tutte le misure possibili, ma non si assume responsabilità in caso di violazioni.</div>
     <img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne™">
   </div>
-
   <div id="overlay">🔒 Schermata protetta</div>
 
 <script>
 const supabaseUrl = 'https://opsvjksjatksezmhygdz.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wc3Zqa3NqYXRrc2V6bWh5Z2R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MjIwMDUsImV4cCI6MjA2NjE5ODAwNX0.04AwPujY-uMEfjywnryX8Rf-U5HPfwc9F1-yTLBWIiw';
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 function generateFingerprint() {
   return navigator.userAgent + navigator.language + screen.width + screen.height;
@@ -64,7 +62,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const fingerprint = generateFingerprint();
   const saved = localStorage.getItem("invione_" + sessionId);
   const expirationData = JSON.parse(localStorage.getItem("invione_expiration_" + sessionId) || "null");
-
   const main = document.getElementById("mainContent");
   const denied = document.getElementById("accessDenied");
   const overlay = document.getElementById("overlay");
@@ -140,7 +137,7 @@ document.addEventListener("DOMContentLoaded", () => {
     for (const media of mediaElements) {
       const blob = await fetch(media.src).then(r => r.blob());
       const fileName = Date.now() + "_" + Math.random().toString(36).substring(2);
-      await supabase.storage.from("uploads").upload(fileName, blob);
+      await supabaseClient.storage.from("uploads").upload(fileName, blob);
     }
 
     alert("✅ File caricati su InviOne™ con successo.");

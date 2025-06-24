@@ -28,7 +28,7 @@
   </style>
 </head>
 <body>
-  <div id="accessDenied" style="display:none; padding:20px; color:red; background:#111; font-weight:bold;">🔒 Accesso negato. Questo link è riservato ad un solo dispositivo.</div>
+  <div id="accessDenied" style="display:none; padding:20px; color:red; background:#111; font-weight:bold;">🔒 Accesso negato o scaduto.</div>
   <div id="mainContent" style="display:none">
     <h1>Benvenuto su InviOne™</h1>
     <div class="upload-zone">
@@ -51,42 +51,35 @@
 
 <script>
 const supabaseUrl = 'https://opsvjksjatksezmhygdz.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wc3Zqa3NqYXRrc2V6bWh5Z2R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MjIwMDUsImV4cCI6MjA2NjE5ODAwNX0.04AwPujY-uMEfjywnryX8Rf-U5HPfwc9F1-yTLBWIiw';
+const supabaseKey = 'INSERISCI_LA_TUA_CHIAVE';
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 function generateFingerprint() {
   return navigator.userAgent + navigator.language + screen.width + screen.height;
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const params = new URLSearchParams(window.location.search);
   const sessionId = params.get("id") || "admin123";
   const fingerprint = generateFingerprint();
-  const saved = localStorage.getItem("invione_" + sessionId);
-  const expirationData = JSON.parse(localStorage.getItem("invione_expiration_" + sessionId) || "null");
+  const { data, error } = await supabaseClient.from('access_control').select('*').eq('session_id', sessionId).single();
+
   const main = document.getElementById("mainContent");
   const denied = document.getElementById("accessDenied");
   const overlay = document.getElementById("overlay");
 
-  if (expirationData && expirationData.duration !== "always") {
-    const now = Date.now();
-    const start = expirationData.start;
-    const diff = now - start;
-    if ((expirationData.duration === "1h" && diff > 3600000) || (expirationData.duration === "24h" && diff > 86400000)) {
-      denied.textContent = "⛔ Link scaduto.";
-      denied.style.display = "block";
-      return;
-    }
+  if (error || !data) {
+    denied.style.display = "block";
+    return;
   }
 
-  if (!saved) {
-    localStorage.setItem("invione_" + sessionId, fingerprint);
-    main.style.display = "block";
-  } else if (saved === fingerprint) {
-    main.style.display = "block";
-  } else {
+  const now = Date.now();
+  if (data.fingerprint !== fingerprint || (data.expiration && now > data.expiration)) {
     denied.style.display = "block";
+    return;
   }
+
+  main.style.display = "block";
 
   const fileInput = document.getElementById("fileInput");
   const previewContainer = document.getElementById("previewContainer");
@@ -135,7 +128,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const selected = document.querySelector('input[name="duration"]:checked').value;
-    localStorage.setItem("invione_expiration_" + sessionId, JSON.stringify({ duration: selected, start: Date.now() }));
+    const expiration = selected === "always" ? null : Date.now() + (selected === "1h" ? 3600000 : 86400000);
+
+    await supabaseClient.from('access_control').upsert({
+      session_id: sessionId,
+      fingerprint,
+      expiration
+    });
 
     for (const media of mediaElements) {
       const blob = await fetch(media.src).then(r => r.blob());

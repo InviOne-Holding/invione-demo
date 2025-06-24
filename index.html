@@ -11,50 +11,48 @@
     .preview-card { background: #111; padding: 10px; margin: 10px; display: inline-block; max-width: 300px; vertical-align: top; }
     .remove-button { background: crimson; color: white; border: none; padding: 5px 10px; margin-top: 10px; cursor: pointer; }
     #submitBtn { background: #16a34a; color: white; font-weight: bold; padding: 10px 20px; border: none; margin-top: 20px; }
+    #linkOutput { margin-top: 20px; color: #4ade80; font-weight: bold; word-break: break-all; }
     #logo-fixed { position: fixed; bottom: 20px; right: 20px; width: 100px; opacity: 0.9; z-index: 10000; }
     #disclaimer { color: #ffc107; font-size: 16px; font-weight: bold; margin-top: 20px; }
     #overlay {
-      position: fixed; top: 0; left: 0;
+      position: fixed;
+      top: 0; left: 0;
       height: 100vh; width: 100vw;
       background-color: #000;
       color: #ff4c4c;
       display: flex; align-items: center; justify-content: center;
       font-size: 32px; font-weight: bold;
-      z-index: 9999; display: none;
-    }
-    #linkGenerato {
-      margin-top: 20px; color: #0f0; word-break: break-all;
+      z-index: 9999;
+      display: none;
     }
   </style>
 </head>
 <body>
-<div id="accessDenied" style="display:none; padding:20px; color:red; background:#111; font-weight:bold;">🔒 Accesso negato. Questo link è riservato ad un solo dispositivo.</div>
-
-<div id="mainContent" style="display:none">
-  <h1>Benvenuto su InviOne™</h1>
-  <div class="upload-zone">
-    <label for="fileInput"><strong>Seleziona immagini o video da inviare</strong></label><br>
-    <input type="file" id="fileInput" accept="image/*,video/*" multiple>
+  <div id="accessDenied" style="display:none; padding:20px; color:red; background:#111; font-weight:bold;">🔒 Accesso negato. Questo link è riservato ad un solo dispositivo.</div>
+  <div id="mainContent" style="display:none">
+    <h1>Benvenuto su InviOne™</h1>
+    <div class="upload-zone">
+      <label for="fileInput"><strong>Seleziona immagini o video da inviare</strong></label><br>
+      <input type="file" id="fileInput" accept="image/*,video/*" multiple>
+    </div>
+    <div id="expirationOptions" style="margin-top: 20px; text-align: left; display: inline-block;">
+      <strong>Durata accesso:</strong><br>
+      <label><input type="radio" name="duration" value="always" checked> Per sempre</label><br>
+      <label><input type="radio" name="duration" value="1h"> Solo 1 ora</label><br>
+      <label><input type="radio" name="duration" value="24h"> Solo 24 ore</label>
+    </div>
+    <div id="previewContainer"></div>
+    <button id="submitBtn">Invia</button>
+    <div id="linkOutput"></div>
+    <div id="disclaimer">⚠️ L'utente può ancora scattare foto dello schermo con dispositivi esterni. InviOne™ adotta tutte le misure possibili, ma non si assume responsabilità in caso di violazioni.</div>
+    <img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne™">
   </div>
-  <div id="expirationOptions" style="margin-top: 20px; text-align: left; display: inline-block;">
-    <strong>Durata accesso:</strong><br>
-    <label><input type="radio" name="duration" value="always" checked> Per sempre</label><br>
-    <label><input type="radio" name="duration" value="1h"> Solo 1 ora</label><br>
-    <label><input type="radio" name="duration" value="24h"> Solo 24 ore</label>
-  </div>
-  <div id="previewContainer"></div>
-  <button id="submitBtn">Invia</button>
-  <div id="linkGenerato"></div>
-  <div id="disclaimer">⚠️ L'utente può ancora scattare foto dello schermo con dispositivi esterni. InviOne™ adotta tutte le misure possibili, ma non si assume responsabilità in caso di violazioni.</div>
-  <img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne™">
-</div>
-
-<div id="overlay">🔒 Schermata protetta</div>
+  <div id="overlay">🔒 Schermata protetta</div>
 
 <script>
 const supabaseUrl = 'https://opsvjksjatksezmhygdz.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wc3Zqa3NqYXRrc2V6bWh5Z2R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MjIwMDUsImV4cCI6MjA2NjE5ODAwNX0.04AwPujY-uMEfjywnryX8Rf-U5HPfwc9F1-yTLBWIiw';
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 function generateFingerprint() {
   return navigator.userAgent + navigator.language + screen.width + screen.height;
@@ -66,15 +64,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const fingerprint = generateFingerprint();
   const saved = localStorage.getItem("invione_" + sessionId);
   const expirationData = JSON.parse(localStorage.getItem("invione_expiration_" + sessionId) || "null");
-
   const main = document.getElementById("mainContent");
   const denied = document.getElementById("accessDenied");
   const overlay = document.getElementById("overlay");
-  const linkGenerato = document.getElementById("linkGenerato");
 
   if (expirationData && expirationData.duration !== "always") {
     const now = Date.now();
-    const diff = now - expirationData.start;
+    const start = expirationData.start;
+    const diff = now - start;
     if ((expirationData.duration === "1h" && diff > 3600000) || (expirationData.duration === "24h" && diff > 86400000)) {
       denied.textContent = "⛔ Link scaduto.";
       denied.style.display = "block";
@@ -93,6 +90,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const fileInput = document.getElementById("fileInput");
   const previewContainer = document.getElementById("previewContainer");
+  const linkOutput = document.getElementById("linkOutput");
 
   fileInput.addEventListener("change", () => {
     const files = Array.from(fileInput.files);
@@ -142,11 +140,13 @@ document.addEventListener("DOMContentLoaded", () => {
     for (const media of mediaElements) {
       const blob = await fetch(media.src).then(r => r.blob());
       const fileName = Date.now() + "_" + Math.random().toString(36).substring(2);
-      await supabase.storage.from("uploads").upload(fileName, blob);
+      await supabaseClient.storage.from("uploads").upload(fileName, blob);
     }
 
-    const newLink = `${window.location.origin}${window.location.pathname}?id=${sessionId}`;
-    linkGenerato.textContent = `✅ Link generato: ${newLink}`;
+    const link = window.location.origin + window.location.pathname + "?id=" + sessionId;
+    linkOutput.textContent = "🔗 Link generato: " + link;
+    navigator.clipboard.writeText(link);
+    alert("✅ File caricati su InviOne™. Link copiato negli appunti.");
     previewContainer.innerHTML = "";
   });
 });

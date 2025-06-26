@@ -15,7 +15,8 @@
     #logo-fixed { position: fixed; bottom: 20px; right: 20px; width: 100px; opacity: 0.9; z-index: 10000; }
     #disclaimer { color: #ffc107; font-size: 16px; font-weight: bold; margin-top: 20px; }
     #overlay {
-      position: fixed; top: 0; left: 0;
+      position: fixed;
+      top: 0; left: 0;
       height: 100vh; width: 100vw;
       background-color: #000;
       color: #ff4c4c;
@@ -47,11 +48,19 @@
     <img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne™">
   </div>
   <div id="overlay">🔒 Schermata protetta</div>
+
 <script>
-const supabase = supabase.createClient('https://opsvjksjatksezmhygdz.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wc3Zqa3NqYXRrc2V6bWh5Z2R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MjIwMDUsImV4cCI6MjA2NjE5ODAwNX0.04AwPujY-uMEfjywnryX8Rf-U5HPfwc9F1-yTLBWIiw');
+const supabaseUrl = 'https://opsvjksjatksezmhygdz.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wc3Zqa3NqYXRrc2V6bWh5Z2R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MjIwMDUsImV4cCI6MjA2NjE5ODAwNX0.04AwPujY-uMEfjywnryX8Rf-U5HPfwc9F1-yTLBWIiw';
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 function generateFingerprint() {
   return navigator.userAgent + navigator.language + screen.width + screen.height;
+}
+
+function isAdminDevice() {
+  const currentFingerprint = generateFingerprint();
+  return currentFingerprint.includes("Windows NT 10.0") && currentFingerprint.includes("Chrome"); // Adatta alla tua macchina
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -61,39 +70,54 @@ document.addEventListener("DOMContentLoaded", () => {
   const saved = localStorage.getItem("invione_" + sessionId);
   const expirationData = JSON.parse(localStorage.getItem("invione_expiration_" + sessionId) || "null");
 
+  const main = document.getElementById("mainContent");
+  const denied = document.getElementById("accessDenied");
+  const overlay = document.getElementById("overlay");
+
+  if (isAdminDevice()) {
+    main.style.display = "block";
+    return;
+  }
+
   if (expirationData && expirationData.duration !== "always") {
     const now = Date.now();
-    if ((expirationData.duration === "1h" && now - expirationData.start > 3600000) || (expirationData.duration === "24h" && now - expirationData.start > 86400000)) {
-      document.getElementById("accessDenied").style.display = "block";
+    const start = expirationData.start;
+    const diff = now - start;
+    if ((expirationData.duration === "1h" && diff > 3600000) || (expirationData.duration === "24h" && diff > 86400000)) {
+      denied.textContent = "⛔ Link scaduto.";
+      denied.style.display = "block";
       return;
     }
   }
 
   if (!saved) {
     localStorage.setItem("invione_" + sessionId, fingerprint);
-    document.getElementById("mainContent").style.display = "block";
+    main.style.display = "block";
   } else if (saved === fingerprint) {
-    document.getElementById("mainContent").style.display = "block";
+    main.style.display = "block";
   } else {
-    document.getElementById("accessDenied").style.display = "block";
+    denied.style.display = "block";
   }
 
-  document.getElementById("fileInput").addEventListener("change", e => {
-    const previewContainer = document.getElementById("previewContainer");
-    previewContainer.innerHTML = "";
-    Array.from(e.target.files).forEach(file => {
+  const fileInput = document.getElementById("fileInput");
+  const previewContainer = document.getElementById("previewContainer");
+  const linkOutput = document.getElementById("linkOutput");
+
+  fileInput.addEventListener("change", () => {
+    const files = Array.from(fileInput.files);
+    files.forEach(file => {
       const reader = new FileReader();
-      reader.onload = evt => {
+      reader.onload = e => {
         const card = document.createElement("div");
         card.className = "preview-card";
         if (file.type.startsWith("image")) {
           const img = document.createElement("img");
-          img.src = evt.target.result;
+          img.src = e.target.result;
           img.style.maxWidth = "100%";
           card.appendChild(img);
         } else if (file.type.startsWith("video")) {
           const vid = document.createElement("video");
-          vid.src = evt.target.result;
+          vid.src = e.target.result;
           vid.controls = true;
           vid.style.maxWidth = "100%";
           card.appendChild(vid);
@@ -107,27 +131,34 @@ document.addEventListener("DOMContentLoaded", () => {
       };
       reader.readAsDataURL(file);
     });
+    fileInput.value = "";
   });
 
   document.addEventListener("contextmenu", e => e.preventDefault());
-  window.addEventListener("blur", () => document.getElementById("overlay").style.display = "flex");
-  window.addEventListener("focus", () => document.getElementById("overlay").style.display = "none");
+  window.addEventListener("blur", () => overlay.style.display = "flex");
+  window.addEventListener("focus", () => overlay.style.display = "none");
 
   document.getElementById("submitBtn").addEventListener("click", async () => {
     const mediaElements = document.querySelectorAll(".preview-card img, .preview-card video");
-    if (mediaElements.length === 0) return alert("⚠️ Nessun file selezionato.");
+    if (mediaElements.length === 0) {
+      alert("⚠️ Nessun file selezionato.");
+      return;
+    }
 
-    localStorage.setItem("invione_expiration_" + sessionId, JSON.stringify({ duration: document.querySelector('input[name="duration"]:checked').value, start: Date.now() }));
+    const selected = document.querySelector('input[name="duration"]:checked').value;
+    localStorage.setItem("invione_expiration_" + sessionId, JSON.stringify({ duration: selected, start: Date.now() }));
 
     for (const media of mediaElements) {
       const blob = await fetch(media.src).then(r => r.blob());
-      await supabase.storage.from("uploads").upload(Date.now() + "_" + Math.random().toString(36).substring(2), blob);
+      const fileName = Date.now() + "_" + Math.random().toString(36).substring(2);
+      await supabaseClient.storage.from("uploads").upload(fileName, blob);
     }
 
     const link = window.location.origin + window.location.pathname + "?id=" + sessionId;
-    document.getElementById("linkOutput").textContent = "🔗 Link generato: " + link;
+    linkOutput.textContent = "🔗 Link generato: " + link;
     navigator.clipboard.writeText(link);
     alert("✅ File caricati su InviOne™. Link copiato negli appunti.");
+    previewContainer.innerHTML = "";
   });
 });
 </script>

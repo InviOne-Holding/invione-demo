@@ -28,7 +28,7 @@
   </style>
 </head>
 <body>
-  <div id="accessDenied" style="display:none; padding:20px; color:red; background:#111; font-weight:bold;">🔒 Accesso negato. Questo link è riservato ad un solo dispositivo.</div>
+  <div id="accessDenied" style="display:none; padding:20px; color:red; background:#111; font-weight:bold;">🔒 Accesso negato o scaduto.</div>
   <div id="mainContent" style="display:none">
     <h1>Benvenuto su InviOne™</h1>
     <div class="upload-zone">
@@ -73,7 +73,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const start = expirationData.start;
     const diff = now - start;
     if ((expirationData.duration === "1h" && diff > 3600000) || (expirationData.duration === "24h" && diff > 86400000)) {
-      denied.textContent = "⛔ Link scaduto.";
       denied.style.display = "block";
       return;
     }

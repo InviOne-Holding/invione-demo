@@ -96,6 +96,12 @@
       z-index: 9999;
       display: none;
       backdrop-filter: blur(5px);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { opacity: 0.95; }
+      50% { opacity: 0.8; }
+      100% { opacity: 0.95; }
     }
   </style>
 </head>
@@ -141,6 +147,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const fingerprint = generateFingerprint();
   const saved = localStorage.getItem("invione_" + sessionId);
   const expirationData = JSON.parse(localStorage.getItem("invione_expiration_" + sessionId) || "null");
+  const openedFlag = localStorage.getItem("invione_opened_" + sessionId);
 
   const main = document.getElementById("mainContent");
   const denied = document.getElementById("accessDenied");
@@ -162,11 +169,19 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  if (openedFlag) {
+    denied.textContent = "⛔ Questo link è già stato utilizzato.";
+    denied.style.display = "block";
+    return;
+  }
+
   if (!saved) {
     localStorage.setItem("invione_" + sessionId, fingerprint);
     main.style.display = "block";
+    localStorage.setItem("invione_opened_" + sessionId, true);
   } else if (saved === fingerprint) {
     main.style.display = "block";
+    localStorage.setItem("invione_opened_" + sessionId, true);
   } else {
     denied.style.display = "block";
   }
@@ -209,6 +224,14 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("contextmenu", e => e.preventDefault());
   window.addEventListener("blur", () => overlay.style.display = "flex");
   window.addEventListener("focus", () => overlay.style.display = "none");
+
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "PrintScreen" || (e.ctrlKey && e.key.toLowerCase() === "p")) {
+      overlay.style.display = "flex";
+      setTimeout(() => overlay.style.display = "none", 3000);
+      e.preventDefault();
+    }
+  });
 
   document.getElementById("submitBtn").addEventListener("click", async () => {
     const mediaElements = document.querySelectorAll(".preview-card img, .preview-card video");

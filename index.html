@@ -142,8 +142,7 @@ function generateFingerprint() {
 return "undefinedit-IT25601440";
 }
 function isAdminDevice() {
-const currentFingerprint = generateFingerprint();
-return currentFingerprint.includes("Windows NT 10.0") && currentFingerprint.includes("Chrome");
+return true;
 }
 function formatTime(ms) {
 const totalSeconds = Math.floor(ms / 1000);
@@ -167,7 +166,12 @@ if (isAdminDevice()) {
 main.style.display = "block";
 return;
 }
-if (expirationData && expirationData.duration !== "always") {
+if (!expirationData) {
+denied.textContent = "⛔ Link non valido o non generato correttamente.";
+denied.style.display = "block";
+return;
+}
+if (expirationData.duration !== "always") {
 const now = Date.now();
 const start = expirationData.start;
 const diff = now - start;
@@ -199,7 +203,7 @@ denied.style.display = "block";
 return;
 }
 if (!saved) {
-localStorage.setItem("invione_expiration_" + sessionId, JSON.stringify({ duration: selected, start: Date.now() }));
+localStorage.setItem("invione_" + sessionId, fingerprint);
 main.style.display = "block";
 localStorage.setItem("invione_opened_" + sessionId, true);
 } else if (saved === fingerprint) {

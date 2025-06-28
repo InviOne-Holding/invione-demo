@@ -19,9 +19,21 @@ body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family
 #disclaimer { color: #ffc107; font-size: 16px; font-weight: bold; margin-top: 20px; }
 #overlay { position: fixed; top: 0; left: 0; height: 100vh; width: 100vw; background-color: rgba(0,0,0,0.95); color: #ff4c4c; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; z-index: 9999; display: none; backdrop-filter: blur(5px); animation: pulse 2s infinite; }
 #timerBox { margin-top: 10px; font-size: 18px; font-weight: bold; color: #4ade80; }
+#legalPopup { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: flex; align-items: center; justify-content: center; z-index: 10001; color: #fff; }
+#legalPopupContent { background: #111; padding: 20px; border-radius: 10px; max-width: 400px; text-align: left; box-shadow: 0 0 20px #000; }
+#acceptBtn { background: #16a34a; color: white; padding: 10px 20px; border: none; border-radius: 10px; margin-top: 10px; width: 100%; font-weight: bold; cursor: pointer; opacity: 0.6; }
+#acceptBtn.enabled { opacity: 1; }
 </style>
 </head>
 <body>
+<div id="legalPopup">
+<div id="legalPopupContent">
+<h2>Condizioni d'Uso</h2>
+<p>⚠️ Questo contenuto è protetto. Vietata la diffusione, copia o registrazione, incluse foto e screenshot. Violazioni saranno perseguite a norma di legge.</p>
+<label><input type="checkbox" id="acceptCheckbox"> Dichiaro di aver letto e accettato le condizioni.</label>
+<button id="acceptBtn" disabled>Accedi</button>
+</div>
+</div>
 <div id="accessDenied" style="display:none; padding:20px; color:red; background:#111; font-weight:bold; border-radius:10px;">🔒 Accesso negato o scaduto.</div>
 <div id="mainContent" style="display:none">
 <h1>Benvenuto su InviOne™</h1>
@@ -56,6 +68,23 @@ const seconds = String(totalSeconds % 60).padStart(2, '0');
 return `${hours}:${minutes}:${seconds}`;
 }
 document.addEventListener("DOMContentLoaded", () => {
+const legalPopup = document.getElementById("legalPopup");
+const acceptBtn = document.getElementById("acceptBtn");
+const acceptCheckbox = document.getElementById("acceptCheckbox");
+acceptCheckbox.addEventListener("change", () => {
+acceptBtn.disabled = !acceptCheckbox.checked;
+acceptBtn.classList.toggle("enabled", acceptCheckbox.checked);
+});
+acceptBtn.addEventListener("click", () => {
+legalPopup.style.display = "none";
+initializeApp();
+});
+if (isAdmin) {
+legalPopup.style.display = "none";
+initializeApp();
+}
+});
+function initializeApp() {
 const params = new URLSearchParams(window.location.search);
 const sessionId = params.get("id") || "admin123";
 const main = document.getElementById("mainContent");
@@ -148,12 +177,12 @@ const { data, error } = await supabaseClient.storage.from("uploads").upload(file
 console.log("Upload risultato:", data, error);
 }
 const link = window.location.origin + window.location.pathname + "?id=" + sessionId;
-linkOutput.textContent = "🔗 Link generato: " + link;
+document.getElementById("linkOutput").textContent = "🔗 Link generato: " + link;
 navigator.clipboard.writeText(link);
 alert("✅ File caricati su InviOne™. Link copiato negli appunti.");
 previewContainer.innerHTML = "";
 });
-});
+}
 </script>
 </body>
 </html>

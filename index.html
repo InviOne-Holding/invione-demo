@@ -142,9 +142,6 @@ function generateFingerprint() {
 return "undefinedit-IT25601440";
 }
 function isAdminDevice() {
-    return true;
-}
-
 const currentFingerprint = generateFingerprint();
 return currentFingerprint.includes("Windows NT 10.0") && currentFingerprint.includes("Chrome");
 }

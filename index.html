@@ -98,6 +98,12 @@
       backdrop-filter: blur(5px);
       animation: pulse 2s infinite;
     }
+    #timerBox {
+      margin-top: 10px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #4ade80;
+    }
     @keyframes pulse {
       0% { opacity: 0.95; }
       50% { opacity: 0.8; }
@@ -109,6 +115,7 @@
   <div id="accessDenied" style="display:none; padding:20px; color:red; background:#111; font-weight:bold; border-radius:10px;">🔒 Accesso negato o scaduto.</div>
   <div id="mainContent" style="display:none">
     <h1>Benvenuto su InviOne™</h1>
+    <div id="timerBox"></div>
     <div class="upload-zone">
       <label for="fileInput"><strong>Seleziona immagini o video da inviare</strong></label><br>
       <input type="file" id="fileInput" accept="image/*,video/*" multiple>
@@ -141,6 +148,14 @@ function isAdminDevice() {
   return currentFingerprint.includes("Windows NT 10.0") && currentFingerprint.includes("Chrome");
 }
 
+function formatTime(ms) {
+  const totalSeconds = Math.floor(ms / 1000);
+  const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+  const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+  const seconds = String(totalSeconds % 60).padStart(2, '0');
+  return `${hours}:${minutes}:${seconds}`;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const params = new URLSearchParams(window.location.search);
   const sessionId = params.get("id") || "admin123";
@@ -152,6 +167,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const main = document.getElementById("mainContent");
   const denied = document.getElementById("accessDenied");
   const overlay = document.getElementById("overlay");
+  const timerBox = document.getElementById("timerBox");
 
   if (isAdminDevice()) {
     main.style.display = "block";
@@ -162,11 +178,27 @@ document.addEventListener("DOMContentLoaded", () => {
     const now = Date.now();
     const start = expirationData.start;
     const diff = now - start;
-    if ((expirationData.duration === "1h" && diff > 3600000) || (expirationData.duration === "24h" && diff > 86400000)) {
+    const maxTime = expirationData.duration === "1h" ? 3600000 : 86400000;
+    if (diff > maxTime) {
       denied.textContent = "⛔ Link scaduto.";
       denied.style.display = "block";
       return;
     }
+    const remaining = maxTime - diff;
+    timerBox.textContent = `⏳ Tempo rimanente: ${formatTime(remaining)}`;
+    const interval = setInterval(() => {
+      const now = Date.now();
+      const diff = now - start;
+      const remaining = maxTime - diff;
+      if (remaining <= 0) {
+        clearInterval(interval);
+        denied.textContent = "⛔ Link scaduto.";
+        denied.style.display = "block";
+        main.style.display = "none";
+      } else {
+        timerBox.textContent = `⏳ Tempo rimanente: ${formatTime(remaining)}`;
+      }
+    }, 1000);
   }
 
   if (openedFlag) {

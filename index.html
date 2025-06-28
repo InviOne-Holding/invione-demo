@@ -6,109 +6,20 @@
 <title>InviOne™</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 <style>
-body {
-  background: linear-gradient(135deg, #000, #111);
-  color: #fff;
-  font-family: Arial, sans-serif;
-  text-align: center;
-  padding: 20px;
-  user-select: none;
-}
-.upload-zone {
-  border: 2px dashed #4ade80;
-  padding: 20px;
-  margin-bottom: 20px;
-  border-radius: 15px;
-  background: #1a1a1a;
-  transition: 0.3s;
-}
-.upload-zone:hover {
-  background: #222;
-}
-.preview-card {
-  background: #111;
-  padding: 10px;
-  margin: 10px;
-  display: inline-block;
-  max-width: 300px;
-  vertical-align: top;
-  border-radius: 10px;
-  box-shadow: 0 0 10px #000;
-}
-.remove-button {
-  background: crimson;
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  margin-top: 10px;
-  cursor: pointer;
-  border-radius: 5px;
-  transition: 0.3s;
-}
-.remove-button:hover {
-  background: darkred;
-}
-#submitBtn {
-  background: #16a34a;
-  color: white;
-  font-weight: bold;
-  padding: 10px 20px;
-  border: none;
-  margin-top: 20px;
-  border-radius: 10px;
-  box-shadow: 0 0 10px #16a34a;
-  transition: 0.3s;
-}
-#submitBtn:hover {
-  background: #15803d;
-}
-#linkOutput {
-  margin-top: 20px;
-  color: #4ade80;
-  font-weight: bold;
-  word-break: break-word;
-  background: #111;
-  padding: 10px;
-  border-radius: 10px;
-}
-#logo-fixed {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  width: 100px;
-  opacity: 0.9;
-  z-index: 10000;
-  filter: drop-shadow(0 0 10px #4ade80);
-}
-#overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 100vh;
-  width: 100vw;
-  background-color: rgba(0,0,0,0.95);
-  color: #ff4c4c;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 32px;
-  font-weight: bold;
-  z-index: 9999;
-  display: none;
-  backdrop-filter: blur(5px);
-  animation: pulse 2s infinite;
-}
-#timerBox {
-  margin-top: 10px;
-  font-size: 18px;
-  font-weight: bold;
-  color: #4ade80;
-}
-@keyframes pulse {
-  0% { opacity: 0.95; }
-  50% { opacity: 0.8; }
-  100% { opacity: 0.95; }
-}
+body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family: Arial, sans-serif; text-align: center; padding: 20px; user-select: none; }
+.upload-zone { border: 2px dashed #4ade80; padding: 20px; margin-bottom: 20px; border-radius: 15px; background: #1a1a1a; transition: 0.3s; }
+.upload-zone:hover { background: #222; }
+.preview-card { background: #111; padding: 10px; margin: 10px; display: inline-block; max-width: 300px; vertical-align: top; border-radius: 10px; box-shadow: 0 0 10px #000; }
+.remove-button { background: crimson; color: white; border: none; padding: 5px 10px; margin-top: 10px; cursor: pointer; border-radius: 5px; transition: 0.3s; }
+.remove-button:hover { background: darkred; }
+#submitBtn { background: #16a34a; color: white; font-weight: bold; padding: 10px 20px; border: none; margin-top: 20px; border-radius: 10px; box-shadow: 0 0 10px #16a34a; transition: 0.3s; }
+#submitBtn:hover { background: #15803d; }
+#linkOutput { margin-top: 20px; color: #4ade80; font-weight: bold; word-break: break-word; background: #111; padding: 10px; border-radius: 10px; }
+#logo-fixed { position: fixed; bottom: 20px; right: 20px; width: 100px; opacity: 0.9; z-index: 10000; filter: drop-shadow(0 0 10px #4ade80); }
+#disclaimer { color: #ffc107; font-size: 16px; font-weight: bold; margin-top: 20px; }
+#overlay { position: fixed; top: 0; left: 0; height: 100vh; width: 100vw; background-color: rgba(0,0,0,0.95); color: #ff4c4c; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; z-index: 9999; display: none; backdrop-filter: blur(5px); animation: pulse 2s infinite; }
+#timerBox { margin-top: 10px; font-size: 18px; font-weight: bold; color: #4ade80; }
+@keyframes pulse { 0% { opacity: 0.95; } 50% { opacity: 0.8; } 100% { opacity: 0.95; } }
 </style>
 </head>
 <body>
@@ -129,14 +40,15 @@ body {
 <div id="previewContainer"></div>
 <button id="submitBtn">Invia</button>
 <div id="linkOutput"></div>
+<div id="disclaimer">⚠️ L'utente può ancora scattare foto dello schermo con dispositivi esterni. InviOne™ adotta tutte le misure possibili, ma non si assume responsabilità in caso di violazioni.</div>
 <img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne™">
 </div>
 <div id="overlay">🔒 Contenuto protetto</div>
-
 <script>
 const supabaseUrl = 'https://opsvjksjatksezmhygdz.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wc3Zqa3NqYXRrc2V6bWh5Z2R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MjIwMDUsImV4cCI6MjA2NjE5ODAwNX0.04AwPujY-uMEfjywnryX8Rf-U5HPfwc9F1-yTLBWIiw';
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
 function generateFingerprint() {
   return "admin-fingerprint";
 }
@@ -149,6 +61,14 @@ function formatTime(ms) {
   const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
   const seconds = String(totalSeconds % 60).padStart(2, '0');
   return `${hours}:${minutes}:${seconds}`;
+}
+function generateSecureId(length = 20) {
+  const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += charset.charAt(Math.floor(Math.random() * charset.length));
+  }
+  return result;
 }
 document.addEventListener("DOMContentLoaded", () => {
   const params = new URLSearchParams(window.location.search);
@@ -177,8 +97,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const remaining = maxTime - diff;
     timerBox.textContent = `⏳ Tempo rimanente: ${formatTime(remaining)}`;
     const interval = setInterval(() => {
-      const now = Date.now();
-      const diff = now - start;
+      const diff = Date.now() - start;
       const remaining = maxTime - diff;
       if (remaining <= 0) {
         clearInterval(interval);
@@ -189,7 +108,6 @@ document.addEventListener("DOMContentLoaded", () => {
         timerBox.textContent = `⏳ Tempo rimanente: ${formatTime(remaining)}`;
       }
     }, 1000);
-
     if (openedFlag) {
       denied.textContent = "⛔ Questo link è già stato utilizzato.";
       denied.style.display = "block";
@@ -254,6 +172,10 @@ document.addEventListener("DOMContentLoaded", () => {
       setTimeout(() => overlay.style.display = "none", 3000);
       e.preventDefault();
     }
+    if (e.key === "F12" || (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J")) || (e.ctrlKey && e.key.toLowerCase() === "u")) {
+      e.preventDefault();
+      alert("🚫 Ispezione disabilitata.");
+    }
   });
 
   document.getElementById("submitBtn").addEventListener("click", async () => {
@@ -267,7 +189,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     for (const media of mediaElements) {
       const blob = await fetch(media.src).then(r => r.blob());
-      const fileName = Date.now() + "_" + Math.random().toString(36).substring(2);
+      const fileName = Date.now() + "_" + generateSecureId();
       const { data, error } = await supabaseClient.storage.from("uploads").upload(fileName, blob);
       console.log("Upload risultato:", data, error);
     }

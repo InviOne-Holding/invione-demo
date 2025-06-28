@@ -92,12 +92,16 @@
       background-color: rgba(0,0,0,0.95);
       color: #ff4c4c;
       display: flex; align-items: center; justify-content: center;
-      font-size: 32px;
-      font-weight: bold;
+      font-size: 32px; font-weight: bold;
       z-index: 9999;
       display: none;
       backdrop-filter: blur(5px);
       animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { opacity: 0.95; }
+      50% { opacity: 0.8; }
+      100% { opacity: 0.95; }
     }
   </style>
 </head>
@@ -115,7 +119,6 @@
       <label><input type="radio" name="duration" value="1h"> Solo 1 ora</label><br>
       <label><input type="radio" name="duration" value="24h"> Solo 24 ore</label>
     </div>
-    <div id="timerBox" style="margin-top: 10px; font-size: 18px; font-weight: bold; color: #4ade80;"></div>
     <div id="previewContainer"></div>
     <button id="submitBtn">Invia</button>
     <div id="linkOutput"></div>
@@ -128,19 +131,16 @@
 const supabaseUrl = 'https://opsvjksjatksezmhygdz.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wc3Zqa3NqYXRrc2V6bWh5Z2R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MjIwMDUsImV4cCI6MjA2NjE5ODAwNX0.04AwPujY-uMEfjywnryX8Rf-U5HPfwc9F1-yTLBWIiw';
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
 function generateFingerprint() {
   return "undefinedit-IT25601440";
 }
+
 function isAdminDevice() {
-  return true;
+  const currentFingerprint = generateFingerprint();
+  return currentFingerprint.includes("Windows NT 10.0") && currentFingerprint.includes("Chrome");
 }
-function formatTime(ms) {
-  const totalSeconds = Math.floor(ms / 1000);
-  const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
-  const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
-  const seconds = String(totalSeconds % 60).padStart(2, '0');
-  return `${hours}:${minutes}:${seconds}`;
-}
+
 document.addEventListener("DOMContentLoaded", () => {
   const params = new URLSearchParams(window.location.search);
   const sessionId = params.get("id") || "admin123";
@@ -148,45 +148,33 @@ document.addEventListener("DOMContentLoaded", () => {
   const saved = localStorage.getItem("invione_" + sessionId);
   const expirationData = JSON.parse(localStorage.getItem("invione_expiration_" + sessionId) || "null");
   const openedFlag = localStorage.getItem("invione_opened_" + sessionId);
+
   const main = document.getElementById("mainContent");
   const denied = document.getElementById("accessDenied");
   const overlay = document.getElementById("overlay");
-  const timerBox = document.getElementById("timerBox");
+
   if (isAdminDevice()) {
     main.style.display = "block";
     return;
   }
+
   if (expirationData && expirationData.duration !== "always") {
     const now = Date.now();
     const start = expirationData.start;
     const diff = now - start;
-    const maxTime = expirationData.duration === "1h" ? 3600000 : 86400000;
-    if (diff > maxTime) {
+    if ((expirationData.duration === "1h" && diff > 3600000) || (expirationData.duration === "24h" && diff > 86400000)) {
       denied.textContent = "⛔ Link scaduto.";
       denied.style.display = "block";
       return;
     }
-    const remaining = maxTime - diff;
-    timerBox.textContent = `⏳ Tempo rimanente: ${formatTime(remaining)}`;
-    const interval = setInterval(() => {
-      const now = Date.now();
-      const diff = now - start;
-      const remaining = maxTime - diff;
-      if (remaining <= 0) {
-        clearInterval(interval);
-        denied.textContent = "⛔ Link scaduto.";
-        denied.style.display = "block";
-        main.style.display = "none";
-      } else {
-        timerBox.textContent = `⏳ Tempo rimanente: ${formatTime(remaining)}`;
-      }
-    }, 1000);
   }
+
   if (openedFlag) {
     denied.textContent = "⛔ Questo link è già stato utilizzato.";
     denied.style.display = "block";
     return;
   }
+
   if (!saved) {
     localStorage.setItem("invione_" + sessionId, fingerprint);
     main.style.display = "block";
@@ -197,9 +185,11 @@ document.addEventListener("DOMContentLoaded", () => {
   } else {
     denied.style.display = "block";
   }
+
   const fileInput = document.getElementById("fileInput");
   const previewContainer = document.getElementById("previewContainer");
   const linkOutput = document.getElementById("linkOutput");
+
   fileInput.addEventListener("change", () => {
     const files = Array.from(fileInput.files);
     files.forEach(file => {
@@ -230,9 +220,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     fileInput.value = "";
   });
+
   document.addEventListener("contextmenu", e => e.preventDefault());
   window.addEventListener("blur", () => overlay.style.display = "flex");
   window.addEventListener("focus", () => overlay.style.display = "none");
+
   window.addEventListener("keydown", (e) => {
     if (e.key === "PrintScreen" || (e.ctrlKey && e.key.toLowerCase() === "p")) {
       overlay.style.display = "flex";
@@ -240,36 +232,23 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
     }
   });
+
   document.getElementById("submitBtn").addEventListener("click", async () => {
     const mediaElements = document.querySelectorAll(".preview-card img, .preview-card video");
     if (mediaElements.length === 0) {
       alert("⚠️ Nessun file selezionato.");
       return;
     }
+
     const selected = document.querySelector('input[name="duration"]:checked').value;
     localStorage.setItem("invione_expiration_" + sessionId, JSON.stringify({ duration: selected, start: Date.now() }));
-    if (selected !== "always") {
-      const maxTime = selected === "1h" ? 3600000 : 86400000;
-      const timerBox = document.getElementById("timerBox");
-      const start = Date.now();
-      const interval = setInterval(() => {
-        const diff = Date.now() - start;
-        const remaining = maxTime - diff;
-        if (remaining <= 0) {
-          clearInterval(interval);
-          denied.textContent = "⛔ Link scaduto.";
-          denied.style.display = "block";
-          main.style.display = "none";
-        } else {
-          timerBox.textContent = `⏳ Tempo rimanente: ${formatTime(remaining)}`;
-        }
-      }, 1000);
-    }
+
     for (const media of mediaElements) {
       const blob = await fetch(media.src).then(r => r.blob());
       const fileName = Date.now() + "_" + Math.random().toString(36).substring(2);
       await supabaseClient.storage.from("uploads").upload(fileName, blob);
     }
+
     const link = window.location.origin + window.location.pathname + "?id=" + sessionId;
     linkOutput.textContent = "🔗 Link generato: " + link;
     navigator.clipboard.writeText(link);

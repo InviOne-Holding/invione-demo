@@ -6,7 +6,6 @@
 <title>InviOne™</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 <style>
-/* Tutto il tuo stile invariato */
 body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family: Arial, sans-serif; text-align: center; padding: 20px; user-select: none; }
 .upload-zone { border: 2px dashed #4ade80; padding: 20px; margin-bottom: 20px; border-radius: 15px; background: #1a1a1a; transition: 0.3s; }
 .upload-zone:hover { background: #222; }
@@ -18,7 +17,7 @@ body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family
 #linkOutput { margin-top: 20px; color: #4ade80; font-weight: bold; word-break: break-word; background: #111; padding: 10px; border-radius: 10px; }
 #logo-fixed { position: fixed; bottom: 20px; right: 20px; width: 100px; opacity: 0.9; z-index: 10000; filter: drop-shadow(0 0 10px #4ade80); }
 #disclaimer { color: #ffc107; font-size: 16px; font-weight: bold; margin-top: 20px; }
-#overlay { position: fixed; top: 0; left: 0; height: 100vh; width: 100vw; background-color: rgba(0,0,0,0.95); color: #ff4c4c; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; z-index: 9999; display: none; backdrop-filter: blur(5px); }
+#overlay { position: fixed; top: 0; left: 0; height: 100vh; width: 100vw; background-color: rgba(0,0,0,0.95); color: #ff4c4c; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; z-index: 9999; display: none; backdrop-filter: blur(5px); animation: pulse 2s infinite; }
 #timerBox { margin-top: 10px; font-size: 18px; font-weight: bold; color: #4ade80; }
 #legalPopup { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 10001; color: #fff; }
 #legalPopupContent { background: #111; padding: 20px; border-radius: 10px; max-width: 400px; text-align: left; box-shadow: 0 0 20px #000; }
@@ -96,9 +95,7 @@ const overlay = document.getElementById("overlay");
 const timerBox = document.getElementById("timerBox");
 if (isAdminDevice()) {
 main.style.display = "block";
-return;
-}
-if (expirationData && expirationData.duration !== "always") {
+} else if (expirationData && expirationData.duration !== "always") {
 const now = Date.now();
 const start = expirationData.start;
 const diff = now - start;
@@ -123,11 +120,11 @@ main.style.display = "none";
 timerBox.textContent = `⏳ Tempo rimanente: ${formatTime(remaining)}`;
 }
 }, 1000);
-}
 if (openedFlag) {
 dened.textContent = "⛔ Questo link è già stato utilizzato.";
 dened.style.display = "block";
 return;
+}
 }
 if (!saved) {
 localStorage.setItem("invione_" + sessionId, fingerprint);
@@ -192,6 +189,22 @@ return;
 }
 const selected = document.querySelector('input[name="duration"]:checked').value;
 localStorage.setItem("invione_expiration_" + sessionId, JSON.stringify({ duration: selected, start: Date.now() }));
+if (selected !== "always") {
+const maxTime = selected === "1h" ? 3600000 : 86400000;
+const start = Date.now();
+const interval = setInterval(() => {
+const diff = Date.now() - start;
+const remaining = maxTime - diff;
+if (remaining <= 0) {
+clearInterval(interval);
+dened.textContent = "⛔ Link scaduto.";
+dened.style.display = "block";
+main.style.display = "none";
+} else {
+timerBox.textContent = `⏳ Tempo rimanente: ${formatTime(remaining)}`;
+}
+}, 1000);
+}
 for (const media of mediaElements) {
 const blob = await fetch(media.src).then(r => r.blob());
 const fileName = Date.now() + "_" + Math.random().toString(36).substring(2);

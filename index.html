@@ -1,156 +1,156 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>InviOne™</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <style>
-    body {
-      background: linear-gradient(135deg, #000, #111);
-      color: #fff;
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 20px;
-      user-select: none;
-    }
-    .upload-zone {
-      border: 2px dashed #4ade80;
-      padding: 20px;
-      margin-bottom: 20px;
-      border-radius: 15px;
-      background: #1a1a1a;
-      transition: 0.3s;
-    }
-    .upload-zone:hover {
-      background: #222;
-    }
-    .preview-card {
-      background: #111;
-      padding: 10px;
-      margin: 10px;
-      display: inline-block;
-      max-width: 300px;
-      vertical-align: top;
-      border-radius: 10px;
-      box-shadow: 0 0 10px #000;
-    }
-    .remove-button {
-      background: crimson;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      margin-top: 10px;
-      cursor: pointer;
-      border-radius: 5px;
-      transition: 0.3s;
-    }
-    .remove-button:hover {
-      background: darkred;
-    }
-    #submitBtn {
-      background: #16a34a;
-      color: white;
-      font-weight: bold;
-      padding: 10px 20px;
-      border: none;
-      margin-top: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px #16a34a;
-      transition: 0.3s;
-    }
-    #submitBtn:hover {
-      background: #15803d;
-    }
-    #linkOutput {
-      margin-top: 20px;
-      color: #4ade80;
-      font-weight: bold;
-      word-break: break-word;
-      background: #111;
-      padding: 10px;
-      border-radius: 10px;
-    }
-    #logo-fixed {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 100px;
-      opacity: 0.9;
-      z-index: 10000;
-      filter: drop-shadow(0 0 10px #4ade80);
-    }
-    #disclaimer {
-      color: #ffc107;
-      font-size: 16px;
-      font-weight: bold;
-      margin-top: 20px;
-    }
-    #overlay {
-      position: fixed;
-      top: 0; left: 0;
-      height: 100vh; width: 100vw;
-      background-color: rgba(0,0,0,0.95);
-      color: #ff4c4c;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 32px;
-      font-weight: bold;
-      z-index: 9999;
-      display: none;
-      backdrop-filter: blur(5px);
-      animation: pulse 2s infinite;
-    }
-    #timerBox {
-      margin-top: 10px;
-      font-size: 18px;
-      font-weight: bold;
-      color: #4ade80;
-    }
-    #legalPopup {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.9);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 10001;
-      color: #fff;
-    }
-    #legalPopupContent {
-      background: #111;
-      padding: 20px;
-      border-radius: 10px;
-      max-width: 400px;
-      text-align: left;
-      box-shadow: 0 0 20px #000;
-    }
-    #acceptBtn {
-      background: #16a34a;
-      color: white;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 10px;
-      margin-top: 10px;
-      width: 100%;
-      font-weight: bold;
-      cursor: pointer;
-      opacity: 0.6;
-    }
-    #acceptBtn.enabled {
-      opacity: 1;
-      cursor: pointer;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InviOne™</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<style>
+body {
+  background: linear-gradient(135deg, #000, #111);
+  color: #fff;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  padding: 20px;
+  user-select: none;
+}
+.upload-zone {
+  border: 2px dashed #4ade80;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 15px;
+  background: #1a1a1a;
+  transition: 0.3s;
+}
+.upload-zone:hover {
+  background: #222;
+}
+.preview-card {
+  background: #111;
+  padding: 10px;
+  margin: 10px;
+  display: inline-block;
+  max-width: 300px;
+  vertical-align: top;
+  border-radius: 10px;
+  box-shadow: 0 0 10px #000;
+}
+.remove-button {
+  background: crimson;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  margin-top: 10px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: 0.3s;
+}
+.remove-button:hover {
+  background: darkred;
+}
+#submitBtn {
+  background: #16a34a;
+  color: white;
+  font-weight: bold;
+  padding: 10px 20px;
+  border: none;
+  margin-top: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px #16a34a;
+  transition: 0.3s;
+}
+#submitBtn:hover {
+  background: #15803d;
+}
+#linkOutput {
+  margin-top: 20px;
+  color: #4ade80;
+  font-weight: bold;
+  word-break: break-word;
+  background: #111;
+  padding: 10px;
+  border-radius: 10px;
+}
+#logo-fixed {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 100px;
+  opacity: 0.9;
+  z-index: 10000;
+  filter: drop-shadow(0 0 10px #4ade80);
+}
+#disclaimer {
+  color: #ffc107;
+  font-size: 16px;
+  font-weight: bold;
+  margin-top: 20px;
+}
+#overlay {
+  position: fixed;
+  top: 0; left: 0;
+  height: 100vh; width: 100vw;
+  background-color: rgba(0,0,0,0.95);
+  color: #ff4c4c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: bold;
+  z-index: 9999;
+  display: none;
+  backdrop-filter: blur(5px);
+}
+#timerBox {
+  margin-top: 10px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #4ade80;
+}
+#legalPopup {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+  color: #fff;
+}
+#legalPopupContent {
+  background: #111;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 400px;
+  text-align: left;
+  box-shadow: 0 0 20px #000;
+}
+#acceptBtn {
+  background: #16a34a;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  margin-top: 10px;
+  width: 100%;
+  font-weight: bold;
+  cursor: pointer;
+  opacity: 0.6;
+}
+#acceptBtn.enabled {
+  opacity: 1;
+}
+</style>
 </head>
 <body>
 <div id="legalPopup">
-  <div id="legalPopupContent">
-    <h2>Condizioni d'Uso</h2>
-    <p>⚠️ Questo contenuto è protetto. Vietata la diffusione, copia o registrazione, incluse foto e screenshot. Violazioni saranno perseguite a norma di legge.</p>
-    <label><input type="checkbox" id="acceptCheckbox"> Dichiaro di aver letto e accettato le condizioni.</label>
-    <button id="acceptBtn" disabled>Accedi</button>
-  </div>
+<div id="legalPopupContent">
+<h2>Condizioni d'Uso</h2>
+<p>⚠️ Questo contenuto è protetto. Vietata la diffusione, copia o registrazione, incluse foto e screenshot. Violazioni saranno perseguite a norma di legge.</p>
+<label><input type="checkbox" id="acceptCheckbox"> Dichiaro di aver letto e accettato le condizioni.</label>
+<button id="acceptBtn" disabled>Accedi</button>
+</div>
 </div>
 <div id="accessDenied" style="display:none; padding:20px; color:red; background:#111; font-weight:bold; border-radius:10px;">🔒 Accesso negato o scaduto.</div>
 <div id="mainContent" style="display:none">
@@ -178,40 +178,158 @@ const supabaseUrl = 'https://opsvjksjatksezmhygdz.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wc3Zqa3NqYXRrc2V6bWh5Z2R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MjIwMDUsImV4cCI6MjA2NjE5ODAwNX0.04AwPujY-uMEfjywnryX8Rf-U5HPfwc9F1-yTLBWIiw';
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 function generateFingerprint() {
-  return "admin-fingerprint";
+return "admin-fingerprint";
 }
 function isAdminDevice() {
-  return true;
-}
-function formatTime(ms) {
-  const totalSeconds = Math.floor(ms / 1000);
-  const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
-  const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
-  const seconds = String(totalSeconds % 60).padStart(2, '0');
-  return `${hours}:${minutes}:${seconds}`;
+return true;
 }
 document.addEventListener("DOMContentLoaded", () => {
 const legalPopup = document.getElementById("legalPopup");
 const acceptBtn = document.getElementById("acceptBtn");
 const acceptCheckbox = document.getElementById("acceptCheckbox");
 acceptCheckbox.addEventListener("change", () => {
-  if (acceptCheckbox.checked) {
-    acceptBtn.disabled = false;
-    acceptBtn.classList.add("enabled");
-  } else {
-    acceptBtn.disabled = true;
-    acceptBtn.classList.remove("enabled");
-  }
+acceptBtn.disabled = !acceptCheckbox.checked;
+acceptBtn.classList.toggle("enabled", acceptCheckbox.checked);
 });
 acceptBtn.addEventListener("click", () => {
-  legalPopup.style.display = "none";
-  localStorage.setItem("invione_accepted", "true");
+legalPopup.style.display = "none";
+localStorage.setItem("invione_accepted", "true");
+inizializzaSistema();
 });
 if (localStorage.getItem("invione_accepted") === "true" || isAdminDevice()) {
-  legalPopup.style.display = "none";
+legalPopup.style.display = "none";
+inizializzaSistema();
 }
-// resto codice invariato...
 });
+function inizializzaSistema() {
+const params = new URLSearchParams(window.location.search);
+const sessionId = params.get("id") || "admin123";
+const fingerprint = generateFingerprint();
+const saved = localStorage.getItem("invione_" + sessionId);
+const expirationData = JSON.parse(localStorage.getItem("invione_expiration_" + sessionId) || "null");
+const openedFlag = localStorage.getItem("invione_opened_" + sessionId);
+const main = document.getElementById("mainContent");
+const denied = document.getElementById("accessDenied");
+const overlay = document.getElementById("overlay");
+const timerBox = document.getElementById("timerBox");
+if (isAdminDevice()) {
+main.style.display = "block";
+return;
+}
+if (expirationData && expirationData.duration !== "always") {
+const now = Date.now();
+const start = expirationData.start;
+const diff = now - start;
+const maxTime = expirationData.duration === "1h" ? 3600000 : 86400000;
+if (diff > maxTime) {
+dened.textContent = "⛔ Link scaduto.";
+dened.style.display = "block";
+return;
+}
+const remaining = maxTime - diff;
+timerBox.textContent = `⏳ Tempo rimanente: ${formatTime(remaining)}`;
+const interval = setInterval(() => {
+const now = Date.now();
+const diff = now - start;
+const remaining = maxTime - diff;
+if (remaining <= 0) {
+clearInterval(interval);
+dened.textContent = "⛔ Link scaduto.";
+dened.style.display = "block";
+main.style.display = "none";
+} else {
+timerBox.textContent = `⏳ Tempo rimanente: ${formatTime(remaining)}`;
+}
+}, 1000);
+}
+if (openedFlag) {
+dened.textContent = "⛔ Questo link è già stato utilizzato.";
+dened.style.display = "block";
+return;
+}
+if (!saved) {
+localStorage.setItem("invione_" + sessionId, fingerprint);
+main.style.display = "block";
+localStorage.setItem("invione_opened_" + sessionId, true);
+} else if (saved === fingerprint) {
+main.style.display = "block";
+localStorage.setItem("invione_opened_" + sessionId, true);
+} else {
+dened.style.display = "block";
+}
+const fileInput = document.getElementById("fileInput");
+const previewContainer = document.getElementById("previewContainer");
+const linkOutput = document.getElementById("linkOutput");
+fileInput.addEventListener("change", () => {
+const files = Array.from(fileInput.files);
+files.forEach(file => {
+const reader = new FileReader();
+reader.onload = e => {
+const card = document.createElement("div");
+card.className = "preview-card";
+if (file.type.startsWith("image")) {
+const img = document.createElement("img");
+img.src = e.target.result;
+img.style.maxWidth = "100%";
+card.appendChild(img);
+} else if (file.type.startsWith("video")) {
+const vid = document.createElement("video");
+vid.src = e.target.result;
+vid.controls = true;
+vid.style.maxWidth = "100%";
+card.appendChild(vid);
+}
+const btn = document.createElement("button");
+btn.textContent = "Rimuovi";
+btn.className = "remove-button";
+btn.onclick = () => card.remove();
+card.appendChild(btn);
+previewContainer.appendChild(card);
+};
+reader.readAsDataURL(file);
+});
+fileInput.value = "";
+});
+document.addEventListener("contextmenu", e => e.preventDefault());
+document.addEventListener("selectstart", e => e.preventDefault());
+document.addEventListener("dragstart", e => e.preventDefault());
+window.addEventListener("blur", () => overlay.style.display = "flex");
+window.addEventListener("focus", () => overlay.style.display = "none");
+window.addEventListener("keydown", (e) => {
+if (e.key === "PrintScreen" || (e.ctrlKey && e.key.toLowerCase() === "p")) {
+overlay.style.display = "flex";
+setTimeout(() => overlay.style.display = "none", 3000);
+e.preventDefault();
+}
+});
+document.getElementById("submitBtn").addEventListener("click", async () => {
+const mediaElements = document.querySelectorAll(".preview-card img, .preview-card video");
+if (mediaElements.length === 0) {
+alert("⚠️ Nessun file selezionato.");
+return;
+}
+const selected = document.querySelector('input[name="duration"]:checked').value;
+localStorage.setItem("invione_expiration_" + sessionId, JSON.stringify({ duration: selected, start: Date.now() }));
+for (const media of mediaElements) {
+const blob = await fetch(media.src).then(r => r.blob());
+const fileName = Date.now() + "_" + Math.random().toString(36).substring(2);
+const { data, error } = await supabaseClient.storage.from("uploads").upload(fileName, blob);
+console.log("Upload risultato:", data, error);
+}
+const link = window.location.origin + window.location.pathname + "?id=" + sessionId;
+document.getElementById("linkOutput").textContent = "🔗 Link generato: " + link;
+navigator.clipboard.writeText(link);
+alert("✅ File caricati su InviOne™. Link copiato negli appunti.");
+previewContainer.innerHTML = "";
+});
+}
+function formatTime(ms) {
+const totalSeconds = Math.floor(ms / 1000);
+const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+const seconds = String(totalSeconds % 60).padStart(2, '0');
+return `${hours}:${minutes}:${seconds}`;
+}
 </script>
 </body>
 </html>

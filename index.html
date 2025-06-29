@@ -19,28 +19,19 @@ body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family
 #disclaimer { color: #ffc107; font-size: 16px; font-weight: bold; margin-top: 20px; }
 #overlay { position: fixed; top: 0; left: 0; height: 100vh; width: 100vw; background-color: rgba(0,0,0,0.95); color: #ff4c4c; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; z-index: 9999; display: none; backdrop-filter: blur(5px); animation: pulse 2s infinite; }
 #welcomeScreen { position: fixed; top: 0; left: 0; height: 100vh; width: 100vw; background-color: #000; color: #4ade80; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; z-index: 10001; animation: fadeOut 2s ease 3s forwards; }
-#errorMsg { color: red; font-weight: bold; background: #111; padding: 15px; border-radius: 10px; margin-top: 20px; display: none; }
 @keyframes pulse { 0% { opacity: 0.95; } 50% { opacity: 0.8; } 100% { opacity: 0.95; } }
 @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
-#timerBox { margin-top: 10px; font-size: 18px; font-weight: bold; color: #4ade80; }
 </style>
 </head>
 <body>
 <div id="welcomeScreen">👋 Benvenuto su InviOne™</div>
-<div id="errorMsg">⛔ Accesso negato: token mancante o non valido.</div>
+<div id="accessDenied" style="display:none; padding:20px; color:red; background:#111; font-weight:bold; border-radius:10px;">⛔ Accesso negato: token mancante o non valido.</div>
 <div id="mainContent" style="display:none">
 <h1>Benvenuto su InviOne™</h1>
 <div class="upload-zone">
 <label for="fileInput"><strong>Seleziona immagini o video da inviare</strong></label><br>
 <input type="file" id="fileInput" accept="image/*,video/*" multiple>
 </div>
-<div id="expirationOptions" style="margin-top: 20px; text-align: left; display: inline-block;">
-<strong>Durata accesso:</strong><br>
-<label><input type="radio" name="duration" value="always" checked> Per sempre</label><br>
-<label><input type="radio" name="duration" value="1h"> Solo 1 ora</label><br>
-<label><input type="radio" name="duration" value="24h"> Solo 24 ore</label>
-</div>
-<div id="timerBox"></div>
 <div id="previewContainer"></div>
 <button id="submitBtn">Invia</button>
 <div id="linkOutput"></div>
@@ -57,24 +48,30 @@ document.addEventListener("DOMContentLoaded", async () => {
   setTimeout(() => document.getElementById("welcomeScreen").style.display = "none", 5000);
   
   const params = new URLSearchParams(window.location.search);
-  const token = params.get("id");
+  const tokenParam = params.get("token");
   const main = document.getElementById("mainContent");
-  const errorMsg = document.getElementById("errorMsg");
+  const denied = document.getElementById("accessDenied");
   const overlay = document.getElementById("overlay");
 
-  if (!token) {
-    // Nessun token, mostra tutto normalmente
+  // Se non c'è token, accesso completo (pagina principale)
+  if (!tokenParam) {
     main.style.display = "block";
-  } else {
-    // Controllo token nel database
-    const { data, error } = await supabaseClient.from("tokens").select("*").eq("token", token).maybeSingle();
-    if (data) {
-      main.style.display = "block";
-    } else {
-      errorMsg.style.display = "block";
-    }
+    setupUpload();
+    return;
   }
 
+  // Se c'è token, verifica su Supabase
+  const { data, error } = await supabaseClient.from("tokens").select("*").eq("token", tokenParam).single();
+  if (error || !data) {
+    denied.style.display = "block";
+    return;
+  }
+
+  main.style.display = "block";
+  setupUpload();
+});
+
+function setupUpload() {
   const fileInput = document.getElementById("fileInput");
   const previewContainer = document.getElementById("previewContainer");
   const linkOutput = document.getElementById("linkOutput");
@@ -116,39 +113,29 @@ document.addEventListener("DOMContentLoaded", async () => {
       alert("⚠️ Nessun file selezionato.");
       return;
     }
+    const token = generateSecureId();
+    await supabaseClient.from("tokens").insert([{ token }]);
 
-    const { data, error } = await supabaseClient.from("tokens").insert([{ token: generateSecureId() }]).select();
-    if (error) {
-      console.error(error);
-      alert("Errore generazione link.");
-      return;
-    }
-
-    const generatedToken = data[0].token;
-    const link = window.location.origin + window.location.pathname + "?id=" + generatedToken;
+    const link = window.location.origin + window.location.pathname + "?token=" + token;
     linkOutput.textContent = "🔗 Link generato: " + link;
     navigator.clipboard.writeText(link);
-    alert("✅ Link copiato negli appunti.");
+    alert("✅ File inviati. Link copiato.");
     previewContainer.innerHTML = "";
   });
 
   document.addEventListener("contextmenu", e => e.preventDefault());
   document.addEventListener("selectstart", e => e.preventDefault());
   document.addEventListener("dragstart", e => e.preventDefault());
-  window.addEventListener("blur", () => overlay.style.display = "flex");
-  window.addEventListener("focus", () => overlay.style.display = "none");
+  window.addEventListener("blur", () => document.getElementById("overlay").style.display = "flex");
+  window.addEventListener("focus", () => document.getElementById("overlay").style.display = "none");
   window.addEventListener("keydown", e => {
-    if (e.key === "PrintScreen" || (e.ctrlKey && e.key.toLowerCase() === "p")) {
-      overlay.style.display = "flex";
-      setTimeout(() => overlay.style.display = "none", 3000);
+    if (e.key === "PrintScreen" || (e.ctrlKey && e.key.toLowerCase() === "p") || e.key === "F12" || (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J")) || (e.ctrlKey && e.key.toLowerCase() === "u")) {
       e.preventDefault();
-    }
-    if (e.key === "F12" || (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J")) || (e.ctrlKey && e.key.toLowerCase() === "u")) {
-      e.preventDefault();
-      alert("🚫 Ispezione disabilitata.");
+      document.getElementById("overlay").style.display = "flex";
+      setTimeout(() => document.getElementById("overlay").style.display = "none", 3000);
     }
   });
-});
+}
 
 function generateSecureId(length = 20) {
   const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';

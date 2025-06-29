@@ -73,17 +73,15 @@ function setupUpload() {
   const fileInput = document.getElementById("fileInput");
   const previewContainer = document.getElementById("previewContainer");
   const linkOutput = document.getElementById("linkOutput");
+  let fileCount = 0;
+  const maxFiles = 3;
 
   fileInput.addEventListener("change", () => {
-    previewContainer.innerHTML = "";
     const files = Array.from(fileInput.files);
-
-    if (files.length > 3) {
-      alert("⚠️ Limite massimo: 3 file per invio nella versione gratuita.");
-      fileInput.value = "";
+    if (fileCount + files.length > maxFiles) {
+      alert(`⚠️ Puoi caricare massimo ${maxFiles} file.`);
       return;
     }
-
     files.forEach(file => {
       const reader = new FileReader();
       reader.onload = e => {
@@ -104,9 +102,13 @@ function setupUpload() {
         const btn = document.createElement("button");
         btn.textContent = "Rimuovi";
         btn.className = "remove-button";
-        btn.onclick = () => card.remove();
+        btn.onclick = () => {
+          card.remove();
+          fileCount--;
+        };
         card.appendChild(btn);
         previewContainer.appendChild(card);
+        fileCount++;
       };
       reader.readAsDataURL(file);
     });
@@ -125,20 +127,16 @@ function setupUpload() {
     linkOutput.textContent = "🔗 Link generato: " + link;
     navigator.clipboard.writeText(link);
     alert("✅ Link protetto copiato negli appunti.");
-    console.log("⚠️ Supabase ricorda: limite tecnico noto 199 file per bucket. Monitorare o prevedere pulizia.");
   });
 }
 
 function applyProtections() {
   const overlay = document.getElementById("overlay");
-
   document.addEventListener("contextmenu", e => e.preventDefault());
   document.addEventListener("selectstart", e => e.preventDefault());
   document.addEventListener("dragstart", e => e.preventDefault());
-  
   window.addEventListener("blur", () => overlay.style.display = "flex");
   window.addEventListener("focus", () => overlay.style.display = "none");
-
   window.addEventListener("keydown", e => {
     if (e.key === "PrintScreen" || (e.ctrlKey && e.key.toLowerCase() === "p") || e.key === "F12" || (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J")) || (e.ctrlKey && e.key.toLowerCase() === "u")) {
       e.preventDefault();

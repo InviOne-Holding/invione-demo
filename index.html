@@ -6,7 +6,7 @@
 <title>InviOne™</title>
 <script src="https://unpkg.com/@supabase/supabase-js@2.39.6/dist/umd/supabase.js"></script>
 <style>
-body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family: Arial, sans-serif; text-align: center; padding: 20px; user-select: none; }
+body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family: Arial, sans-serif; text-align: center; padding: 20px; user-select: none; overflow: hidden; }
 .upload-zone { border: 2px dashed #4ade80; padding: 20px; margin-bottom: 20px; border-radius: 15px; background: #1a1a1a; transition: 0.3s; }
 .upload-zone:hover { background: #222; }
 .preview-card { background: #111; padding: 10px; margin: 10px; display: inline-block; max-width: 300px; vertical-align: top; border-radius: 10px; box-shadow: 0 0 10px #000; }
@@ -18,28 +18,27 @@ body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family
 #logo-fixed { position: fixed; bottom: 20px; right: 20px; width: 100px; opacity: 0.9; z-index: 10000; filter: drop-shadow(0 0 10px #4ade80); }
 #disclaimer { color: #ffc107; font-size: 16px; font-weight: bold; margin-top: 20px; }
 #overlay { position: fixed; top: 0; left: 0; height: 100vh; width: 100vw; background-color: rgba(0,0,0,0.95); color: #ff4c4c; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; z-index: 9999; display: none; backdrop-filter: blur(5px); animation: pulse 2s infinite; }
-#timerBox { margin-top: 10px; font-size: 18px; font-weight: bold; color: #4ade80; }
+#welcomeScreen { position: fixed; top: 0; left: 0; height: 100vh; width: 100vw; background-color: #000; color: #4ade80; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; z-index: 10001; animation: fadeOut 2s ease 3s forwards; }
 @keyframes pulse { 0% { opacity: 0.95; } 50% { opacity: 0.8; } 100% { opacity: 0.95; } }
+@keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
+#timerBox { margin-top: 10px; font-size: 18px; font-weight: bold; color: #4ade80; }
 </style>
 </head>
 <body>
-
+<div id="welcomeScreen">👋 Benvenuto su InviOne™</div>
 <div id="accessDenied" style="display:none; padding:20px; color:red; background:#111; font-weight:bold; border-radius:10px;">🔒 Accesso negato o scaduto.</div>
 <div id="mainContent" style="display:none">
 <h1>Benvenuto su InviOne™</h1>
-
 <div class="upload-zone">
 <label for="fileInput"><strong>Seleziona immagini o video da inviare</strong></label><br>
 <input type="file" id="fileInput" accept="image/*,video/*" multiple>
 </div>
-
 <div id="expirationOptions" style="margin-top: 20px; text-align: left; display: inline-block;">
 <strong>Durata accesso:</strong><br>
 <label><input type="radio" name="duration" value="always" checked> Per sempre</label><br>
 <label><input type="radio" name="duration" value="1h"> Solo 1 ora</label><br>
 <label><input type="radio" name="duration" value="24h"> Solo 24 ore</label>
 </div>
-
 <div id="timerBox"></div>
 <div id="previewContainer"></div>
 <button id="submitBtn">Invia</button>
@@ -47,112 +46,62 @@ body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family
 <div id="disclaimer">⚠️ L'utente può ancora scattare foto dello schermo con dispositivi esterni. InviOne™ adotta tutte le misure possibili, ma non si assume responsabilità in caso di violazioni.</div>
 <img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne™">
 </div>
-
 <div id="overlay">🔒 Contenuto protetto</div>
-
 <script>
 const supabaseUrl = 'https://opsvjksjatksezmhygdz.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wc3Zqa3NqYXRrc2V6bWh5Z2R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MjIwMDUsImV4cCI6MjA2NjE5ODAwNX0.04AwPujY-uMEfjywnryX8Rf-U5HPfwc9F1-yTLBWIiw';
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-
 function generateFingerprint() {
-  const ua = navigator.userAgent;
-  const lang = navigator.language;
-  const screenRes = `${screen.width}x${screen.height}`;
-  
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-  ctx.textBaseline = 'top';
-  ctx.font = "14px Arial";
-  ctx.textBaseline = "alphabetic";
-  ctx.fillStyle = "#f60";
-  ctx.fillRect(125,1,62,20);
-  ctx.fillStyle = "#069";
-  ctx.fillText("InviOne™ Fingerprint", 2, 15);
-  const canvasData = canvas.toDataURL();
-
-  return btoa(ua + lang + screenRes + canvasData);
+  return navigator.userAgent + navigator.language + screen.width + screen.height;
 }
-
-function isAdminDevice() {
-  return true;
-}
-
-function formatTime(ms) {
-  const totalSeconds = Math.floor(ms / 1000);
-  const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
-  const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
-  const seconds = String(totalSeconds % 60).padStart(2, '0');
-  return `${hours}:${minutes}:${seconds}`;
-}
-
-function generateSecureId(length = 20) {
-  const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
-  for (let i = 0; i < length; i++) {
-    result += charset.charAt(Math.floor(Math.random() * charset.length));
-  }
-  return result;
-}
-
 document.addEventListener("DOMContentLoaded", () => {
+  setTimeout(() => document.getElementById("welcomeScreen").style.display = "none", 5000);
   const params = new URLSearchParams(window.location.search);
   const sessionId = params.get("id") || "admin123";
   const fingerprint = generateFingerprint();
   const saved = localStorage.getItem("invione_" + sessionId);
   const expirationData = JSON.parse(localStorage.getItem("invione_expiration_" + sessionId) || "null");
   const openedFlag = localStorage.getItem("invione_opened_" + sessionId);
-
   const main = document.getElementById("mainContent");
   const denied = document.getElementById("accessDenied");
   const overlay = document.getElementById("overlay");
   const timerBox = document.getElementById("timerBox");
 
-  if (isAdminDevice()) {
+  if (fingerprint === "admin-fingerprint" || !saved) {
+    localStorage.setItem("invione_" + sessionId, fingerprint);
+    localStorage.setItem("invione_opened_" + sessionId, true);
     main.style.display = "block";
-  } else if (expirationData && expirationData.duration !== "always") {
+  } else if (saved === fingerprint) {
+    main.style.display = "block";
+  } else {
+    denied.style.display = "block";
+  }
+
+  if (expirationData && expirationData.duration !== "always") {
     const now = Date.now();
     const start = expirationData.start;
     const diff = now - start;
     const maxTime = expirationData.duration === "1h" ? 3600000 : 86400000;
-
     if (diff > maxTime) {
       denied.textContent = "⛔ Link scaduto.";
       denied.style.display = "block";
-      return;
-    }
-
-    const remaining = maxTime - diff;
-    timerBox.textContent = `⏳ Tempo rimanente: ${formatTime(remaining)}`;
-    const interval = setInterval(() => {
-      const diff = Date.now() - start;
+      main.style.display = "none";
+    } else {
       const remaining = maxTime - diff;
-      if (remaining <= 0) {
-        clearInterval(interval);
-        denied.textContent = "⛔ Link scaduto.";
-        denied.style.display = "block";
-        main.style.display = "none";
-      } else {
-        timerBox.textContent = `⏳ Tempo rimanente: ${formatTime(remaining)}`;
-      }
-    }, 1000);
-
-    if (openedFlag) {
-      denied.textContent = "⛔ Questo link è già stato utilizzato.";
-      denied.style.display = "block";
-      return;
+      timerBox.textContent = `⏳ Tempo rimanente: ${formatTime(remaining)}`;
+      const interval = setInterval(() => {
+        const diff = Date.now() - start;
+        const remaining = maxTime - diff;
+        if (remaining <= 0) {
+          clearInterval(interval);
+          denied.textContent = "⛔ Link scaduto.";
+          denied.style.display = "block";
+          main.style.display = "none";
+        } else {
+          timerBox.textContent = `⏳ Tempo rimanente: ${formatTime(remaining)}`;
+        }
+      }, 1000);
     }
-  }
-
-  if (!saved) {
-    localStorage.setItem("invione_" + sessionId, fingerprint);
-    main.style.display = "block";
-    localStorage.setItem("invione_opened_" + sessionId, true);
-  } else if (saved === fingerprint) {
-    main.style.display = "block";
-    localStorage.setItem("invione_opened_" + sessionId, true);
-  } else {
-    denied.style.display = "block";
   }
 
   const fileInput = document.getElementById("fileInput");
@@ -166,7 +115,6 @@ document.addEventListener("DOMContentLoaded", () => {
       reader.onload = e => {
         const card = document.createElement("div");
         card.className = "preview-card";
-
         if (file.type.startsWith("image")) {
           const img = document.createElement("img");
           img.src = e.target.result;
@@ -179,13 +127,11 @@ document.addEventListener("DOMContentLoaded", () => {
           vid.style.maxWidth = "100%";
           card.appendChild(vid);
         }
-
         const btn = document.createElement("button");
         btn.textContent = "Rimuovi";
         btn.className = "remove-button";
         btn.onclick = () => card.remove();
         card.appendChild(btn);
-
         previewContainer.appendChild(card);
       };
       reader.readAsDataURL(file);
@@ -196,11 +142,9 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("contextmenu", e => e.preventDefault());
   document.addEventListener("selectstart", e => e.preventDefault());
   document.addEventListener("dragstart", e => e.preventDefault());
-
   window.addEventListener("blur", () => overlay.style.display = "flex");
   window.addEventListener("focus", () => overlay.style.display = "none");
-
-  window.addEventListener("keydown", e => {
+  window.addEventListener("keydown", (e) => {
     if (e.key === "PrintScreen" || (e.ctrlKey && e.key.toLowerCase() === "p")) {
       overlay.style.display = "flex";
       setTimeout(() => overlay.style.display = "none", 3000);
@@ -218,7 +162,6 @@ document.addEventListener("DOMContentLoaded", () => {
       alert("⚠️ Nessun file selezionato.");
       return;
     }
-
     const selected = document.querySelector('input[name="duration"]:checked').value;
     localStorage.setItem("invione_expiration_" + sessionId, JSON.stringify({ duration: selected, start: Date.now() }));
 
@@ -236,6 +179,21 @@ document.addEventListener("DOMContentLoaded", () => {
     previewContainer.innerHTML = "";
   });
 });
+function formatTime(ms) {
+  const totalSeconds = Math.floor(ms / 1000);
+  const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+  const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+  const seconds = String(totalSeconds % 60).padStart(2, '0');
+  return `${hours}:${minutes}:${seconds}`;
+}
+function generateSecureId(length = 20) {
+  const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += charset.charAt(Math.floor(Math.random() * charset.length));
+  }
+  return result;
+}
 </script>
 </body>
 </html>

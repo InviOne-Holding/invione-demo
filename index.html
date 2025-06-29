@@ -29,7 +29,7 @@ body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family
 <div id="mainContent" style="display:none">
 <h1>Benvenuto su InviOne™</h1>
 <div class="upload-zone">
-<label for="fileInput"><strong>Seleziona immagini o video da inviare</strong></label><br>
+<label for="fileInput"><strong>Seleziona immagini o video da inviare (max 3)</strong></label><br>
 <input type="file" id="fileInput" accept="image/*,video/*" multiple>
 </div>
 <div id="previewContainer"></div>
@@ -77,6 +77,13 @@ function setupUpload() {
   fileInput.addEventListener("change", () => {
     previewContainer.innerHTML = "";
     const files = Array.from(fileInput.files);
+
+    if (files.length > 3) {
+      alert("⚠️ Limite massimo: 3 file per invio nella versione gratuita.");
+      fileInput.value = "";
+      return;
+    }
+
     files.forEach(file => {
       const reader = new FileReader();
       reader.onload = e => {
@@ -118,6 +125,7 @@ function setupUpload() {
     linkOutput.textContent = "🔗 Link generato: " + link;
     navigator.clipboard.writeText(link);
     alert("✅ Link protetto copiato negli appunti.");
+    console.log("⚠️ Supabase ricorda: limite tecnico noto 199 file per bucket. Monitorare o prevedere pulizia.");
   });
 }
 

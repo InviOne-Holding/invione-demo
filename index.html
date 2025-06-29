@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -24,7 +24,7 @@ body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family
 </head>
 <body>
 <div id="accessDenied" style="display:none; padding:20px; color:red; background:#111; font-weight:bold; border-radius:10px;">🔒 Accesso negato o scaduto.</div>
-<div id="mainContent" style="display:none">
+<div id="mainContent">
 <h1>Benvenuto su InviOne™</h1>
 <div class="upload-zone">
 <label for="fileInput"><strong>Seleziona immagini o video da inviare</strong></label><br>
@@ -46,16 +46,10 @@ body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family
 <div id="overlay">🔒 Contenuto protetto</div>
 <script>
 const supabaseUrl = 'https://opsvjksjatksezmhygdz.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wc3Zqa3NqYXRrc2V6bWh5Z2R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MjIwMDUsImV4cCI6MjA2NjE5ODAwNX0.04AwPujY-uMEfjywnryX8Rf-U5HPfwc9F1-yTLBWIiw';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-function generateFingerprint() {
-  return "admin-fingerprint";
-}
-function isAdminDevice() {
-  return true;
-}
-function generateSecureId(length = 25) {
+function generateSecureId(length = 20) {
   const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
   for (let i = 0; i < length; i++) {
@@ -63,79 +57,13 @@ function generateSecureId(length = 25) {
   }
   return result;
 }
-function formatTime(ms) {
-  const totalSeconds = Math.floor(ms / 1000);
-  const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
-  const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
-  const seconds = String(totalSeconds % 60).padStart(2, '0');
-  return `${hours}:${minutes}:${seconds}`;
-}
 
 document.addEventListener("DOMContentLoaded", () => {
-  const params = new URLSearchParams(window.location.search);
-  const sessionId = params.get("id") || "admin123";
-  const urlToken = params.get("token");
-  const fingerprint = generateFingerprint();
-  const saved = localStorage.getItem("invione_" + sessionId);
-  const savedToken = localStorage.getItem("invione_token_" + sessionId);
-  const expirationData = JSON.parse(localStorage.getItem("invione_expiration_" + sessionId) || "null");
-  const openedFlag = localStorage.getItem("invione_opened_" + sessionId);
-  const main = document.getElementById("mainContent");
-  const denied = document.getElementById("accessDenied");
-  const overlay = document.getElementById("overlay");
-  const timerBox = document.getElementById("timerBox");
-
-  if (isAdminDevice()) {
-    main.style.display = "block";
-  } else if (!urlToken || urlToken !== savedToken) {
-    denied.textContent = "⛔ Accesso non autorizzato.";
-    denied.style.display = "block";
-    return;
-  } else if (expirationData && expirationData.duration !== "always") {
-    const now = Date.now();
-    const start = expirationData.start;
-    const diff = now - start;
-    const maxTime = expirationData.duration === "1h" ? 3600000 : 86400000;
-    if (diff > maxTime) {
-      denied.textContent = "⛔ Link scaduto.";
-      denied.style.display = "block";
-      return;
-    }
-    const remaining = maxTime - diff;
-    timerBox.textContent = `⏳ Tempo rimanente: ${formatTime(remaining)}`;
-    const interval = setInterval(() => {
-      const diff = Date.now() - start;
-      const remaining = maxTime - diff;
-      if (remaining <= 0) {
-        clearInterval(interval);
-        denied.textContent = "⛔ Link scaduto.";
-        denied.style.display = "block";
-        main.style.display = "none";
-      } else {
-        timerBox.textContent = `⏳ Tempo rimanente: ${formatTime(remaining)}`;
-      }
-    }, 1000);
-    if (openedFlag) {
-      denied.textContent = "⛔ Questo link è già stato utilizzato.";
-      denied.style.display = "block";
-      return;
-    }
-  }
-
-  if (!saved) {
-    localStorage.setItem("invione_" + sessionId, fingerprint);
-    main.style.display = "block";
-    localStorage.setItem("invione_opened_" + sessionId, true);
-  } else if (saved === fingerprint) {
-    main.style.display = "block";
-    localStorage.setItem("invione_opened_" + sessionId, true);
-  } else {
-    denied.style.display = "block";
-  }
-
   const fileInput = document.getElementById("fileInput");
   const previewContainer = document.getElementById("previewContainer");
   const linkOutput = document.getElementById("linkOutput");
+  const timerBox = document.getElementById("timerBox");
+  const overlay = document.getElementById("overlay");
 
   fileInput.addEventListener("change", () => {
     const files = Array.from(fileInput.files);
@@ -168,46 +96,41 @@ document.addEventListener("DOMContentLoaded", () => {
     fileInput.value = "";
   });
 
-  document.addEventListener("contextmenu", e => e.preventDefault());
-  document.addEventListener("selectstart", e => e.preventDefault());
-  document.addEventListener("dragstart", e => e.preventDefault());
-  window.addEventListener("blur", () => overlay.style.display = "flex");
-  window.addEventListener("focus", () => overlay.style.display = "none");
-  window.addEventListener("keydown", (e) => {
-    if (e.key === "PrintScreen" || (e.ctrlKey && e.key.toLowerCase() === "p")) {
-      overlay.style.display = "flex";
-      setTimeout(() => overlay.style.display = "none", 3000);
-      e.preventDefault();
-    }
-    if (e.key === "F12" || (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J")) || (e.ctrlKey && e.key.toLowerCase() === "u")) {
-      e.preventDefault();
-      alert("🚫 Ispezione disabilitata.");
-    }
-  });
-
   document.getElementById("submitBtn").addEventListener("click", async () => {
     const mediaElements = document.querySelectorAll(".preview-card img, .preview-card video");
     if (mediaElements.length === 0) {
       alert("⚠️ Nessun file selezionato.");
       return;
     }
+    const token = generateSecureId(25);
     const selected = document.querySelector('input[name="duration"]:checked').value;
-    const token = generateSecureId();
-    localStorage.setItem("invione_expiration_" + sessionId, JSON.stringify({ duration: selected, start: Date.now() }));
-    localStorage.setItem("invione_token_" + sessionId, token);
+    localStorage.setItem("invione_expiration_" + token, JSON.stringify({ duration: selected, start: Date.now() }));
 
     for (const media of mediaElements) {
       const blob = await fetch(media.src).then(r => r.blob());
       const fileName = Date.now() + "_" + generateSecureId();
-      const { data, error } = await supabaseClient.storage.from("uploads").upload(fileName, blob);
-      console.log("Upload risultato:", data, error);
+      await supabaseClient.storage.from("uploads").upload(fileName, blob);
     }
 
-    const link = `${window.location.origin}${window.location.pathname}?id=${sessionId}&token=${token}`;
+    const link = `${window.location.origin + window.location.pathname}?id=${token}`;
     linkOutput.textContent = "🔗 Link generato: " + link;
     navigator.clipboard.writeText(link);
     alert("✅ File caricati su InviOne™. Link copiato negli appunti.");
     previewContainer.innerHTML = "";
+  });
+
+  document.addEventListener("contextmenu", e => e.preventDefault());
+  document.addEventListener("selectstart", e => e.preventDefault());
+  document.addEventListener("dragstart", e => e.preventDefault());
+  window.addEventListener("blur", () => overlay.style.display = "flex");
+  window.addEventListener("focus", () => overlay.style.display = "none");
+  window.addEventListener("keydown", (e) => {
+    if (["PrintScreen", "F12"].includes(e.key) || (e.ctrlKey && ["p", "u"].includes(e.key.toLowerCase())) || (e.ctrlKey && e.shiftKey && ["I", "J"].includes(e.key))) {
+      overlay.style.display = "flex";
+      setTimeout(() => overlay.style.display = "none", 3000);
+      e.preventDefault();
+      alert("🚫 Funzione bloccata.");
+    }
   });
 });
 </script>

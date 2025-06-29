@@ -25,11 +25,10 @@ body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family
 </head>
 <body>
 <div id="welcomeScreen">👋 Benvenuto su InviOne™</div>
-<div id="accessDenied" style="display:none; padding:20px; color:red; background:#111; font-weight:bold; border-radius:10px;">⛔ Accesso negato: token mancante o non valido.</div>
-<div id="mainContent" style="display:none">
+<div id="mainContent">
 <h1>Benvenuto su InviOne™</h1>
 <div class="upload-zone">
-<label for="fileInput"><strong>Seleziona immagini o video da inviare (max 3)</strong></label><br>
+<label for="fileInput"><strong>Seleziona immagini o video da inviare</strong></label><br>
 <input type="file" id="fileInput" accept="image/*,video/*" multiple>
 </div>
 <div id="previewContainer"></div>
@@ -45,41 +44,21 @@ const supabaseUrl = 'https://opsvjksjatksezmhygdz.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wc3Zqa3NqYXRrc2V6bWh5Z2R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MjIwMDUsImV4cCI6MjA2NjE5ODAwNX0.04AwPujY-uMEfjywnryX8Rf-U5HPfwc9F1-yTLBWIiw';
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", () => {
   setTimeout(() => document.getElementById("welcomeScreen").style.display = "none", 5000);
-  
-  const params = new URLSearchParams(window.location.search);
-  const tokenParam = params.get("token");
-  const main = document.getElementById("mainContent");
-  const denied = document.getElementById("accessDenied");
-  
-  if (!tokenParam) {
-    main.style.display = "block";
-    setupUpload();
-    return;
-  }
-
-  const { data, error } = await supabaseClient.from("tokens").select("*").eq("token", tokenParam).single();
-  if (error || !data) {
-    denied.style.display = "block";
-    return;
-  }
-
-  main.style.display = "block";
-  applyProtections();
+  setupUpload();
 });
 
 function setupUpload() {
   const fileInput = document.getElementById("fileInput");
   const previewContainer = document.getElementById("previewContainer");
   const linkOutput = document.getElementById("linkOutput");
-  let fileCount = 0;
-  const maxFiles = 3;
 
-  fileInput.addEventListener("change", () => {
+  fileInput.addEventListener("change", async () => {
+    previewContainer.innerHTML = "";
     const files = Array.from(fileInput.files);
-    if (fileCount + files.length > maxFiles) {
-      alert(`⚠️ Puoi caricare massimo ${maxFiles} file.`);
+    if (files.length > 3) {
+      alert("⚠️ Puoi inviare massimo 3 file nella versione free.");
       return;
     }
     files.forEach(file => {
@@ -102,17 +81,16 @@ function setupUpload() {
         const btn = document.createElement("button");
         btn.textContent = "Rimuovi";
         btn.className = "remove-button";
-        btn.onclick = () => {
-          card.remove();
-          fileCount--;
-        };
+        btn.onclick = () => card.remove();
         card.appendChild(btn);
         previewContainer.appendChild(card);
-        fileCount++;
       };
       reader.readAsDataURL(file);
     });
     fileInput.value = "";
+
+    // Pulizia automatica ad ogni caricamento
+    await cleanupOldFiles();
   });
 
   document.getElementById("submitBtn").addEventListener("click", async () => {
@@ -130,20 +108,20 @@ function setupUpload() {
   });
 }
 
-function applyProtections() {
-  const overlay = document.getElementById("overlay");
-  document.addEventListener("contextmenu", e => e.preventDefault());
-  document.addEventListener("selectstart", e => e.preventDefault());
-  document.addEventListener("dragstart", e => e.preventDefault());
-  window.addEventListener("blur", () => overlay.style.display = "flex");
-  window.addEventListener("focus", () => overlay.style.display = "none");
-  window.addEventListener("keydown", e => {
-    if (e.key === "PrintScreen" || (e.ctrlKey && e.key.toLowerCase() === "p") || e.key === "F12" || (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J")) || (e.ctrlKey && e.key.toLowerCase() === "u")) {
-      e.preventDefault();
-      overlay.style.display = "flex";
-      setTimeout(() => overlay.style.display = "none", 3000);
+async function cleanupOldFiles() {
+  const { data, error } = await supabaseClient.storage.from("uploads").list("", { limit: 200 });
+  if (error) {
+    console.error("Errore durante la pulizia:", error);
+    return;
+  }
+  const now = Date.now();
+  for (const file of data) {
+    const fileDate = new Date(file.metadata?.lastModified || file.created_at).getTime();
+    if (now - fileDate > 24 * 3600000) {
+      await supabaseClient.storage.from("uploads").remove([file.name]);
+      console.log("🗑️ File eliminato:", file.name);
     }
-  });
+  }
 }
 
 function generateSecureId(length = 20) {

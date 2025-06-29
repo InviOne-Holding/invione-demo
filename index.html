@@ -50,11 +50,26 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 function generateFingerprint() {
-  return "admin-fingerprint";
+  const ua = navigator.userAgent;
+  const platform = navigator.platform;
+  const language = navigator.language;
+  const resolution = screen.width + 'x' + screen.height;
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const rawString = ua + platform + language + resolution + timezone;
+  
+  let hash = 0;
+  for (let i = 0; i < rawString.length; i++) {
+    const char = rawString.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash |= 0;
+  }
+  return 'fp-' + Math.abs(hash);
 }
+
 function isAdminDevice() {
   return true;
 }
+
 function formatTime(ms) {
   const totalSeconds = Math.floor(ms / 1000);
   const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
@@ -62,6 +77,7 @@ function formatTime(ms) {
   const seconds = String(totalSeconds % 60).padStart(2, '0');
   return `${hours}:${minutes}:${seconds}`;
 }
+
 function generateSecureId(length = 20) {
   const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
@@ -70,6 +86,7 @@ function generateSecureId(length = 20) {
   }
   return result;
 }
+
 document.addEventListener("DOMContentLoaded", () => {
   const params = new URLSearchParams(window.location.search);
   const sessionId = params.get("id") || "admin123";

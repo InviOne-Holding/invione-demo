@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -24,7 +24,7 @@ body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family
 </head>
 <body>
 <div id="accessDenied" style="display:none; padding:20px; color:red; background:#111; font-weight:bold; border-radius:10px;">🔒 Accesso negato o scaduto.</div>
-<div id="mainContent">
+<div id="mainContent" style="display:none">
 <h1>Benvenuto su InviOne™</h1>
 <div class="upload-zone">
 <label for="fileInput"><strong>Seleziona immagini o video da inviare</strong></label><br>
@@ -49,7 +49,16 @@ const supabaseUrl = 'https://opsvjksjatksezmhygdz.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-function generateSecureId(length = 20) {
+function generateFingerprint() {
+  return btoa(
+    navigator.userAgent +
+    navigator.language +
+    screen.width +
+    screen.height
+  );
+}
+
+function generateSecureId(length = 25) {
   const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
   for (let i = 0; i < length; i++) {
@@ -59,11 +68,65 @@ function generateSecureId(length = 20) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  const params = new URLSearchParams(window.location.search);
+  const sessionId = params.get("id");
+  const fingerprint = generateFingerprint();
+  const saved = localStorage.getItem("invione_" + sessionId);
+  const expirationData = JSON.parse(localStorage.getItem("invione_expiration_" + sessionId) || "null");
+  const openedFlag = localStorage.getItem("invione_opened_" + sessionId);
+  const main = document.getElementById("mainContent");
+  const denied = document.getElementById("accessDenied");
+  const overlay = document.getElementById("overlay");
+  const timerBox = document.getElementById("timerBox");
+
+  if (!sessionId) {
+    main.style.display = "block";
+    return;
+  }
+
+  if (!saved) {
+    denied.textContent = "⛔ Accesso non autorizzato.";
+    denied.style.display = "block";
+    return;
+  }
+
+  if (saved !== fingerprint) {
+    denied.textContent = "⛔ Accesso da dispositivo non autorizzato.";
+    denied.style.display = "block";
+    return;
+  }
+
+  if (expirationData && expirationData.duration !== "always") {
+    const now = Date.now();
+    const start = expirationData.start;
+    const diff = now - start;
+    const maxTime = expirationData.duration === "1h" ? 3600000 : 86400000;
+    if (diff > maxTime) {
+      denied.textContent = "⛔ Link scaduto.";
+      denied.style.display = "block";
+      return;
+    }
+    const remaining = maxTime - diff;
+    timerBox.textContent = `⏳ Tempo rimanente: ${formatTime(remaining)}`;
+    const interval = setInterval(() => {
+      const diff = Date.now() - start;
+      const remaining = maxTime - diff;
+      if (remaining <= 0) {
+        clearInterval(interval);
+        denied.textContent = "⛔ Link scaduto.";
+        denied.style.display = "block";
+        main.style.display = "none";
+      } else {
+        timerBox.textContent = `⏳ Tempo rimanente: ${formatTime(remaining)}`;
+      }
+    }, 1000);
+  }
+
+  main.style.display = "block";
+
   const fileInput = document.getElementById("fileInput");
   const previewContainer = document.getElementById("previewContainer");
   const linkOutput = document.getElementById("linkOutput");
-  const timerBox = document.getElementById("timerBox");
-  const overlay = document.getElementById("overlay");
 
   fileInput.addEventListener("change", () => {
     const files = Array.from(fileInput.files);
@@ -102,8 +165,11 @@ document.addEventListener("DOMContentLoaded", () => {
       alert("⚠️ Nessun file selezionato.");
       return;
     }
-    const token = generateSecureId(25);
+    const token = generateSecureId();
+    const fingerprint = generateFingerprint();
     const selected = document.querySelector('input[name="duration"]:checked').value;
+
+    localStorage.setItem("invione_" + token, fingerprint);
     localStorage.setItem("invione_expiration_" + token, JSON.stringify({ duration: selected, start: Date.now() }));
 
     for (const media of mediaElements) {
@@ -133,6 +199,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
+function formatTime(ms) {
+  const totalSeconds = Math.floor(ms / 1000);
+  const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+  const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+  const seconds = String(totalSeconds % 60).padStart(2, '0');
+  return `${hours}:${minutes}:${seconds}`;
+}
 </script>
 </body>
 </html>

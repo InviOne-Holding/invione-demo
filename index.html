@@ -44,41 +44,37 @@ body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family
 <img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne™">
 </div>
 <div id="overlay">🔒 Contenuto protetto</div>
+
 <script>
 const supabaseUrl = 'https://opsvjksjatksezmhygdz.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wc3Zqa3NqYXRrc2V6bWh5Z2R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MjIwMDUsImV4cCI6MjA2NjE5ODAwNX0.04AwPujY-uMEfjywnryX8Rf-U5HPfwc9F1-yTLBWIiw';
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 function generateFingerprint() {
+  const userAgent = navigator.userAgent;
+  const language = navigator.language;
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
-  ctx.textBaseline = 'top';
-  ctx.font = '14px Arial';
-  ctx.fillText(navigator.userAgent + screen.width + screen.height + navigator.language, 2, 2);
+  ctx.textBaseline = "top";
+  ctx.font = "16px Arial";
+  ctx.fillText(userAgent + language, 2, 2);
   const canvasData = canvas.toDataURL();
+  const rawData = userAgent + language + canvasData;
+  return hashString(rawData);
+}
 
-  const gl = document.createElement('canvas').getContext('webgl');
-  const debugInfo = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
-  const renderer = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : 'unknown';
-
-  const ua = navigator.userAgent;
-  const platform = navigator.platform;
-  const language = navigator.language;
-  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-  const rawString = ua + platform + language + timezone + canvasData + renderer;
-
+function hashString(str) {
   let hash = 0;
-  for (let i = 0; i < rawString.length; i++) {
-    const char = rawString.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
     hash |= 0;
   }
-  return 'fp-' + Math.abs(hash);
+  return "fp-" + Math.abs(hash);
 }
 
 function isAdminDevice() {
-  return true;
+  const adminFingerprint = "fp-INSERISCI_IL_TUO_FINGERPRINT"; 
+  return generateFingerprint() === adminFingerprint;
 }
 
 function formatTime(ms) {

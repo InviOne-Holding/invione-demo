@@ -50,13 +50,24 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 function generateFingerprint() {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.textBaseline = 'top';
+  ctx.font = '14px Arial';
+  ctx.fillText(navigator.userAgent + screen.width + screen.height + navigator.language, 2, 2);
+  const canvasData = canvas.toDataURL();
+
+  const gl = document.createElement('canvas').getContext('webgl');
+  const debugInfo = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
+  const renderer = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : 'unknown';
+
   const ua = navigator.userAgent;
   const platform = navigator.platform;
   const language = navigator.language;
-  const resolution = screen.width + 'x' + screen.height;
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const rawString = ua + platform + language + resolution + timezone;
-  
+
+  const rawString = ua + platform + language + timezone + canvasData + renderer;
+
   let hash = 0;
   for (let i = 0; i < rawString.length; i++) {
     const char = rawString.charCodeAt(i);

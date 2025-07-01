@@ -9,8 +9,7 @@
 body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family: Arial, sans-serif; text-align: center; padding: 20px; user-select: none; overflow: hidden; }
 .upload-zone { border: 2px dashed #4ade80; padding: 20px; margin-bottom: 10px; border-radius: 15px; background: #1a1a1a; transition: 0.3s; }
 .upload-zone:hover { background: #222; }
-#limitMsg { color: #fbbf24; font-size: 14px; margin-bottom: 20px; }
-#proMsg { color: #4ade80; font-size: 14px; margin-bottom: 20px; }
+#limitMsg, #proMsg { color: #fbbf24; font-size: 14px; margin-bottom: 20px; }
 .preview-card { background: #111; padding: 10px; margin: 10px; display: inline-block; max-width: 300px; vertical-align: top; border-radius: 10px; box-shadow: 0 0 10px #000; }
 .remove-button { background: crimson; color: white; border: none; padding: 5px 10px; margin-top: 10px; cursor: pointer; border-radius: 5px; transition: 0.3s; }
 .remove-button:hover { background: darkred; }
@@ -26,8 +25,10 @@ body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family
 </style>
 </head>
 <body>
+
 <div id="welcomeScreen">👋 Benvenuto su InviOne</div>
-<div id="mainContent">
+
+<div id="mainContent" style="display:none">
 <h1>Benvenuto su InviOne</h1>
 <div class="upload-zone">
 <label for="fileInput"><strong>Seleziona immagini o video da inviare</strong></label><br>
@@ -41,6 +42,14 @@ body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family
 <div id="disclaimer">⚠️ L'utente può ancora scattare foto dello schermo con dispositivi esterni. InviOne adotta tutte le misure possibili, ma non si assume responsabilità in caso di violazioni.</div>
 <img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne">
 </div>
+
+<div id="protectedView" style="display:none">
+<h1>Visualizzazione Protetta</h1>
+<p>I file inviati sono protetti.</p>
+<div id="fileList"></div>
+<img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne">
+</div>
+
 <div id="overlay">🔒 Contenuto protetto</div>
 
 <script>
@@ -48,11 +57,20 @@ const supabaseUrl = 'https://opsvjksjatksezmhygdz.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wc3Zqa3NqYXRrc2V6bWh5Z2R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MjIwMDUsImV4cCI6MjA2NjE5ODAwNX0.04AwPujY-uMEfjywnryX8Rf-U5HPfwc9F1-yTLBWIiw';
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   setTimeout(() => document.getElementById("welcomeScreen").style.display = "none", 5000);
+  
   const tokenParam = new URLSearchParams(window.location.search).get("token");
-  if (tokenParam) applyProtections();
-  setupUpload();
+  
+  if (tokenParam) {
+    applyProtections();
+    document.getElementById("protectedView").style.display = "block";
+    // Simulazione visualizzazione file
+    document.getElementById("fileList").innerHTML = "<p>File protetti caricati. (Simulazione)</p>";
+  } else {
+    document.getElementById("mainContent").style.display = "block";
+    setupUpload();
+  }
 });
 
 function setupUpload() {

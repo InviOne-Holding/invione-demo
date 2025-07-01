@@ -10,6 +10,7 @@ body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family
 .upload-zone { border: 2px dashed #4ade80; padding: 20px; margin-bottom: 10px; border-radius: 15px; background: #1a1a1a; transition: 0.3s; }
 .upload-zone:hover { background: #222; }
 #limitMsg { color: #fbbf24; font-size: 14px; margin-bottom: 20px; }
+#proMsg { color: #4ade80; font-size: 14px; margin-bottom: 20px; }
 .preview-card { background: #111; padding: 10px; margin: 10px; display: inline-block; max-width: 300px; vertical-align: top; border-radius: 10px; box-shadow: 0 0 10px #000; }
 .remove-button { background: crimson; color: white; border: none; padding: 5px 10px; margin-top: 10px; cursor: pointer; border-radius: 5px; transition: 0.3s; }
 .remove-button:hover { background: darkred; }
@@ -33,6 +34,7 @@ body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family
 <input type="file" id="fileInput" accept="image/*,video/*" multiple>
 </div>
 <div id="limitMsg">⚠️ Puoi inviare massimo 3 file nella versione free.</div>
+<div id="proMsg">💡 Versione Pro in arrivo: più file, durata illimitata, protezione avanzata!</div>
 <div id="previewContainer"></div>
 <button id="submitBtn">Genera Link Protetto</button>
 <div id="linkOutput"></div>
@@ -48,6 +50,8 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 document.addEventListener("DOMContentLoaded", () => {
   setTimeout(() => document.getElementById("welcomeScreen").style.display = "none", 5000);
+  const tokenParam = new URLSearchParams(window.location.search).get("token");
+  if (tokenParam) applyProtections();
   setupUpload();
 });
 
@@ -105,6 +109,24 @@ function setupUpload() {
     linkOutput.textContent = "🔗 Link generato: " + link;
     navigator.clipboard.writeText(link);
     alert("✅ Link protetto copiato negli appunti.");
+  });
+}
+
+function applyProtections() {
+  const overlay = document.getElementById("overlay");
+  document.addEventListener("contextmenu", e => e.preventDefault());
+  document.addEventListener("selectstart", e => e.preventDefault());
+  document.addEventListener("dragstart", e => e.preventDefault());
+  window.addEventListener("blur", () => overlay.style.display = "flex");
+  window.addEventListener("focus", () => overlay.style.display = "none");
+  window.addEventListener("keydown", e => {
+    if (["PrintScreen", "F12"].includes(e.key) || 
+       (e.ctrlKey && ["p", "u"].includes(e.key.toLowerCase())) || 
+       (e.ctrlKey && e.shiftKey && ["I", "J"].includes(e.key))) {
+      e.preventDefault();
+      overlay.style.display = "flex";
+      setTimeout(() => overlay.style.display = "none", 3000);
+    }
   });
 }
 

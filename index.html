@@ -46,7 +46,7 @@ body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family
 <div id="protectedView" style="display:none">
 <h1>Visualizzazione Protetta</h1>
 <p>I file inviati sono protetti.</p>
-<div id="fileList"></div>
+<div id="fileList" style="margin-top:20px"></div>
 <img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne">
 </div>
 
@@ -59,14 +59,36 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 document.addEventListener("DOMContentLoaded", async () => {
   setTimeout(() => document.getElementById("welcomeScreen").style.display = "none", 5000);
-  
   const tokenParam = new URLSearchParams(window.location.search).get("token");
-  
+
   if (tokenParam) {
     applyProtections();
     document.getElementById("protectedView").style.display = "block";
-    // Simulazione visualizzazione file
-    document.getElementById("fileList").innerHTML = "<p>File protetti caricati. (Simulazione)</p>";
+    const { data, error } = await supabaseClient.storage.from("uploads").list("");
+    if (error) {
+      console.error("Errore nel recupero file:", error);
+      return;
+    }
+    const list = document.getElementById("fileList");
+    list.innerHTML = "";
+    data.forEach(file => {
+      const url = `${supabaseUrl}/storage/v1/object/public/uploads/${file.name}`;
+      const ext = file.name.split(".").pop().toLowerCase();
+      if (["jpg","jpeg","png","gif","webp"].includes(ext)) {
+        const img = document.createElement("img");
+        img.src = url;
+        img.style.maxWidth = "100%";
+        img.style.margin = "10px";
+        list.appendChild(img);
+      } else if (["mp4","webm"].includes(ext)) {
+        const vid = document.createElement("video");
+        vid.src = url;
+        vid.controls = true;
+        vid.style.maxWidth = "100%";
+        vid.style.margin = "10px";
+        list.appendChild(vid);
+      }
+    });
   } else {
     document.getElementById("mainContent").style.display = "block";
     setupUpload();

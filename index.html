@@ -66,7 +66,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (tokenParam) {
     applyProtections();
     document.getElementById("protectedView").style.display = "block";
-    const { data, error } = await supabaseClient.storage.from("uploads").list("");
+    const { data, error } = await supabaseClient.storage.from("uploads").list(tokenParam);
     if (error) {
       console.error("Errore nel recupero file:", error);
       return;
@@ -74,7 +74,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const list = document.getElementById("fileList");
     list.innerHTML = "";
     data.forEach(file => {
-      const url = `${supabaseUrl}/storage/v1/object/public/uploads/${file.name}`;
+      const url = `${supabaseUrl}/storage/v1/object/public/uploads/${tokenParam}/${file.name}`;
       const ext = file.name.split(".").pop().toLowerCase();
       if (["jpg","jpeg","png","gif","webp"].includes(ext)) {
         const img = document.createElement("img");
@@ -102,7 +102,7 @@ function setupUpload() {
   const previewContainer = document.getElementById("previewContainer");
   const linkOutput = document.getElementById("linkOutput");
 
-  fileInput.addEventListener("change", async () => {
+  fileInput.addEventListener("change", () => {
     previewContainer.innerHTML = "";
     const files = Array.from(fileInput.files);
     if (files.length > 3) {
@@ -135,8 +135,6 @@ function setupUpload() {
       };
       reader.readAsDataURL(file);
     });
-    fileInput.value = "";
-    await cleanupOldFiles();
   });
 
   document.getElementById("submitBtn").addEventListener("click", async () => {
@@ -147,10 +145,24 @@ function setupUpload() {
     }
     const token = generateSecureId();
     await supabaseClient.from("tokens").insert([{ token }]);
+
+    const files = Array.from(fileInput.files);
+    for (const file of files) {
+      const filePath = `${token}/${file.name}`;
+      const { error } = await supabaseClient.storage.from("uploads").upload(filePath, file);
+      if (error) {
+        console.error("Errore upload:", error);
+        alert("Errore durante l'invio di alcuni file.");
+        return;
+      }
+    }
+
     const link = window.location.origin + window.location.pathname + "?token=" + token;
     linkOutput.textContent = "🔗 Link generato: " + link;
     navigator.clipboard.writeText(link);
     alert("✅ Link protetto copiato negli appunti.");
+    fileInput.value = "";
+    document.getElementById("previewContainer").innerHTML = "";
   });
 }
 
@@ -170,22 +182,6 @@ function applyProtections() {
       setTimeout(() => overlay.style.display = "none", 3000);
     }
   });
-}
-
-async function cleanupOldFiles() {
-  const { data, error } = await supabaseClient.storage.from("uploads").list("", { limit: 200 });
-  if (error) {
-    console.error("Errore durante la pulizia:", error);
-    return;
-  }
-  const now = Date.now();
-  for (const file of data) {
-    const fileDate = new Date(file.metadata?.lastModified || file.created_at).getTime();
-    if (now - fileDate > 24 * 3600000) {
-      await supabaseClient.storage.from("uploads").remove([file.name]);
-      console.log("🗑️ File eliminato:", file.name);
-    }
-  }
 }
 
 function generateSecureId(length = 20) {

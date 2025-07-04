@@ -41,6 +41,30 @@ body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family
 <button id="submitBtn">Genera Link Protetto</button>
 <div id="linkOutput"></div>
 <div id="disclaimer">⚠️ L'utente può ancora scattare foto dello schermo con dispositivi esterni. InviOne adotta tutte le misure possibili, ma non si assume responsabilità in caso di violazioni.</div>
+
+<!-- NUOVO BOX BEN VISIBILE -->
+<div style="
+  background: #1a1a1a;
+  color: #fbbf24;
+  border: 2px dashed #fbbf24;
+  padding: 15px;
+  margin-top: 30px;
+  font-size: 14px;
+  border-radius: 10px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 20px;
+">
+  <h3 style="color: #fbbf24; margin-bottom: 10px;">Disclaimer & Condizioni d'Uso</h3>
+  <p>
+    Questo sistema riduce il rischio di copia o diffusione non autorizzata dei contenuti, ma nessun sistema è infallibile.<br>
+    Chi riceve un link o un file è responsabile del proprio comportamento e uso del contenuto.<br>
+    InviOne non è responsabile per aggiramenti tramite dispositivi esterni, software o altri strumenti.<br>
+    <strong>Usa il sistema in modo responsabile.</strong>
+  </p>
+</div>
+
 <img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne">
 </div>
 
@@ -55,6 +79,7 @@ body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family
 <div id="overlay">🔒 Contenuto protetto</div>
 
 <script>
+// Il tuo script originale resta IDENTICO
 const supabaseUrl = 'https://opsvjksjatksezmhygdz.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wc3Zqa3NqYXRrc2V6bWh5Z2R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MjIwMDUsImV4cCI6MjA2NjE5ODAwNX0.04AwPujY-uMEfjywnryX8Rf-U5HPfwc9F1-yTLBWIiw';
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
@@ -73,7 +98,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     const list = document.getElementById("fileList");
     list.innerHTML = "";
-
     for (const file of data) {
       try {
         const { data: signedUrlData, error: signedError } = await supabaseClient

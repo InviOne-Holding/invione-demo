@@ -74,8 +74,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     const list = document.getElementById("fileList");
     list.innerHTML = "";
     for (const file of data) {
-      const { data: publicUrlData } = supabaseClient.storage.from("uploads").getPublicUrl(`${tokenParam}/${file.name}`);
-      const url = publicUrlData.publicUrl;
+      const { data: signedUrlData, error: signedError } = await supabaseClient
+        .storage
+        .from("uploads")
+        .createSignedUrl(`${tokenParam}/${file.name}`, 3600);
+
+      if (signedError) {
+        console.error("Errore URL firmato:", signedError);
+        continue;
+      }
+
+      const url = signedUrlData.signedUrl;
       const ext = file.name.split(".").pop().toLowerCase();
       if (["jpg","jpeg","png","gif","webp"].includes(ext)) {
         const img = document.createElement("img");
@@ -172,11 +181,6 @@ async function generaTokenUnico() {
   do {
     token = generateSecureId();
     const { data, error } = await supabaseClient.storage.from("uploads").list(token + "/");
-    if (error) {
-      console.error("Errore controllo token:", error);
-      alert("Errore durante la generazione del link.");
-      return;
-    }
     esiste = data && data.length > 0;
   } while (esiste);
   return token;

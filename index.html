@@ -171,7 +171,7 @@ async function generaTokenUnico() {
   let token, esiste;
   do {
     token = generateSecureId();
-    const { data, error } = await supabaseClient.from("tokens").select("*").eq("token", token);
+    const { data, error } = await supabaseClient.storage.from("uploads").list(tokenParam + "/");
     if (error) {
       console.error("Errore controllo token:", error);
       alert("Errore durante la generazione del link.");

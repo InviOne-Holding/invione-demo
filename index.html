@@ -73,8 +73,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     const list = document.getElementById("fileList");
     list.innerHTML = "";
-    data.forEach(file => {
-      const url = `${supabaseUrl}/storage/v1/object/public/uploads/${tokenParam}/${file.name}`;
+    for (const file of data) {
+      const { data: publicUrlData } = supabaseClient.storage.from("uploads").getPublicUrl(`${tokenParam}/${file.name}`);
+      const url = publicUrlData.publicUrl;
       const ext = file.name.split(".").pop().toLowerCase();
       if (["jpg","jpeg","png","gif","webp"].includes(ext)) {
         const img = document.createElement("img");
@@ -90,7 +91,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         vid.style.margin = "10px";
         list.appendChild(vid);
       }
-    });
+    }
   } else {
     document.getElementById("mainContent").style.display = "block";
     setupUpload();

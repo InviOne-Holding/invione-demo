@@ -73,32 +73,38 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     const list = document.getElementById("fileList");
     list.innerHTML = "";
+
     for (const file of data) {
-      const { data: signedUrlData, error: signedError } = await supabaseClient
-        .storage
-        .from("uploads")
-        .createSignedUrl(`${tokenParam}/${file.name}`, 3600);
+      try {
+        const { data: signedUrlData, error: signedError } = await supabaseClient
+          .storage
+          .from("uploads")
+          .createSignedUrl(`${tokenParam}/${file.name}`, 3600);
 
-      if (signedError) {
-        console.error("Errore URL firmato:", signedError);
-        continue;
-      }
+        if (signedError || !signedUrlData) {
+          console.error("Errore URL firmato:", signedError);
+          continue;
+        }
 
-      const url = signedUrlData.signedUrl;
-      const ext = file.name.split(".").pop().toLowerCase();
-      if (["jpg","jpeg","png","gif","webp"].includes(ext)) {
-        const img = document.createElement("img");
-        img.src = url;
-        img.style.maxWidth = "100%";
-        img.style.margin = "10px";
-        list.appendChild(img);
-      } else if (["mp4","webm"].includes(ext)) {
-        const vid = document.createElement("video");
-        vid.src = url;
-        vid.controls = true;
-        vid.style.maxWidth = "100%";
-        vid.style.margin = "10px";
-        list.appendChild(vid);
+        const url = signedUrlData.signedUrl;
+        const ext = file.name.split(".").pop().toLowerCase();
+
+        if (["jpg","jpeg","png","gif","webp"].includes(ext)) {
+          const img = document.createElement("img");
+          img.src = url;
+          img.style.maxWidth = "100%";
+          img.style.margin = "10px";
+          list.appendChild(img);
+        } else if (["mp4","webm"].includes(ext)) {
+          const vid = document.createElement("video");
+          vid.src = url;
+          vid.controls = true;
+          vid.style.maxWidth = "100%";
+          vid.style.margin = "10px";
+          list.appendChild(vid);
+        }
+      } catch (err) {
+        console.error("Errore generale nel caricamento del file:", err);
       }
     }
   } else {
@@ -153,7 +159,7 @@ function setupUpload() {
       alert("⚠️ Nessun file selezionato.");
       return;
     }
-    const token = await generaTokenUnico();
+    const token = generateSecureId();
     await supabaseClient.from("tokens").insert([{ token }]);
 
     const files = Array.from(fileInput.files);
@@ -174,16 +180,6 @@ function setupUpload() {
     fileInput.value = "";
     previewContainer.innerHTML = "";
   });
-}
-
-async function generaTokenUnico() {
-  let token, esiste;
-  do {
-    token = generateSecureId();
-    const { data, error } = await supabaseClient.storage.from("uploads").list(token + "/");
-    esiste = data && data.length > 0;
-  } while (esiste);
-  return token;
 }
 
 function applyProtections() {

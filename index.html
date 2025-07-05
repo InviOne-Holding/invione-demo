@@ -6,7 +6,7 @@
 <title>InviOne</title>
 <script src="https://unpkg.com/@supabase/supabase-js@2.39.6/dist/umd/supabase.js"></script>
 <style>
-body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family: Arial, sans-serif; text-align: center; padding: 20px; user-select: none; overflow-x: hidden; }
+body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family: Arial, sans-serif; text-align: center; padding: 20px; user-select: none; overflow-x: hidden; margin: 0; }
 .upload-zone { border: 2px dashed #4ade80; padding: 20px; margin-bottom: 10px; border-radius: 15px; background: #1a1a1a; transition: 0.3s; }
 .upload-zone:hover { background: #222; }
 #limitMsg, #proMsg { color: #fbbf24; font-size: 14px; margin-bottom: 20px; }
@@ -16,15 +16,10 @@ body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family
 #submitBtn { background: #16a34a; color: white; font-weight: bold; padding: 10px 20px; border: none; margin-top: 20px; border-radius: 10px; box-shadow: 0 0 10px #16a34a; transition: 0.3s; }
 #submitBtn:hover { background: #15803d; }
 #linkOutput { margin-top: 20px; color: #4ade80; font-weight: bold; word-break: break-word; background: #111; padding: 10px; border-radius: 10px; }
-#logo-fixed { position: fixed; bottom: 80px; right: 20px; width: 100px; opacity: 0.9; z-index: 10000; filter: drop-shadow(0 0 10px #4ade80); }
-#disclaimer { color: #ffc107; font-size: 16px; font-weight: bold; margin-top: 20px; }
+#logo-fixed { position: fixed; bottom: 80px; right: 20px; width: 80px; opacity: 0.9; z-index: 10000; filter: drop-shadow(0 0 10px #4ade80); }
 #overlay { position: fixed; top: 0; left: 0; height: 100vh; width: 100vw; background-color: rgba(0,0,0,0.95); color: #ff4c4c; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; z-index: 9999; display: none; backdrop-filter: blur(5px); animation: pulse 2s infinite; }
 #welcomeScreen { position: fixed; top: 0; left: 0; height: 100vh; width: 100vw; background-color: #000; color: #4ade80; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; z-index: 10001; animation: fadeOut 2s ease 3s forwards; }
-@keyframes pulse { 0% { opacity: 0.95; } 50% { opacity: 0.8; } 100% { opacity: 0.95; } }
-@keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
-
-/* Disclaimer fisso in basso */
-#legalNotice {
+#disclaimer-box {
   position: fixed;
   bottom: 0;
   left: 0;
@@ -32,18 +27,15 @@ body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family
   background: #1a1a1a;
   color: #fbbf24;
   border-top: 2px dashed #fbbf24;
-  padding: 10px;
-  font-size: 12px;
+  padding: 15px;
+  font-size: 14px;
   text-align: center;
-  z-index: 9999;
-  word-break: break-word;
   animation: fadeIn 1s ease forwards;
 }
-#legalNotice a {
-  color: #fbbf24;
-  text-decoration: underline;
-}
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+#disclaimer-box a { color: #4ade80; text-decoration: underline; }
+@keyframes pulse { 0% { opacity: 0.95; } 50% { opacity: 0.8; } 100% { opacity: 0.95; } }
+@keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: translateY(0); } }
 </style>
 </head>
 <body>
@@ -62,7 +54,6 @@ body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family
 <div id="previewContainer"></div>
 <button id="submitBtn">Genera Link Protetto</button>
 <div id="linkOutput"></div>
-<div id="disclaimer">⚠️ L'utente può ancora scattare foto dello schermo con dispositivi esterni. InviOne adotta tutte le misure possibili, ma non si assume responsabilità in caso di violazioni.</div>
 <img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne">
 </div>
 
@@ -74,16 +65,15 @@ body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family
 <img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne">
 </div>
 
-<div id="legalNotice">
-  Questo sistema riduce il rischio di copia o diffusione non autorizzata dei contenuti, ma nessun sistema è infallibile. Chi riceve un link o un file è responsabile del proprio comportamento e uso del contenuto. InviOne non è responsabile per aggiramenti tramite dispositivi esterni, software o altri strumenti. 
-  <a href="termini.html">Termini e Condizioni</a>
+<div id="disclaimer-box">
+⚠️ Questo sistema riduce il rischio di copia, ma nessun sistema è infallibile. L'utente si assume la piena responsabilità per l'uso dei file. <a href="termini.html">Termini e Condizioni</a>
 </div>
 
 <div id="overlay">🔒 Contenuto protetto</div>
 
 <script>
 const supabaseUrl = 'https://opsvjksjatksezmhygdz.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wc3Zqa3NqYXRrc2V6bWh5Z2R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MjIwMDUsImV4cCI6MjA2NjE5ODAwNX0.04AwPujY-uMEfjywnryX8Rf-U5HPfwc9F1-yTLBWIiw';
+const supabaseKey = 'INSERISCI_LA_TUA_CHIAVE_SUPABASE';
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -101,15 +91,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     const list = document.getElementById("fileList");
     list.innerHTML = "";
     for (const file of data) {
-      try {
-        const { data: signedUrlData, error: signedError } = await supabaseClient
-          .storage
-          .from("uploads")
-          .createSignedUrl(`${tokenParam}/${file.name}`, 3600);
-        if (signedError || !signedUrlData) {
-          console.error("Errore URL firmato:", signedError);
-          continue;
-        }
+      const { data: signedUrlData } = await supabaseClient
+        .storage
+        .from("uploads")
+        .createSignedUrl(`${tokenParam}/${file.name}`, 3600);
+      if (signedUrlData && signedUrlData.signedUrl) {
         const url = signedUrlData.signedUrl;
         const ext = file.name.split(".").pop().toLowerCase();
         if (["jpg","jpeg","png","gif","webp"].includes(ext)) {
@@ -126,8 +112,6 @@ document.addEventListener("DOMContentLoaded", async () => {
           vid.style.margin = "10px";
           list.appendChild(vid);
         }
-      } catch (err) {
-        console.error("Errore generale nel caricamento del file:", err);
       }
     }
   } else {
@@ -207,15 +191,23 @@ function setupUpload() {
 
 function applyProtections() {
   const overlay = document.getElementById("overlay");
+
   document.addEventListener("contextmenu", e => e.preventDefault());
   document.addEventListener("selectstart", e => e.preventDefault());
   document.addEventListener("dragstart", e => e.preventDefault());
+
   window.addEventListener("blur", () => overlay.style.display = "flex");
   window.addEventListener("focus", () => overlay.style.display = "none");
+
+  const elem = document.documentElement;
+  if (elem.requestFullscreen) elem.requestFullscreen().catch(() => {});
+  else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+  else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
+
   window.addEventListener("keydown", e => {
     if (["PrintScreen", "F12"].includes(e.key) || 
-       (e.ctrlKey && ["p", "u"].includes(e.key.toLowerCase())) || 
-       (e.ctrlKey && e.shiftKey && ["I", "J"].includes(e.key))) {
+        (e.ctrlKey && ["p", "u"].includes(e.key.toLowerCase())) || 
+        (e.ctrlKey && e.shiftKey && ["I", "J"].includes(e.key))) {
       e.preventDefault();
       overlay.style.display = "flex";
       setTimeout(() => overlay.style.display = "none", 3000);

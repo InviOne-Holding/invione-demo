@@ -31,6 +31,7 @@ body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family
   font-size: 14px;
   text-align: center;
   animation: fadeIn 1s ease forwards;
+  z-index: 10001;
 }
 #disclaimer-box a { color: #4ade80; text-decoration: underline; }
 @keyframes pulse { 0% { opacity: 0.95; } 50% { opacity: 0.8; } 100% { opacity: 0.95; } }
@@ -66,7 +67,7 @@ body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family
 </div>
 
 <div id="disclaimer-box">
-⚠️ Questo sistema riduce il rischio di copia, ma nessun sistema è infallibile. L'utente si assume la piena responsabilità per l'uso dei file. <a href="termini.html" target="_blank">Termini e Condizioni</a>
+⚠️ Questo sistema riduce il rischio di copia, ma nessun sistema è infallibile. L'utente si assume la piena responsabilità per l'uso dei file. <a href="termini.html">Termini e Condizioni</a>
 </div>
 
 <div id="overlay">🔒 Contenuto protetto</div>
@@ -91,7 +92,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     const list = document.getElementById("fileList");
     list.innerHTML = "";
     for (const file of data) {
-      const { data: signedUrlData } = await supabaseClient.storage.from("uploads").createSignedUrl(`${tokenParam}/${file.name}`, 3600);
+      const { data: signedUrlData } = await supabaseClient
+        .storage
+        .from("uploads")
+        .createSignedUrl(`${tokenParam}/${file.name}`, 3600);
       if (signedUrlData && signedUrlData.signedUrl) {
         const url = signedUrlData.signedUrl;
         const ext = file.name.split(".").pop().toLowerCase();
@@ -170,8 +174,7 @@ function setupUpload() {
     for (const file of files) {
       const filePath = `${token}/${file.name}`;
       const { error } = await supabaseClient.storage.from("uploads").upload(filePath, file);
-
-      if (error && error.message !== "The resource already exists") {
+      if (error) {
         console.error("Errore upload:", error);
         alert("Errore durante l'invio di alcuni file.");
         return;
@@ -196,11 +199,6 @@ function applyProtections() {
 
   window.addEventListener("blur", () => overlay.style.display = "flex");
   window.addEventListener("focus", () => overlay.style.display = "none");
-
-  const elem = document.documentElement;
-  if (elem.requestFullscreen) elem.requestFullscreen().catch(() => {});
-  else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
-  else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
 
   window.addEventListener("keydown", e => {
     if (["PrintScreen", "F12"].includes(e.key) || 

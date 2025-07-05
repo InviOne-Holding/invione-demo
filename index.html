@@ -31,7 +31,6 @@ body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family
   font-size: 14px;
   text-align: center;
   animation: fadeIn 1s ease forwards;
-  z-index: 10001;
 }
 #disclaimer-box a { color: #4ade80; text-decoration: underline; }
 @keyframes pulse { 0% { opacity: 0.95; } 50% { opacity: 0.8; } 100% { opacity: 0.95; } }
@@ -74,7 +73,7 @@ body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family
 
 <script>
 const supabaseUrl = 'https://opsvjksjatksezmhygdz.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wc3Zqa3NqYXRrc2V6bWh5Z2R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MjIwMDUsImV4cCI6MjA2NjE5ODAwNX0.04AwPujY-uMEfjywnryX8Rf-U5HPfwc9F1-yTLBWIiw';
+const supabaseKey = 'INSERISCI_LA_TUA_CHIAVE_SUPABASE';
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -84,6 +83,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (tokenParam) {
     applyProtections();
     document.getElementById("protectedView").style.display = "block";
+    fullscreenIfDesktop();
+
     const { data, error } = await supabaseClient.storage.from("uploads").list(tokenParam);
     if (error) {
       console.error("Errore nel recupero file:", error);
@@ -209,6 +210,15 @@ function applyProtections() {
       setTimeout(() => overlay.style.display = "none", 3000);
     }
   });
+}
+
+function fullscreenIfDesktop() {
+  if (window.innerWidth > 768) {
+    const elem = document.documentElement;
+    if (elem.requestFullscreen) elem.requestFullscreen().catch(() => {});
+    else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+    else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
+  }
 }
 
 function generateSecureId(length = 20) {

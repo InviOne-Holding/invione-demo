@@ -16,32 +16,33 @@ body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family
 #submitBtn { background: #16a34a; color: white; font-weight: bold; padding: 10px 20px; border: none; margin-top: 20px; border-radius: 10px; box-shadow: 0 0 10px #16a34a; transition: 0.3s; }
 #submitBtn:hover { background: #15803d; }
 #linkOutput { margin-top: 20px; color: #4ade80; font-weight: bold; word-break: break-word; background: #111; padding: 10px; border-radius: 10px; }
-#logo-fixed { position: fixed; bottom: 70px; right: 20px; width: 100px; opacity: 0.9; z-index: 10000; filter: drop-shadow(0 0 10px #4ade80); }
+#logo-fixed { position: fixed; bottom: 80px; right: 20px; width: 100px; opacity: 0.9; z-index: 10000; filter: drop-shadow(0 0 10px #4ade80); }
+#disclaimer { color: #ffc107; font-size: 16px; font-weight: bold; margin-top: 20px; }
 #overlay { position: fixed; top: 0; left: 0; height: 100vh; width: 100vw; background-color: rgba(0,0,0,0.95); color: #ff4c4c; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; z-index: 9999; display: none; backdrop-filter: blur(5px); animation: pulse 2s infinite; }
 #welcomeScreen { position: fixed; top: 0; left: 0; height: 100vh; width: 100vw; background-color: #000; color: #4ade80; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; z-index: 10001; animation: fadeOut 2s ease 3s forwards; }
+@keyframes pulse { 0% { opacity: 0.95; } 50% { opacity: 0.8; } 100% { opacity: 0.95; } }
+@keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
 
-#disclaimer-box {
+/* Disclaimer fisso in basso */
+#legalNotice {
   position: fixed;
   bottom: 0;
   left: 0;
-  width: 100%;
+  right: 0;
   background: #1a1a1a;
   color: #fbbf24;
   border-top: 2px dashed #fbbf24;
-  padding: 10px 15px;
-  font-size: 13px;
+  padding: 10px;
+  font-size: 12px;
+  text-align: center;
   z-index: 9999;
-  overflow-wrap: break-word;
-  animation: fadeIn 1s ease;
+  word-break: break-word;
+  animation: fadeIn 1s ease forwards;
 }
-
-#disclaimer-box a {
+#legalNotice a {
   color: #fbbf24;
   text-decoration: underline;
 }
-
-@keyframes pulse { 0% { opacity: 0.95; } 50% { opacity: 0.8; } 100% { opacity: 0.95; } }
-@keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 </style>
 </head>
@@ -61,6 +62,7 @@ body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family
 <div id="previewContainer"></div>
 <button id="submitBtn">Genera Link Protetto</button>
 <div id="linkOutput"></div>
+<div id="disclaimer">⚠️ L'utente può ancora scattare foto dello schermo con dispositivi esterni. InviOne adotta tutte le misure possibili, ma non si assume responsabilità in caso di violazioni.</div>
 <img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne">
 </div>
 
@@ -72,11 +74,9 @@ body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family
 <img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne">
 </div>
 
-<div id="disclaimer-box">
-  Questo sistema riduce il rischio di copia o diffusione non autorizzata dei contenuti, ma nessun sistema è infallibile.
-  Chi riceve un link o un file è responsabile del proprio comportamento e uso del contenuto.
-  InviOne non è responsabile per aggiramenti tramite dispositivi esterni, software o altri strumenti. 
-  <a href="termini.html" target="_blank">Termini e Condizioni</a>
+<div id="legalNotice">
+  Questo sistema riduce il rischio di copia o diffusione non autorizzata dei contenuti, ma nessun sistema è infallibile. Chi riceve un link o un file è responsabile del proprio comportamento e uso del contenuto. InviOne non è responsabile per aggiramenti tramite dispositivi esterni, software o altri strumenti. 
+  <a href="termini.html">Termini e Condizioni</a>
 </div>
 
 <div id="overlay">🔒 Contenuto protetto</div>
@@ -106,15 +106,12 @@ document.addEventListener("DOMContentLoaded", async () => {
           .storage
           .from("uploads")
           .createSignedUrl(`${tokenParam}/${file.name}`, 3600);
-
         if (signedError || !signedUrlData) {
           console.error("Errore URL firmato:", signedError);
           continue;
         }
-
         const url = signedUrlData.signedUrl;
         const ext = file.name.split(".").pop().toLowerCase();
-
         if (["jpg","jpeg","png","gif","webp"].includes(ext)) {
           const img = document.createElement("img");
           img.src = url;

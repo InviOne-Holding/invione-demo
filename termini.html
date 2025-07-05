@@ -5,29 +5,76 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Termini e Condizioni - InviOne</title>
 <style>
-body { background: #000; color: #fff; font-family: Arial, sans-serif; padding: 20px; text-align: center; }
-h1 { color: #4ade80; }
-p { text-align: left; max-width: 800px; margin: 20px auto; line-height: 1.6; }
-a.btn { display: inline-block; margin-top: 20px; padding: 10px 20px; background: #4ade80; color: #000; text-decoration: none; border-radius: 8px; font-weight: bold; }
-a.btn:hover { background: #3ac76b; }
+body {
+  background: linear-gradient(135deg, #000, #111);
+  color: #fff;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  padding: 20px;
+  user-select: none;
+}
+h1 {
+  color: #4ade80;
+  margin-bottom: 20px;
+}
+#content {
+  background: #1a1a1a;
+  padding: 20px;
+  border-radius: 15px;
+  max-width: 700px;
+  margin: 0 auto 30px auto;
+  text-align: left;
+  color: #ddd;
+  line-height: 1.6;
+}
+a {
+  color: #4ade80;
+  text-decoration: underline;
+}
+#backBtn {
+  background: #16a34a;
+  color: white;
+  font-weight: bold;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 0 10px #16a34a;
+  transition: 0.3s;
+  margin-top: 20px;
+}
+#backBtn:hover {
+  background: #15803d;
+}
+#logo-fixed {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 100px;
+  opacity: 0.9;
+  z-index: 10000;
+  filter: drop-shadow(0 0 10px #4ade80);
+}
 </style>
 </head>
 <body>
 
 <h1>Termini e Condizioni</h1>
 
-<p>
-Questo sistema riduce il rischio di copia o diffusione non autorizzata dei contenuti, ma nessun sistema è infallibile.
-Chi riceve un link o un file è responsabile del proprio comportamento e uso del contenuto.
-InviOne non è responsabile per aggiramenti tramite dispositivi esterni, software o altri strumenti.
-L'uso improprio dei link può comportare la violazione della privacy o delle normative vigenti.
-</p>
+<div id="content">
+  <p>
+    Questo sistema riduce il rischio di copia o diffusione non autorizzata dei contenuti, ma nessun sistema è infallibile. Chi riceve un link o un file è responsabile del proprio comportamento e uso del contenuto.
+  </p>
+  <p>
+    InviOne non è responsabile per eventuali aggiramenti tramite dispositivi esterni, software, screenshot, registrazioni o altri strumenti non rilevabili dal sistema.
+  </p>
+  <p>
+    Utilizzando InviOne accetti questi termini e dichiari di essere consapevole dei limiti tecnologici nella protezione dei contenuti.
+  </p>
+</div>
 
-<p>
-Utilizzando questo servizio accetti i termini sopra indicati. Ti invitiamo a utilizzare InviOne in modo responsabile.
-</p>
+<button id="backBtn" onclick="window.location.href='index.html'">Torna alla Home</button>
 
-<a href="index.html" class="btn">Torna a InviOne</a>
+<img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne">
 
 </body>
 </html>

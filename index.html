@@ -82,8 +82,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   if (tokenParam) {
     applyProtections();
+    forzaFullscreen();
+    document.body.style.overflow = "hidden";
     document.getElementById("protectedView").style.display = "block";
-    fullscreenIfDesktop();
 
     const { data, error } = await supabaseClient.storage.from("uploads").list(tokenParam);
     if (error) {
@@ -201,6 +202,11 @@ function applyProtections() {
   window.addEventListener("blur", () => overlay.style.display = "flex");
   window.addEventListener("focus", () => overlay.style.display = "none");
 
+  window.addEventListener("visibilitychange", () => {
+    if (document.hidden) overlay.style.display = "flex";
+    else overlay.style.display = "none";
+  });
+
   window.addEventListener("keydown", e => {
     if (["PrintScreen", "F12"].includes(e.key) || 
         (e.ctrlKey && ["p", "u"].includes(e.key.toLowerCase())) || 
@@ -212,13 +218,11 @@ function applyProtections() {
   });
 }
 
-function fullscreenIfDesktop() {
-  if (window.innerWidth > 768) {
-    const elem = document.documentElement;
-    if (elem.requestFullscreen) elem.requestFullscreen().catch(() => {});
-    else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
-    else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
-  }
+function forzaFullscreen() {
+  const elem = document.documentElement;
+  if (elem.requestFullscreen) elem.requestFullscreen().catch(() => {});
+  else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+  else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
 }
 
 function generateSecureId(length = 20) {

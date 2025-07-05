@@ -85,6 +85,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   if (tokenParam) {
     applyProtections();
+    document.documentElement.requestFullscreen().catch(() => {});
     document.getElementById("protectedView").style.display = "block";
     const { data, error } = await supabaseClient.storage.from("uploads").list(tokenParam);
     if (error) return;
@@ -116,7 +117,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     setupUpload();
   }
 
-  // Rileva iOS
   if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
     document.getElementById("iosNotice").innerHTML = "<br>⚠️ Su iPhone o iPad alcune protezioni potrebbero non funzionare correttamente.";
   }
@@ -200,11 +200,6 @@ function applyProtections() {
 
   window.addEventListener("blur", () => overlay.style.display = "flex");
   window.addEventListener("focus", () => overlay.style.display = "none");
-
-  const elem = document.documentElement;
-  if (elem.requestFullscreen) elem.requestFullscreen().catch(() => {});
-  else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
-  else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
 
   window.addEventListener("keydown", e => {
     if (["PrintScreen", "F12"].includes(e.key) || 

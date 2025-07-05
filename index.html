@@ -203,7 +203,7 @@ function applyProtections() {
 
   window.addEventListener("keydown", e => {
     if (["PrintScreen", "F12"].includes(e.key) || 
-        (e.ctrlKey && ["p", "u"].includes(e.key.toLowerCase())) || 
+        (e.ctrlKey && ["p", "u", "s", "c"].includes(e.key.toLowerCase())) || 
         (e.ctrlKey && e.shiftKey && ["I", "J"].includes(e.key))) {
       e.preventDefault();
       overlay.style.display = "flex";

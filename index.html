@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>InviOne</title>
 <script src="https://unpkg.com/@supabase/supabase-js@2.39.6/dist/umd/supabase.js"></script>
 <style>
@@ -42,11 +42,14 @@ body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family
   background: #1a1a1a;
   color: #fbbf24;
   border-top: 2px dashed #fbbf24;
-  padding: 12px 8px;
+  padding: 10px 5px;
   font-size: 13px;
   text-align: center;
   animation: fadeIn 1s ease forwards;
   box-sizing: border-box;
+  word-wrap: break-word;
+  white-space: normal;
+  max-width: 100%;
 }
 #disclaimer-box a { color: #4ade80; text-decoration: underline; }
 .watermark {
@@ -62,7 +65,7 @@ body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family
 @media (max-width: 480px), (orientation: landscape) {
   #disclaimer-box {
     font-size: 11px;
-    padding: 10px 5px;
+    padding: 8px 4px;
   }
 }
 @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }

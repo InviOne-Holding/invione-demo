@@ -85,7 +85,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   if (tokenParam) {
     applyProtections();
-    document.documentElement.requestFullscreen().catch(() => {});
+    enforceFullscreen();
     document.getElementById("protectedView").style.display = "block";
     const { data, error } = await supabaseClient.storage.from("uploads").list(tokenParam);
     if (error) return;
@@ -121,6 +121,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("iosNotice").innerHTML = "<br>⚠️ Su iPhone o iPad alcune protezioni potrebbero non funzionare correttamente.";
   }
 });
+
+function enforceFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(() => {});
+  }
+}
 
 function setupUpload() {
   const fileInput = document.getElementById("fileInput");

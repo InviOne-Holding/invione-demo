@@ -49,6 +49,16 @@ body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family
   box-sizing: border-box;
 }
 #disclaimer-box a { color: #4ade80; text-decoration: underline; }
+.watermark {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  background: rgba(0,0,0,0.5);
+  padding: 2px 5px;
+  border-radius: 3px;
+}
 @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: translateY(0); } }
 </style>
@@ -76,7 +86,7 @@ body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family
 <h1>Visualizzazione Protetta</h1>
 <h2 style="color: #4ade80; margin-top: 5px; font-size: 18px;">Send it. Own it.</h2>
 <p>I file inviati sono protetti.</p>
-<div id="fileList" style="margin-top:20px"></div>
+<div id="fileList" style="margin-top:20px; position: relative;"></div>
 <img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne">
 </div>
 
@@ -111,17 +121,27 @@ document.addEventListener("DOMContentLoaded", async () => {
         const url = signedUrlData.signedUrl;
         const ext = file.name.split(".").pop().toLowerCase();
         if (["jpg","jpeg","png","gif","webp"].includes(ext)) {
+          const container = document.createElement("div");
+          container.style.position = "relative";
+          container.style.display = "inline-block";
           const img = document.createElement("img");
           img.src = url;
           img.style.maxWidth = "100%";
           img.style.margin = "10px";
-          list.appendChild(img);
+          img.oncontextmenu = e => e.preventDefault();
+          const wm = document.createElement("div");
+          wm.className = "watermark";
+          wm.textContent = "InviOne";
+          container.appendChild(img);
+          container.appendChild(wm);
+          list.appendChild(container);
         } else if (["mp4","webm"].includes(ext)) {
           const vid = document.createElement("video");
           vid.src = url;
           vid.controls = true;
           vid.style.maxWidth = "100%";
           vid.style.margin = "10px";
+          vid.oncontextmenu = e => e.preventDefault();
           list.appendChild(vid);
         }
       }

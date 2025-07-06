@@ -113,8 +113,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   setTimeout(() => document.getElementById("welcomeScreen").style.display = "none", 5000);
   const tokenParam = new URLSearchParams(window.location.search).get("token");
 
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
   if (tokenParam) {
     applyProtections();
+    if (!isIOS) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    }
     document.getElementById("protectedView").style.display = "block";
     const { data, error } = await supabaseClient.storage.from("uploads").list(tokenParam);
     if (error) return;
@@ -156,7 +161,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     setupUpload();
   }
 
-  if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
+  if (isIOS) {
     document.getElementById("iosNotice").innerHTML = "<br>⚠️ Su iPhone o iPad alcune protezioni potrebbero non funzionare correttamente.";
   }
 });
@@ -272,5 +277,6 @@ function generateSecureId(length = 20) {
   return result;
 }
 </script>
+
 </body>
 </html>

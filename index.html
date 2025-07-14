@@ -156,6 +156,7 @@ async function uploadAndGenerateLink() {
   const duration = document.getElementById('duration').value;
   const singleView = document.getElementById('singleView').checked;
 
+  let linksHtml = '';
   for (let file of files) {
     const filePath = `${userFolder}/${file.name}`;
     const { error } = await supabase.storage.from('invione-bucket').upload(filePath, file, {
@@ -166,14 +167,15 @@ async function uploadAndGenerateLink() {
       alert(`Errore durante l'upload: ${error.message}`);
       return;
     }
+    const { data } = supabase.storage.from('invione-bucket').getPublicUrl(filePath);
+    linksHtml += `<a href="${data.publicUrl}" target="_blank">🔗 ${file.name}</a><br>`;
   }
 
-  const link = `https://kingwormius.github.io/invione-demo/viewer.html?token=${token}`;
   try {
-    await navigator.clipboard.writeText(link);
-    uploadStatus.innerHTML = `✅ Upload completato. Link copiato: <a href="${link}" target="_blank">${link}</a>`;
+    await navigator.clipboard.writeText(linksHtml);
+    uploadStatus.innerHTML = `✅ Upload completato. Link(s) copiato negli appunti:<br>${linksHtml}`;
   } catch {
-    uploadStatus.innerHTML = `✅ Upload completato. Copia manuale: <a href="${link}" target="_blank">${link}</a>`;
+    uploadStatus.innerHTML = `✅ Upload completato. Copia manuale:<br>${linksHtml}`;
   }
 
   await supabase.from('link_metadata').insert({

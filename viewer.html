@@ -1,102 +1,83 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Visualizza Contenuto - InviOne</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Visualizzazione Protetta</title>
   <script src="https://unpkg.com/@supabase/supabase-js@2.39.6/dist/umd/supabase.js"></script>
   <style>
     body {
-      background: #000;
-      color: white;
+      background-color: #000;
+      color: #fff;
       font-family: Arial, sans-serif;
-      padding: 20px;
       text-align: center;
+      padding: 20px;
     }
-    img, video {
-      max-width: 90%;
+    .media-card {
+      background: #111;
+      padding: 20px;
       margin: 20px auto;
       border-radius: 10px;
-      display: block;
-      box-shadow: 0 0 10px #4ade80;
+      box-shadow: 0 0 10px #000;
+      max-width: 90%;
     }
-    .expired {
-      color: red;
-      font-size: 20px;
+    img, video {
+      max-width: 100%;
+      border-radius: 10px;
+    }
+    video {
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
-  <h1>📦 InviOne Viewer</h1>
-  <div id="content">Caricamento contenuti...</div>
+  <h2>🔒 Contenuto Protetto</h2>
+  <div id="mediaContainer">Caricamento in corso...</div>
 
   <script>
-    const supabase = window.supabase.createClient('https://opsvjksjatksezmhygdz.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wc3Zqa3NqYXRrc2V6bWh5Z2R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MjIwMDUsImV4cCI6MjA2NjE5ODAwNX0.04AwPujY-uMEfjywnryX8Rf-U5HPfwc9F1-yTLBWIiw');
-    const token = new URLSearchParams(window.location.search).get('token');
-    const contentDiv = document.getElementById('content');
+    const supabase = window.supabase.createClient(
+      'https://opsvjksjatksezmhygdz.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wc3Zqa3NqYXRrc2V6bWh5Z2R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MjIwMDUsImV4cCI6MjA2NjE5ODAwNX0.04AwPujY-uMEfjywnryX8Rf-U5HPfwc9F1-yTLBWIiw'
+    );
 
-    if (!token) {
-      contentDiv.innerHTML = '<p class="expired">❌ Link non valido.</p>';
-    } else {
-      fetchContent();
-    }
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    const container = document.getElementById('mediaContainer');
 
-    async function fetchContent() {
-      // Verifica se esiste nei metadati
-      const { data: metadata, error: metaError } = await supabase
-        .from('link_metadata')
-        .select('*')
-        .eq('token', token)
-        .single();
-
-      if (metaError || !metadata) {
-        contentDiv.innerHTML = '<p class="expired">❌ Link non trovato o scaduto.</p>';
+    async function fetchMedia() {
+      if (!token) {
+        container.innerHTML = "❌ Token mancante.";
         return;
       }
 
-      const created = new Date(metadata.created_at);
-      const now = new Date();
-      const diffMin = (now - created) / 60000;
-
-      if (metadata.expires_in_minutes > 0 && diffMin > metadata.expires_in_minutes) {
-        contentDiv.innerHTML = '<p class="expired">⏰ Link scaduto.</p>';
-        return;
-      }
-
-      const { data, error } = await supabase.storage
-        .from('invione-bucket')
-        .list(token);
-
+      const { data, error } = await supabase.storage.from('invione-bucket').list(token, { limit: 20 });
       if (error || !data || data.length === 0) {
-        contentDiv.innerHTML = '<p class="expired">❌ Nessun file trovato o link non valido.</p>';
+        container.innerHTML = "⚠️ Nessun file trovato o token non valido.";
         return;
       }
 
-      contentDiv.innerHTML = '';
+      container.innerHTML = '';
       for (const file of data) {
-        const { data: urlData } = await supabase.storage
-          .from('invione-bucket')
-          .createSignedUrl(`${token}/${file.name}`, 3600);
+        const { data: fileUrl } = supabase.storage.from('invione-bucket').getPublicUrl(`${token}/${file.name}`);
+        const card = document.createElement('div');
+        card.className = 'media-card';
 
-        const fileName = file.name.toLowerCase();
-        if (fileName.endsWith('.mp4') || fileName.endsWith('.mov')) {
+        if (file.name.match(/\.(mp4|webm|ogg)$/i)) {
           const video = document.createElement('video');
-          video.src = urlData.signedUrl;
+          video.src = fileUrl.publicUrl;
           video.controls = true;
-          contentDiv.appendChild(video);
+          card.appendChild(video);
         } else {
           const img = document.createElement('img');
-          img.src = urlData.signedUrl;
-          contentDiv.appendChild(img);
+          img.src = fileUrl.publicUrl;
+          card.appendChild(img);
         }
-      }
 
-      // Se visualizzazione singola attiva
-      if (metadata.single_view) {
-        await supabase.storage.from('invione-bucket').remove(data.map(f => `${token}/${f.name}`));
-        await supabase.from('link_metadata').delete().eq('token', token);
+        container.appendChild(card);
       }
     }
+
+    fetchMedia();
   </script>
 </body>
 </html>

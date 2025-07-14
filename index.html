@@ -158,7 +158,7 @@ async function uploadAndGenerateLink() {
 
   for (let file of files) {
     const filePath = `${userFolder}/${file.name}`;
-    const { data, error } = await supabase.storage.from('invione-bucket').upload(filePath, file, {
+    const { error } = await supabase.storage.from('invione-bucket').upload(filePath, file, {
       cacheControl: '3600',
       upsert: false
     });

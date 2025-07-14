@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visualizza Contenuto - InviOne</title>
+  <script src="https://unpkg.com/@supabase/supabase-js@2.39.6/dist/umd/supabase.js"></script>
+  <style>
+    body {
+      background: #000;
+      color: white;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      text-align: center;
+    }
+    img, video {
+      max-width: 90%;
+      margin: 20px auto;
+      border-radius: 10px;
+      display: block;
+      box-shadow: 0 0 10px #4ade80;
+    }
+    .expired {
+      color: red;
+      font-size: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>📦 InviOne Viewer</h1>
+  <div id="content">Caricamento contenuti...</div>
+
+  <script>
+    const supabase = window.supabase.createClient('https://opsvjksjatksezmhygdz.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wc3Zqa3NqYXRrc2V6bWh5Z2R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MjIwMDUsImV4cCI6MjA2NjE5ODAwNX0.04AwPujY-uMEfjywnryX8Rf-U5HPfwc9F1-yTLBWIiw');
+    const token = new URLSearchParams(window.location.search).get('token');
+    const contentDiv = document.getElementById('content');
+
+    if (!token) {
+      contentDiv.innerHTML = '<p class="expired">❌ Link non valido.</p>';
+    } else {
+      fetchContent();
+    }
+
+    async function fetchContent() {
+      // Verifica se esiste nei metadati
+      const { data: metadata, error: metaError } = await supabase
+        .from('link_metadata')
+        .select('*')
+        .eq('token', token)
+        .single();
+
+      if (metaError || !metadata) {
+        contentDiv.innerHTML = '<p class="expired">❌ Link non trovato o scaduto.</p>';
+        return;
+      }
+
+      const created = new Date(metadata.created_at);
+      const now = new Date();
+      const diffMin = (now - created) / 60000;
+
+      if (metadata.expires_in_minutes > 0 && diffMin > metadata.expires_in_minutes) {
+        contentDiv.innerHTML = '<p class="expired">⏰ Link scaduto.</p>';
+        return;
+      }
+
+      const { data, error } = await supabase.storage
+        .from('invione-bucket')
+        .list(token);
+
+      if (error || !data || data.length === 0) {
+        contentDiv.innerHTML = '<p class="expired">❌ Nessun file trovato o link non valido.</p>';
+        return;
+      }
+
+      contentDiv.innerHTML = '';
+      for (const file of data) {
+        const { data: urlData } = await supabase.storage
+          .from('invione-bucket')
+          .createSignedUrl(`${token}/${file.name}`, 3600);
+
+        const fileName = file.name.toLowerCase();
+        if (fileName.endsWith('.mp4') || fileName.endsWith('.mov')) {
+          const video = document.createElement('video');
+          video.src = urlData.signedUrl;
+          video.controls = true;
+          contentDiv.appendChild(video);
+        } else {
+          const img = document.createElement('img');
+          img.src = urlData.signedUrl;
+          contentDiv.appendChild(img);
+        }
+      }
+
+      // Se visualizzazione singola attiva
+      if (metadata.single_view) {
+        await supabase.storage.from('invione-bucket').remove(data.map(f => `${token}/${f.name}`));
+        await supabase.from('link_metadata').delete().eq('token', token);
+      }
+    }
+  </script>
+</body>
+</html>

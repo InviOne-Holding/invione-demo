@@ -99,7 +99,7 @@
   <div id="preview"></div>
 
 <script>
-const supabase = window.supabase.createClient('https://YOUR_PROJECT_ID.supabase.co', 'YOUR_PUBLIC_ANON_KEY');
+const supabase = window.supabase.createClient('https://opsvjksjatksezmhygdz.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wc3Zqa3NqYXRrc2V6bWh5Z2R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MjIwMDUsImV4cCI6MjA2NjE5ODAwNX0.04AwPujY-uMEfjywnryX8Rf-U5HPfwc9F1-yTLBWIiw');
 const fileInput = document.getElementById('fileInput');
 const preview = document.getElementById('preview');
 const uploadStatus = document.getElementById('uploadStatus');
@@ -115,12 +115,36 @@ fileInput.addEventListener('change', () => {
   for (let file of files) {
     const card = document.createElement('div');
     card.className = 'preview-card';
-    card.innerText = file.name;
+
+    if (file.type.startsWith('image/')) {
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(file);
+      card.appendChild(img);
+    } else if (file.type.startsWith('video/')) {
+      const video = document.createElement('video');
+      video.src = URL.createObjectURL(file);
+      video.controls = true;
+      card.appendChild(video);
+    }
+
+    const caption = document.createElement('p');
+    caption.textContent = file.name;
+    card.appendChild(caption);
+
     preview.appendChild(card);
   }
 });
 
-function uploadAndGenerateLink() {
+function generateSecureId(length = 20) {
+  const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += charset.charAt(Math.floor(Math.random() * charset.length));
+  }
+  return result;
+}
+
+async function uploadAndGenerateLink() {
   const files = fileInput.files;
   const acceptTerms = document.getElementById('terms').checked;
   if (!acceptTerms) {
@@ -131,16 +155,29 @@ function uploadAndGenerateLink() {
     alert("Seleziona almeno un file.");
     return;
   }
-
-  // Simula upload e generazione link
-  const dummyLink = 'https://invione.link/dummy';
-  navigator.clipboard.writeText(dummyLink)
-    .then(() => {
-      uploadStatus.innerHTML = `✅ Upload completato con successo. Link copiato negli appunti.`;
-    })
-    .catch(() => {
-      uploadStatus.innerHTML = `✅ Upload completato con successo. Copia manualmente il link: <a href="${dummyLink}" target="_blank">${dummyLink}</a>`;
-    });
+  const token = generateSecureId();
+  const { error: insertError } = await supabase.from('tokens').insert([{ token }]);
+  if (insertError) {
+    alert("Errore nella creazione del token.");
+    return;
+  }
+  for (const file of files) {
+    const filePath = `${token}/${file.name}`;
+    const { error } = await supabase.storage.from("uploads").upload(filePath, file);
+    if (error) {
+      alert("Errore durante l'upload: " + error.message);
+      return;
+    }
+  }
+  const link = `${window.location.origin}${window.location.pathname}?token=${token}`;
+  try {
+    await navigator.clipboard.writeText(link);
+    uploadStatus.innerHTML = `✅ Upload completato. Link copiato negli appunti: <a href="${link}" target="_blank">${link}</a>`;
+  } catch (err) {
+    uploadStatus.innerHTML = `✅ Upload completato. Copia manualmente il link: <a href="${link}" target="_blank">${link}</a>`;
+  }
+  fileInput.value = '';
+  preview.innerHTML = '';
 }
 </script>
 

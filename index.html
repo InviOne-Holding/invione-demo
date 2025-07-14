@@ -99,7 +99,11 @@
   <div id="preview"></div>
 
 <script>
-const supabase = window.supabase.createClient('https://opsvjksjatksezmhygdz.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wc3Zqa3NqYXRrc2V6bWh5Z2R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MjIwMDUsImV4cCI6MjA2NjE5ODAwNX0.04AwPujY-uMEfjywnryX8Rf-U5HPfwc9F1-yTLBWIiw');
+const supabase = window.supabase.createClient(
+  'https://opsvjksjatksezmhygdz.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wc3Zqa3NqYXRrc2V6bWh5Z2R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MjIwMDUsImV4cCI6MjA2NjE5ODAwNX0.04AwPujY-uMEfjywnryX8Rf-U5HPfwc9F1-yTLBWIiw'
+);
+
 const fileInput = document.getElementById('fileInput');
 const preview = document.getElementById('preview');
 const uploadStatus = document.getElementById('uploadStatus');
@@ -150,11 +154,13 @@ async function uploadAndGenerateLink() {
   const token = Math.random().toString(36).substring(2);
   const duration = document.getElementById('duration').value;
   const singleView = document.getElementById('singleView').checked;
-  const userId = token; // ← usiamo il token come cartella utente temporaneo (solo se non loggato)
 
   for (let file of files) {
-    const path = `${userId}/${file.name}`;
-    const { data, error } = await supabase.storage.from('invione-bucket').upload(path, file);
+    const filePath = `${token}/${file.name}`;
+    const { data, error } = await supabase.storage.from('invione-bucket').upload(filePath, file, {
+      cacheControl: '3600',
+      upsert: false
+    });
     if (error) {
       alert(`Errore durante l'upload: ${error.message}`);
       return;
@@ -162,13 +168,12 @@ async function uploadAndGenerateLink() {
   }
 
   const link = `https://kingwormius.github.io/invione-demo/viewer.html?token=${token}`;
-  navigator.clipboard.writeText(link)
-    .then(() => {
-      uploadStatus.innerHTML = `✅ Upload completato. Link copiato negli appunti: <a href="${link}" target="_blank">${link}</a>`;
-    })
-    .catch(() => {
-      uploadStatus.innerHTML = `✅ Upload completato. Copia manualmente il link: <a href="${link}" target="_blank">${link}</a>`;
-    });
+  try {
+    await navigator.clipboard.writeText(link);
+    uploadStatus.innerHTML = `✅ Upload completato. Link copiato: <a href="${link}" target="_blank">${link}</a>`;
+  } catch {
+    uploadStatus.innerHTML = `✅ Upload completato. Copia manuale: <a href="${link}" target="_blank">${link}</a>`;
+  }
 
   await supabase.from('link_metadata').insert({
     token,

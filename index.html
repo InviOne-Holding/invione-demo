@@ -57,6 +57,10 @@
     select, input[type="checkbox"] {
       margin: 10px;
     }
+    img, video {
+      max-width: 100%;
+      border-radius: 10px;
+    }
   </style>
 </head>
 <body>
@@ -86,47 +90,59 @@
       <input type="checkbox" id="terms" /> Accetto i <a href="termini.html" target="_blank">Termini e Condizioni</a>
     </label>
     <br />
-    <button onclick="generaLink()">Genera Link Protetto</button>
+    <button onclick="uploadAndGenerateLink()">Genera Link Protetto</button>
     <div id="uploadStatus"></div>
   </div>
 
-  <p class="info">⚠️ Questo sistema riduce il rischio di copia, ma nessun sistema è infallibile. L’utente si assume la piena responsabilità per l’uso dei file. <a href="termini.html" target="_blank">Termini e Condizioni</a></p>
+  <p class="info" id="termFooter">⚠️ Questo sistema riduce il rischio di copia, ma nessun sistema è infallibile. L’utente si assume la piena responsabilità per l’uso dei file.</p>
 
   <div id="preview"></div>
 
-  <script>
-    const fileInput = document.getElementById('fileInput');
-    const preview = document.getElementById('preview');
+<script>
+const supabase = window.supabase.createClient('https://YOUR_PROJECT_ID.supabase.co', 'YOUR_PUBLIC_ANON_KEY');
+const fileInput = document.getElementById('fileInput');
+const preview = document.getElementById('preview');
+const uploadStatus = document.getElementById('uploadStatus');
 
-    fileInput.addEventListener('change', () => {
-      preview.innerHTML = '';
-      const files = fileInput.files;
-      if (files.length > 3) {
-        alert("Puoi inviare massimo 3 file nella versione gratuita.");
-        fileInput.value = '';
-        return;
-      }
-      for (let file of files) {
-        const card = document.createElement('div');
-        card.className = 'preview-card';
-        card.innerText = file.name;
-        preview.appendChild(card);
-      }
+fileInput.addEventListener('change', () => {
+  preview.innerHTML = '';
+  const files = fileInput.files;
+  if (files.length > 3) {
+    alert("Puoi inviare massimo 3 file nella versione gratuita.");
+    fileInput.value = '';
+    return;
+  }
+  for (let file of files) {
+    const card = document.createElement('div');
+    card.className = 'preview-card';
+    card.innerText = file.name;
+    preview.appendChild(card);
+  }
+});
+
+function uploadAndGenerateLink() {
+  const files = fileInput.files;
+  const acceptTerms = document.getElementById('terms').checked;
+  if (!acceptTerms) {
+    alert("Devi accettare i Termini e Condizioni per procedere.");
+    return;
+  }
+  if (files.length === 0) {
+    alert("Seleziona almeno un file.");
+    return;
+  }
+
+  // Simula upload e generazione link
+  const dummyLink = 'https://invione.link/dummy';
+  navigator.clipboard.writeText(dummyLink)
+    .then(() => {
+      uploadStatus.innerHTML = `✅ Upload completato con successo. Link copiato negli appunti.`;
+    })
+    .catch(() => {
+      uploadStatus.innerHTML = `✅ Upload completato con successo. Copia manualmente il link: <a href="${dummyLink}" target="_blank">${dummyLink}</a>`;
     });
+}
+</script>
 
-    function generaLink() {
-      const files = fileInput.files;
-      const acceptTerms = document.getElementById('terms').checked;
-      if (!acceptTerms) {
-        alert("Devi accettare i Termini e Condizioni per procedere.");
-        return;
-      }
-      if (files.length === 0) {
-        alert("Seleziona almeno un file.");
-        return;
-      }
-      document.getElementById('uploadStatus').innerHTML = '✅ Upload completato con successo.';
-    }
-  </script>
 </body>
 </html>

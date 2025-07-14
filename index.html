@@ -16,6 +16,7 @@ body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family
 #submitBtn { background: #16a34a; color: white; font-weight: bold; padding: 10px 20px; border: none; margin-top: 20px; border-radius: 10px; box-shadow: 0 0 10px #16a34a; transition: 0.3s; }
 #submitBtn:hover { background: #15803d; }
 #linkOutput { margin-top: 20px; color: #4ade80; font-weight: bold; word-break: break-word; background: #111; padding: 10px; border-radius: 10px; }
+#uploadSuccess { margin-top: 10px; color: #22c55e; font-weight: bold; display: none; }
 #logo-fixed { position: fixed; bottom: 80px; right: 20px; width: 80px; opacity: 0.9; z-index: 10000; filter: drop-shadow(0 0 10px #4ade80); }
 #overlay {
   position: fixed;
@@ -23,94 +24,42 @@ body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family
   left: 0;
   height: 100vh;
   width: 100vw;
-  background-color: rgba(0,0,0,0.6);
-  z-index: 9999;
-  display: none;
+  background-color: rgba(0,0,0,0.7);
   pointer-events: none;
-  animation: float 12s linear infinite;
+  z-index: 9998;
+  display: none;
+  animation: float 10s linear infinite;
   background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.03), rgba(255,255,255,0.03) 1px, transparent 1px, transparent 20px);
 }
 @keyframes float {
   0% { background-position: 0 0; }
   100% { background-position: 100px 100px; }
 }
-#welcomeScreen { position: fixed; top: 0; left: 0; height: 100vh; width: 100vw; background-color: #000; color: #4ade80; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; z-index: 10001; animation: fadeOut 2s ease 3s forwards; }
-#disclaimer-box {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: #1a1a1a;
-  color: #fbbf24;
-  border-top: 2px dashed #fbbf24;
-  padding: 10px 6px;
-  font-size: 12px;
-  text-align: center;
-  animation: fadeIn 1s ease forwards;
-  box-sizing: border-box;
-}
-#disclaimer-box a { color: #4ade80; text-decoration: underline; }
-.watermark {
-  position: absolute;
-  bottom: 5px;
-  right: 5px;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
-  background: rgba(0,0,0,0.5);
-  padding: 2px 5px;
-  border-radius: 3px;
-}
-@media (max-width: 480px), (orientation: landscape) {
-  #disclaimer-box {
-    font-size: 11px;
-    padding: 8px 4px;
-  }
-}
-@keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: translateY(0); } }
 </style>
 </head>
 <body>
-<div id="welcomeScreen">👋 Benvenuto su InviOne</div>
-<div id="mainContent" style="display:none">
-<h1>Benvenuto su InviOne</h1>
-<h2 style="color: #4ade80; margin-top: 5px; font-size: 18px;">Send it. Own it.</h2>
-<div class="upload-zone">
-<label for="fileInput"><strong>Seleziona immagini o video da inviare</strong></label><br>
-<input type="file" id="fileInput" accept="image/*,video/*" multiple>
-</div>
-<div id="limitMsg">⚠️ Puoi inviare massimo 3 file nella versione free.</div>
-<div id="proMsg">💡 Versione Pro in arrivo: più file, durata illimitata, protezione avanzata!</div>
-<div id="previewContainer"></div>
-<button id="submitBtn">Genera Link Protetto</button>
-<div id="linkOutput"></div>
-<img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne">
-</div>
-<div id="protectedView" style="display:none">
-<h1>Visualizzazione Protetta</h1>
-<h2 style="color: #4ade80; margin-top: 5px; font-size: 18px;">Send it. Own it.</h2>
-<p>I file inviati sono protetti.</p>
-<div id="fileList" style="margin-top:20px; position: relative;"></div>
-<img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne">
-</div>
-<div id="disclaimer-box">
-⚠️ Questo sistema riduce il rischio di copia, ma nessun sistema è infallibile. L'utente si assume la piena responsabilità per l'uso dei file.
-<span id="iosNotice"></span>
-<a href="termini.html">Termini e Condizioni</a>
+<div id="mainContent">
+  <h1>InviOne</h1>
+  <h2 style="color: #4ade80; margin-top: 5px; font-size: 18px;">Send it. Own it.</h2>
+  <div class="upload-zone">
+    <label for="fileInput"><strong>Seleziona immagini o video da inviare</strong></label><br>
+    <input type="file" id="fileInput" accept="image/*,video/*" multiple>
+  </div>
+  <div id="limitMsg">⚠️ Puoi inviare massimo 3 file nella versione free.</div>
+  <div id="proMsg">💡 Versione Pro in arrivo: più file, durata illimitata, protezione avanzata!</div>
+  <div id="previewContainer"></div>
+  <button id="submitBtn">Genera Link Protetto</button>
+  <div id="uploadSuccess">✅ Upload completato con successo.</div>
+  <div id="linkOutput"></div>
+  <img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne">
 </div>
 <div id="overlay"></div>
 <script>
-const supabaseUrl = 'https://opsvjksjatksezmhygdz.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wc3Zqa3NqYXRrc2V6bWh5Z2R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MjIwMDUsImV4cCI6MjA2NjE5ODAwNX0.04AwPujY-uMEfjywnryX8Rf-U5HPfwc9F1-yTLBWIiw';
-const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-
-document.addEventListener("DOMContentLoaded", async () => {
-  // Overlay solo desktop
+document.addEventListener("DOMContentLoaded", () => {
   if (!/Mobi|Android/i.test(navigator.userAgent)) {
     document.getElementById("overlay").style.display = "block";
   }
 
-  // Timer e visualizzazione singola
   const params = new URLSearchParams(window.location.search);
   const expires = params.get("expires");
   const token = params.get("token");
@@ -132,64 +81,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (token) {
     localStorage.setItem("seen_" + token, true);
   }
-
-  setTimeout(() => document.getElementById("welcomeScreen").style.display = "none", 5000);
-
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-
-  if (token) {
-    applyProtections();
-    if (!isIOS) document.documentElement.requestFullscreen().catch(() => {});
-    document.getElementById("protectedView").style.display = "block";
-    const { data, error } = await supabaseClient.storage.from("uploads").list(token);
-    if (error) return;
-    const list = document.getElementById("fileList");
-    list.innerHTML = "";
-    for (const file of data) {
-      const { data: signedUrlData } = await supabaseClient.storage.from("uploads").createSignedUrl(`${token}/${file.name}`, 3600);
-      if (signedUrlData && signedUrlData.signedUrl) {
-        const url = signedUrlData.signedUrl;
-        const ext = file.name.split(".").pop().toLowerCase();
-        if (["jpg","jpeg","png","gif","webp"].includes(ext)) {
-          const container = document.createElement("div");
-          container.style.position = "relative";
-          container.style.display = "inline-block";
-          const img = document.createElement("img");
-          img.src = url;
-          img.style.maxWidth = "100%";
-          img.style.margin = "10px";
-          img.oncontextmenu = e => e.preventDefault();
-          const wm = document.createElement("div");
-          wm.className = "watermark";
-          wm.textContent = "InviOne";
-          container.appendChild(img);
-          container.appendChild(wm);
-          list.appendChild(container);
-        } else if (["mp4","webm"].includes(ext)) {
-          const vid = document.createElement("video");
-          vid.src = url;
-          vid.controls = true;
-          vid.style.maxWidth = "100%";
-          vid.style.margin = "10px";
-          vid.oncontextmenu = e => e.preventDefault();
-          list.appendChild(vid);
-        }
-      }
-    }
-  } else {
-    document.getElementById("mainContent").style.display = "block";
-    setupUpload();
-  }
-
-  if (isIOS) {
-    document.getElementById("iosNotice").innerHTML = "<br>⚠️ Su iPhone o iPad alcune protezioni potrebbero non funzionare correttamente.";
-  }
 });
+
+const supabaseUrl = 'https://opsvjksjatksezmhygdz.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wc3Zqa3NqYXRrc2V6bWh5Z2R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MjIwMDUsImV4cCI6MjA2NjE5ODAwNX0.04AwPujY-uMEfjywnryX8Rf-U5HPfwc9F1-yTLBWIiw';
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 function setupUpload() {
   const fileInput = document.getElementById("fileInput");
   const previewContainer = document.getElementById("previewContainer");
   const linkOutput = document.getElementById("linkOutput");
+  const uploadSuccess = document.getElementById("uploadSuccess");
 
   fileInput.addEventListener("change", () => {
     previewContainer.innerHTML = "";
@@ -227,64 +129,35 @@ function setupUpload() {
   });
 
   document.getElementById("submitBtn").addEventListener("click", async () => {
-    const mediaElements = document.querySelectorAll(".preview-card img, .preview-card video");
-    if (mediaElements.length === 0) {
+    const files = Array.from(fileInput.files);
+    if (files.length === 0) {
       alert("⚠️ Nessun file selezionato.");
       return;
     }
     const token = generateSecureId();
     await supabaseClient.from("tokens").insert([{ token }]);
 
-    const files = Array.from(fileInput.files);
+    let allOk = true;
     for (const file of files) {
       const filePath = `${token}/${file.name}`;
       const { error } = await supabaseClient.storage.from("uploads").upload(filePath, file);
       if (error) {
         console.error("Errore upload:", error);
         alert("Errore durante l'invio di alcuni file.");
-        return;
+        allOk = false;
+        break;
       }
     }
+    if (!allOk) return;
 
     const now = Date.now();
-    const duration = 60 * 60 * 1000; // default 1 ora
+    const duration = 60 * 60 * 1000;
     const link = `${window.location.origin}${window.location.pathname}?token=${token}&expires=${now + duration}`;
     linkOutput.textContent = "🔗 Link generato: " + link;
     navigator.clipboard.writeText(link);
-    alert("✅ Link protetto copiato negli appunti.");
+    uploadSuccess.style.display = "block";
     fileInput.value = "";
     previewContainer.innerHTML = "";
-  });
-}
-
-function applyProtections() {
-  const overlay = document.getElementById("overlay");
-  document.addEventListener("contextmenu", e => e.preventDefault());
-  document.addEventListener("selectstart", e => e.preventDefault());
-  document.addEventListener("dragstart", e => e.preventDefault());
-
-  window.addEventListener("blur", () => overlay.style.display = "flex");
-  window.addEventListener("focus", () => overlay.style.display = "none");
-
-  window.addEventListener("visibilitychange", () => {
-    overlay.style.display = document.hidden ? "flex" : "none";
-  });
-
-  if (screen.orientation) {
-    screen.orientation.addEventListener("change", () => {
-      overlay.style.display = "flex";
-      setTimeout(() => overlay.style.display = "none", 3000);
-    });
-  }
-
-  window.addEventListener("keydown", e => {
-    if (["PrintScreen", "F12"].includes(e.key) || 
-        (e.ctrlKey && ["p", "u", "s", "c"].includes(e.key.toLowerCase())) || 
-        (e.ctrlKey && e.shiftKey && ["I", "J"].includes(e.key))) {
-      e.preventDefault();
-      overlay.style.display = "flex";
-      setTimeout(() => overlay.style.display = "none", 3000);
-    }
   });
 }
 

@@ -1,230 +1,282 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>InviOne</title>
-  <script src="https://unpkg.com/@supabase/supabase-js@2.39.6/dist/umd/supabase.js"></script>
-  <style>
-    body {
-      background: linear-gradient(135deg, #000, #111);
-      color: #fff;
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 20px;
-      user-select: none;
-      overflow-x: hidden;
-      margin: 0;
-    }
-    .upload-zone {
-      border: 2px dashed #4ade80;
-      padding: 20px;
-      margin-bottom: 10px;
-      border-radius: 15px;
-      background: #1a1a1a;
-      transition: 0.3s;
-    }
-    .upload-zone:hover { background: #222; }
-    #limitMsg, #proMsg {
-      color: #fbbf24;
-      font-size: 14px;
-      margin-bottom: 20px;
-    }
-    .preview-card {
-      background: #111;
-      padding: 10px;
-      margin: 10px;
-      display: inline-block;
-      max-width: 300px;
-      vertical-align: top;
-      border-radius: 10px;
-      box-shadow: 0 0 10px #000;
-    }
-    .remove-button {
-      background: crimson;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      margin-top: 10px;
-      cursor: pointer;
-      border-radius: 5px;
-      transition: 0.3s;
-    }
-    .remove-button:hover { background: darkred; }
-    #submitBtn {
-      background: #16a34a;
-      color: white;
-      font-weight: bold;
-      padding: 10px 20px;
-      border: none;
-      margin-top: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px #16a34a;
-      transition: 0.3s;
-    }
-    #submitBtn:hover { background: #15803d; }
-    #linkOutput {
-      margin-top: 20px;
-      color: #4ade80;
-      font-weight: bold;
-      word-break: break-word;
-      background: #111;
-      padding: 10px;
-      border-radius: 10px;
-    }
-    #logo-fixed {
-      position: fixed;
-      bottom: 80px;
-      right: 20px;
-      width: 80px;
-      opacity: 0.9;
-      z-index: 10000;
-      filter: drop-shadow(0 0 10px #4ade80);
-    }
-    #overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 100vh;
-      width: 100vw;
-      background-color: #000;
-      color: #ff4c4c;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 32px;
-      font-weight: bold;
-      z-index: 9999;
-      display: none;
-    }
-    #disclaimer-box {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: #1a1a1a;
-      color: #fbbf24;
-      border-top: 2px dashed #fbbf24;
-      padding: 10px 6px;
-      font-size: 12px;
-      text-align: center;
-      animation: fadeIn 1s ease forwards;
-      box-sizing: border-box;
-    }
-    #disclaimer-box a {
-      color: #4ade80;
-      text-decoration: underline;
-    }
-    .watermark {
-      position: absolute;
-      bottom: 5px;
-      right: 5px;
-      font-size: 12px;
-      color: rgba(255, 255, 255, 0.5);
-      background: rgba(0, 0, 0, 0.5);
-      padding: 2px 5px;
-      border-radius: 3px;
-    }
-    @media (max-width: 480px), (orientation: landscape) {
-      #disclaimer-box {
-        font-size: 11px;
-        padding: 8px 4px;
-      }
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(100%); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InviOne</title>
+<script src="https://unpkg.com/@supabase/supabase-js@2.39.6/dist/umd/supabase.js"></script>
+<style>
+body { background: linear-gradient(135deg, #000, #111); color: #fff; font-family: Arial, sans-serif; text-align: center; padding: 20px; user-select: none; overflow-x: hidden; margin: 0; }
+.upload-zone { border: 2px dashed #4ade80; padding: 20px; margin-bottom: 10px; border-radius: 15px; background: #1a1a1a; transition: 0.3s; }
+.upload-zone:hover { background: #222; }
+#limitMsg, #proMsg { color: #fbbf24; font-size: 14px; margin-bottom: 20px; }
+.preview-card { background: #111; padding: 10px; margin: 10px; display: inline-block; max-width: 300px; vertical-align: top; border-radius: 10px; box-shadow: 0 0 10px #000; }
+.remove-button { background: crimson; color: white; border: none; padding: 5px 10px; margin-top: 10px; cursor: pointer; border-radius: 5px; transition: 0.3s; }
+.remove-button:hover { background: darkred; }
+#submitBtn { background: #16a34a; color: white; font-weight: bold; padding: 10px 20px; border: none; margin-top: 20px; border-radius: 10px; box-shadow: 0 0 10px #16a34a; transition: 0.3s; }
+#submitBtn:hover { background: #15803d; }
+#linkOutput { margin-top: 20px; color: #4ade80; font-weight: bold; word-break: break-word; background: #111; padding: 10px; border-radius: 10px; }
+#logo-fixed { position: fixed; bottom: 80px; right: 20px; width: 80px; opacity: 0.9; z-index: 10000; filter: drop-shadow(0 0 10px #4ade80); }
+#overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100vw;
+  background-color: #000;
+  color: #ff4c4c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: bold;
+  z-index: 9999;
+  display: none;
+}
+#welcomeScreen { position: fixed; top: 0; left: 0; height: 100vh; width: 100vw; background-color: #000; color: #4ade80; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; z-index: 10001; animation: fadeOut 2s ease 3s forwards; }
+#disclaimer-box {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #1a1a1a;
+  color: #fbbf24;
+  border-top: 2px dashed #fbbf24;
+  padding: 10px 6px;
+  font-size: 12px;
+  text-align: center;
+  animation: fadeIn 1s ease forwards;
+  box-sizing: border-box;
+}
+#disclaimer-box a { color: #4ade80; text-decoration: underline; }
+.watermark {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  background: rgba(0,0,0,0.5);
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+@media (max-width: 480px), (orientation: landscape) {
+  #disclaimer-box {
+    font-size: 11px;
+    padding: 8px 4px;
+  }
+}
+@keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: translateY(0); } }
+</style>
 </head>
 <body>
 
+<div id="welcomeScreen">👋 Benvenuto su InviOne</div>
+
+<div id="mainContent" style="display:none">
 <h1>Benvenuto su InviOne</h1>
-<h2 style="color: #4ade80;">Send it. Own it.</h2>
-
+<h2 style="color: #4ade80; margin-top: 5px; font-size: 18px;">Send it. Own it.</h2>
 <div class="upload-zone">
-  <label for="fileInput"><strong>Seleziona immagini o video da inviare</strong></label><br>
-  <input type="file" id="fileInput" accept="image/*,video/*" multiple>
+<label for="fileInput"><strong>Seleziona immagini o video da inviare</strong></label><br>
+<input type="file" id="fileInput" accept="image/*,video/*" multiple>
 </div>
-
 <div id="limitMsg">⚠️ Puoi inviare massimo 3 file nella versione free.</div>
 <div id="proMsg">💡 Versione Pro in arrivo: più file, durata illimitata, protezione avanzata!</div>
-
 <div id="previewContainer"></div>
 <button id="submitBtn">Genera Link Protetto</button>
 <div id="linkOutput"></div>
 <img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne">
+</div>
+
+<div id="protectedView" style="display:none">
+<h1>Visualizzazione Protetta</h1>
+<h2 style="color: #4ade80; margin-top: 5px; font-size: 18px;">Send it. Own it.</h2>
+<p>I file inviati sono protetti.</p>
+<div id="fileList" style="margin-top:20px; position: relative;"></div>
+<img id="logo-fixed" src="logo-invione.png" alt="Logo InviOne">
+</div>
 
 <div id="disclaimer-box">
-⚠️ Questo sistema riduce il rischio di copia, ma nessun sistema è infallibile.
-<span id="iosNotice"></span> <a href="termini.html">Termini e Condizioni</a>
+⚠️ Questo sistema riduce il rischio di copia, ma nessun sistema è infallibile. L'utente si assume la piena responsabilità per l'uso dei file. 
+<span id="iosNotice"></span>
+<a href="termini.html">Termini e Condizioni</a>
 </div>
 
 <div id="overlay">🔒 Contenuto protetto</div>
 
 <script>
-  const supabaseUrl = 'https://opsvjksjatksezmhygdz.supabase.co';
-  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wc3Zqa3NqYXRrc2V6bWh5Z2R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MjIwMDUsImV4cCI6MjA2NjE5ODAwNX0.04AwPujY-uMEfjywnryX8Rf-U5HPfwc9F1-yTLBWIiw//'
-  const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+const supabaseUrl = 'https://opsvjksjatksezmhygdz.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wc3Zqa3NqYXRrc2V6bWh5Z2R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MjIwMDUsImV4cCI6MjA2NjE5ODAwNX0.04AwPujY-uMEfjywnryX8Rf-U5HPfwc9F1-yTLBWIiw';
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-  document.addEventListener("DOMContentLoaded", () => {
-    if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
-      document.getElementById("iosNotice").innerText = "⚠️ Alcune funzioni potrebbero non essere compatibili su iOS.";
+document.addEventListener("DOMContentLoaded", async () => {
+  setTimeout(() => document.getElementById("welcomeScreen").style.display = "none", 5000);
+  const tokenParam = new URLSearchParams(window.location.search).get("token");
+
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+  if (tokenParam) {
+    applyProtections();
+    if (!isIOS) {
+      document.documentElement.requestFullscreen().catch(() => {});
     }
-    document.getElementById("submitBtn").addEventListener("click", async () => {
-      const fileInput = document.getElementById("fileInput");
-      const files = Array.from(fileInput.files);
-      if (files.length === 0) return alert("Seleziona almeno un file.");
-      if (files.length > 3) return alert("Max 3 file nella versione free.");
-      const token = Math.random().toString(36).substring(2, 12);
-      for (const file of files) {
-        const path = `${token}/${file.name}`;
-        await supabaseClient.storage.from("uploads").upload(path, file);
+    document.getElementById("protectedView").style.display = "block";
+    const { data, error } = await supabaseClient.storage.from("uploads").list(tokenParam);
+    if (error) return;
+    const list = document.getElementById("fileList");
+    list.innerHTML = "";
+    for (const file of data) {
+      const { data: signedUrlData } = await supabaseClient.storage.from("uploads").createSignedUrl(`${tokenParam}/${file.name}`, 3600);
+      if (signedUrlData && signedUrlData.signedUrl) {
+        const url = signedUrlData.signedUrl;
+        const ext = file.name.split(".").pop().toLowerCase();
+        if (["jpg","jpeg","png","gif","webp"].includes(ext)) {
+          const container = document.createElement("div");
+          container.style.position = "relative";
+          container.style.display = "inline-block";
+          const img = document.createElement("img");
+          img.src = url;
+          img.style.maxWidth = "100%";
+          img.style.margin = "10px";
+          img.oncontextmenu = e => e.preventDefault();
+          const wm = document.createElement("div");
+          wm.className = "watermark";
+          wm.textContent = "InviOne";
+          container.appendChild(img);
+          container.appendChild(wm);
+          list.appendChild(container);
+        } else if (["mp4","webm"].includes(ext)) {
+          const vid = document.createElement("video");
+          vid.src = url;
+          vid.controls = true;
+          vid.style.maxWidth = "100%";
+          vid.style.margin = "10px";
+          vid.oncontextmenu = e => e.preventDefault();
+          list.appendChild(vid);
+        }
       }
-      const link = `${location.origin}${location.pathname}?token=${token}`;
-      document.getElementById("linkOutput").innerText = link;
-      navigator.clipboard.writeText(link);
-      alert("Link copiato!");
-    });
+    }
+  } else {
+    document.getElementById("mainContent").style.display = "block";
+    setupUpload();
+  }
 
-    const token = new URLSearchParams(location.search).get("token");
-    if (token) loadProtected(token);
+  if (isIOS) {
+    document.getElementById("iosNotice").innerHTML = "<br>⚠️ Su iPhone o iPad alcune protezioni potrebbero non funzionare correttamente.";
+  }
+});
+
+function setupUpload() {
+  const fileInput = document.getElementById("fileInput");
+  const previewContainer = document.getElementById("previewContainer");
+  const linkOutput = document.getElementById("linkOutput");
+
+  fileInput.addEventListener("change", () => {
+    previewContainer.innerHTML = "";
+    const files = Array.from(fileInput.files);
+    if (files.length > 3) {
+      alert("⚠️ Puoi inviare massimo 3 file nella versione free.");
+      return;
+    }
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const card = document.createElement("div");
+        card.className = "preview-card";
+        if (file.type.startsWith("image")) {
+          const img = document.createElement("img");
+          img.src = e.target.result;
+          img.style.maxWidth = "100%";
+          card.appendChild(img);
+        } else if (file.type.startsWith("video")) {
+          const vid = document.createElement("video");
+          vid.src = e.target.result;
+          vid.controls = true;
+          vid.style.maxWidth = "100%";
+          card.appendChild(vid);
+        }
+        const btn = document.createElement("button");
+        btn.textContent = "Rimuovi";
+        btn.className = "remove-button";
+        btn.onclick = () => card.remove();
+        card.appendChild(btn);
+        previewContainer.appendChild(card);
+      };
+      reader.readAsDataURL(file);
+    });
   });
 
-  async function loadProtected(token) {
-    const overlay = document.getElementById("overlay");
-    const { data } = await supabaseClient.storage.from("uploads").list(token);
-    const container = document.getElementById("previewContainer");
-    container.innerHTML = '';
-    for (const file of data) {
-      const { data: urlData } = await supabaseClient.storage.from("uploads").createSignedUrl(`${token}/${file.name}`, 3600);
-      const ext = file.name.split('.').pop().toLowerCase();
-      if (["jpg", "jpeg", "png", "webp"].includes(ext)) {
-        const img = document.createElement("img");
-        img.src = urlData.signedUrl;
-        img.style.maxWidth = "100%";
-        img.oncontextmenu = e => e.preventDefault();
-        const wrapper = document.createElement("div");
-        wrapper.style.position = "relative";
-        const wm = document.createElement("div");
-        wm.className = "watermark";
-        wm.innerText = "InviOne";
-        wrapper.appendChild(img);
-        wrapper.appendChild(wm);
-        container.appendChild(wrapper);
+  document.getElementById("submitBtn").addEventListener("click", async () => {
+    const mediaElements = document.querySelectorAll(".preview-card img, .preview-card video");
+    if (mediaElements.length === 0) {
+      alert("⚠️ Nessun file selezionato.");
+      return;
+    }
+    const token = generateSecureId();
+    await supabaseClient.from("tokens").insert([{ token }]);
+
+    const files = Array.from(fileInput.files);
+    for (const file of files) {
+      const filePath = `${token}/${file.name}`;
+      const { error } = await supabaseClient.storage.from("uploads").upload(filePath, file);
+      if (error) {
+        console.error("Errore upload:", error);
+        alert("Errore durante l'invio di alcuni file.");
+        return;
       }
     }
 
-    document.addEventListener("visibilitychange", () => {
-      overlay.style.display = document.hidden ? "flex" : "none";
-    });
-    window.addEventListener("keydown", e => {
-      if (e.key === "PrintScreen") {
-        overlay.style.display = "flex";
-        setTimeout(() => overlay.style.display = "none", 3000);
-      }
+    const link = `${window.location.origin}${window.location.pathname}?token=${token}`;
+    linkOutput.textContent = "🔗 Link generato: " + link;
+    navigator.clipboard.writeText(link);
+    alert("✅ Link protetto copiato negli appunti.");
+    fileInput.value = "";
+    previewContainer.innerHTML = "";
+  });
+}
+
+function applyProtections() {
+  const overlay = document.getElementById("overlay");
+
+  document.addEventListener("contextmenu", e => e.preventDefault());
+  document.addEventListener("selectstart", e => e.preventDefault());
+  document.addEventListener("dragstart", e => e.preventDefault());
+
+  window.addEventListener("blur", () => overlay.style.display = "flex");
+  window.addEventListener("focus", () => overlay.style.display = "none");
+
+  window.addEventListener("visibilitychange", () => {
+    if (document.hidden) overlay.style.display = "flex";
+    else overlay.style.display = "none";
+  });
+
+  if (screen.orientation) {
+    screen.orientation.addEventListener("change", () => {
+      overlay.style.display = "flex";
+      setTimeout(() => overlay.style.display = "none", 3000);
     });
   }
+
+  window.addEventListener("keydown", e => {
+    if (["PrintScreen", "F12"].includes(e.key) || 
+        (e.ctrlKey && ["p", "u", "s", "c"].includes(e.key.toLowerCase())) || 
+        (e.ctrlKey && e.shiftKey && ["I", "J"].includes(e.key))) {
+      e.preventDefault();
+      overlay.style.display = "flex";
+      setTimeout(() => overlay.style.display = "none", 3000);
+    }
+  });
+}
+
+function generateSecureId(length = 20) {
+  const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += charset.charAt(Math.floor(Math.random() * charset.length));
+  }
+  return result;
+}
 </script>
+
 </body>
 </html>

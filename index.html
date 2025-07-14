@@ -2,18 +2,12 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>InviOne</title>
   <script src="https://unpkg.com/@supabase/supabase-js@2.39.6/dist/umd/supabase.js"></script>
   <style>
     body {
-      background: repeating-linear-gradient(
-        45deg,
-        #000,
-        #000 10px,
-        #111 10px,
-        #111 20px
-      );
+      background: repeating-linear-gradient(45deg, #000, #000 10px, #111 10px, #111 20px);
       color: #fff;
       font-family: Arial, sans-serif;
       text-align: center;
@@ -33,11 +27,6 @@
     .upload-zone:hover {
       background: #222;
     }
-    #limitMsg, #proMsg, #termsWarning {
-      color: #fbbf24;
-      font-size: 14px;
-      margin-bottom: 10px;
-    }
     .preview-card {
       background: #111;
       padding: 10px;
@@ -53,132 +42,91 @@
       color: white;
       border: none;
       padding: 5px 10px;
-      margin-top: 5px;
-      border-radius: 5px;
+      margin-top: 10px;
       cursor: pointer;
+      border-radius: 5px;
+    }
+    .info {
+      font-size: 14px;
+      color: #fbbf24;
+      margin-top: 5px;
     }
     a {
       color: #4ade80;
     }
-    .watermark {
-      position: fixed;
-      bottom: 10px;
-      right: 10px;
-      font-size: 12px;
-      color: #333;
-    }
-    .green-button {
-      background: #166534;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 12px;
-      font-weight: bold;
-      cursor: pointer;
-      box-shadow: 0 0 10px #166534;
-      margin: 10px auto;
-    }
-    .options-container {
-      margin: 10px auto;
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-      flex-wrap: wrap;
-    }
-    .options-container label {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 14px;
+    select, input[type="checkbox"] {
+      margin: 10px;
     }
   </style>
 </head>
 <body>
   <h1>InviOne</h1>
   <p><strong>Send it. Own it.</strong></p>
-  <div class="upload-zone" id="uploadZone">
-    <label for="fileInput"><strong>Seleziona immagini o video da inviare</strong></label><br/>
+
+  <div class="upload-zone">
+    <h3>Seleziona immagini o video da inviare</h3>
     <input type="file" id="fileInput" multiple accept="image/*,video/*" />
-    <div id="limitMsg">⚠️ Puoi inviare massimo 3 file nella versione free.</div>
-    <div id="proMsg">💡 Versione Pro in arrivo: più file, durata illimitata, protezione avanzata!</div>
+    <p class="info">⚠️ Puoi inviare massimo 3 file nella versione free.</p>
+    <p class="info">💡 Versione Pro in arrivo: più file, durata illimitata, protezione avanzata!</p>
   </div>
-  <div id="previewContainer"></div>
-  <div class="options-container">
-    <label>
-      ⏳ Durata Link:
-      <select id="durationSelect">
-        <option value="600">10 min</option>
-        <option value="3600">1 ora</option>
-        <option value="86400">24 ore</option>
-        <option value="0">Nessuna scadenza</option>
+
+  <div>
+    <label>⏳ Durata Link:
+      <select id="duration">
+        <option value="10">10 min</option>
+        <option value="60">1 ora</option>
+        <option value="1440">24 ore</option>
+        <option value="0">Sempre</option>
       </select>
     </label>
     <label>
-      <input type="checkbox" id="singleView"> Visualizzazione singola
+      <input type="checkbox" id="singleView" /> Visualizzazione singola
     </label>
     <label>
-      <input type="checkbox" id="acceptTerms"> Accetto i <a href="termini.html" target="_blank">Termini e Condizioni</a>
+      <input type="checkbox" id="terms" /> Accetto i <a href="termini.html" target="_blank">Termini e Condizioni</a>
     </label>
+    <br />
+    <button onclick="generaLink()">Genera Link Protetto</button>
+    <div id="uploadStatus"></div>
   </div>
 
-  <button class="green-button" onclick="generateProtectedLink()">Genera Link Protetto</button>
-  <div id="statusMsg"></div>
-  <div id="linkDisplay"></div>
-  <div class="watermark">InviOne ©</div>
+  <p class="info">⚠️ Questo sistema riduce il rischio di copia, ma nessun sistema è infallibile. L’utente si assume la piena responsabilità per l’uso dei file. <a href="termini.html" target="_blank">Termini e Condizioni</a></p>
+
+  <div id="preview"></div>
 
   <script>
-    const supabase = supabase.createClient("https://xxxx.supabase.co", "public-anon-key");
-    const fileInput = document.getElementById("fileInput");
-    const previewContainer = document.getElementById("previewContainer");
-    const statusMsg = document.getElementById("statusMsg");
-    const linkDisplay = document.getElementById("linkDisplay");
+    const fileInput = document.getElementById('fileInput');
+    const preview = document.getElementById('preview');
 
-    let uploadedFiles = [];
-
-    fileInput.addEventListener("change", () => {
-      previewContainer.innerHTML = "";
-      uploadedFiles = Array.from(fileInput.files);
-      if (uploadedFiles.length > 3) {
-        statusMsg.innerHTML = "❌ Puoi caricare al massimo 3 file!";
+    fileInput.addEventListener('change', () => {
+      preview.innerHTML = '';
+      const files = fileInput.files;
+      if (files.length > 3) {
+        alert("Puoi inviare massimo 3 file nella versione gratuita.");
+        fileInput.value = '';
         return;
       }
-      uploadedFiles.forEach(file => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const card = document.createElement("div");
-          card.className = "preview-card";
-          card.innerHTML = `<img src="${e.target.result}" style="max-width: 100%;"/><br><button class="remove-button" onclick="this.parentNode.remove()">Rimuovi</button>`;
-          previewContainer.appendChild(card);
-        };
-        reader.readAsDataURL(file);
-      });
+      for (let file of files) {
+        const card = document.createElement('div');
+        card.className = 'preview-card';
+        card.innerText = file.name;
+        preview.appendChild(card);
+      }
     });
 
-    async function generateProtectedLink() {
-      const accept = document.getElementById("acceptTerms").checked;
-      if (!accept) {
-        statusMsg.innerHTML = "⚠️ Devi accettare i Termini e Condizioni per continuare.";
+    function generaLink() {
+      const files = fileInput.files;
+      const acceptTerms = document.getElementById('terms').checked;
+      if (!acceptTerms) {
+        alert("Devi accettare i Termini e Condizioni per procedere.");
         return;
       }
-
-      if (uploadedFiles.length === 0) {
-        statusMsg.innerHTML = "⚠️ Nessun file selezionato.";
+      if (files.length === 0) {
+        alert("Seleziona almeno un file.");
         return;
       }
-
-      const duration = document.getElementById("durationSelect").value;
-      const singleView = document.getElementById("singleView").checked;
-
-      // Simulazione generazione link
-      const token = Math.random().toString(36).substring(2, 15);
-      const expiration = duration === "0" ? "never" : Date.now() + parseInt(duration) * 1000;
-      const link = `https://kingwormius.github.io/invione-demo/?token=${token}&expires=${expiration}${singleView ? "&once=true" : ""}`;
-
-      linkDisplay.innerHTML = `🔗 Link generato: <a href="${link}" target="_blank">${link}</a>`;
-      statusMsg.innerHTML = "✅ Upload completato con successo.";
+      document.getElementById('uploadStatus').innerHTML = '✅ Upload completato con successo.';
     }
   </script>
-
-  <div id="termsWarning">⚠️ Questo sistema riduce il rischio di copia, ma nessun sistema è infallibile. L'utente si assume la piena responsabilità per l'uso dei file. <a href="termini.html" target="_blank">Termini e Condizioni</a></div>
 </body>
 </html>

@@ -70,7 +70,7 @@
   <div class="upload-zone">
     <h3>Seleziona immagini o video da inviare</h3>
     <input type="file" id="fileInput" multiple accept="image/*,video/*" />
-    <p class="info">⚠️ Puoi inviare massimo 3 file nella versione free.</p>
+    <p class="info">⚠️ Puoi inviare massimo <span id="maxFiles">3</span> file nella versione free.</p>
     <p class="info">💡 Versione Pro in arrivo: più file, durata illimitata, protezione avanzata!</p>
   </div>
 
@@ -91,11 +91,12 @@
     </label>
     <br />
     <button onclick="uploadAndGenerateLink()">Genera Link Protetto</button>
+    <button onclick="attivaPro24h()">⚡ Attiva Pro 24h</button>
     <div id="uploadStatus"></div>
   </div>
 
   <p class="info" id="termFooter">⚠️ Questo sistema riduce il rischio di copia, ma nessun sistema è infallibile. L’utente si assume la piena responsabilità per l’uso dei file.</p>
-
+  <p class="info">🧠 Piano attivo: <span id="userPlan">Loading...</span></p>
   <div id="preview"></div>
 
 <script>
@@ -107,12 +108,36 @@ const supabase = window.supabase.createClient(
 const fileInput = document.getElementById('fileInput');
 const preview = document.getElementById('preview');
 const uploadStatus = document.getElementById('uploadStatus');
+const maxFilesSpan = document.getElementById('maxFiles');
+const userPlanSpan = document.getElementById('userPlan');
+
+let fingerprint = localStorage.getItem("invione_fp");
+if (!fingerprint) {
+  fingerprint = crypto.randomUUID();
+  localStorage.setItem("invione_fp", fingerprint);
+}
+
+let maxFiles = 3;
+
+async function checkPlan() {
+  const { data } = await supabase.from('user_plans').select('*').eq('fingerprint', fingerprint).maybeSingle();
+  const now = new Date();
+  if (data && data.expires_at && new Date(data.expires_at) > now) {
+    maxFiles = 10;
+    userPlanSpan.textContent = data.plan + ' (attivo)';
+  } else {
+    userPlanSpan.textContent = 'Free';
+  }
+  maxFilesSpan.textContent = maxFiles;
+}
+
+checkPlan();
 
 fileInput.addEventListener('change', () => {
   preview.innerHTML = '';
   const files = fileInput.files;
-  if (files.length > 3) {
-    alert("Puoi inviare massimo 3 file nella versione gratuita.");
+  if (files.length > maxFiles) {
+    alert(`Puoi inviare massimo ${maxFiles} file nel tuo piano.`);
     fileInput.value = '';
     return;
   }
@@ -155,17 +180,13 @@ async function uploadAndGenerateLink() {
   const userFolder = `anon/${token}`;
   const duration = document.getElementById('duration').value;
   const singleView = document.getElementById('singleView').checked;
-
   let publicLinks = [];
 
   for (let file of files) {
     const filePath = `${userFolder}/${file.name}`;
     const { error: uploadError } = await supabase.storage
       .from('invione-bucket')
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false
-      });
+      .upload(filePath, file, { cacheControl: '3600', upsert: false });
 
     if (uploadError) {
       alert(`Errore durante l'upload: ${uploadError.message}`);
@@ -175,14 +196,11 @@ async function uploadAndGenerateLink() {
     const { data: urlData } = supabase.storage
       .from('invione-bucket')
       .getPublicUrl(filePath);
-
-    if (urlData?.publicUrl) {
-      publicLinks.push(urlData.publicUrl);
-    }
+    if (urlData?.publicUrl) publicLinks.push(urlData.publicUrl);
   }
 
   const displayLinks = publicLinks
-    .map(url => `<a href="${url}" target="_blank">🔗 ${url.split('/').pop()}</a>`)
+    .map(url => `<a href="${url}" target="_blank">🔗 ${url.split('/').pop()}</a>`) 
     .join("<br>");
 
   try {
@@ -192,14 +210,24 @@ async function uploadAndGenerateLink() {
     uploadStatus.innerHTML = `✅ Upload completato. Copia manuale:<br>${displayLinks}`;
   }
 
-  await supabase
-    .from('link_metadata')
-    .insert({
-      token,
-      expires_in_minutes: parseInt(duration),
-      single_view: singleView,
-      created_at: new Date().toISOString()
-    });
+  await supabase.from('link_metadata').insert({
+    token,
+    expires_in_minutes: parseInt(duration),
+    single_view: singleView,
+    created_at: new Date().toISOString(),
+    fingerprint
+  });
+}
+
+async function attivaPro24h() {
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+  await supabase.from('user_plans').upsert({
+    fingerprint,
+    plan: 'Pass Pro 24h',
+    expires_at: expiresAt,
+    created_at: new Date().toISOString()
+  });
+  alert("✅ Pro attivato per 24 ore! Ricarica la pagina per vedere le nuove funzionalità.");
 }
 </script>
 </body>

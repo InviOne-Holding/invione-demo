@@ -61,6 +61,21 @@
       max-width: 100%;
       border-radius: 10px;
     }
+    table {
+      margin: 20px auto;
+      border-collapse: collapse;
+      width: 90%;
+    }
+    table, th, td {
+      border: 1px solid #444;
+    }
+    th, td {
+      padding: 10px;
+      font-size: 14px;
+    }
+    th {
+      background: #222;
+    }
   </style>
 </head>
 <body>
@@ -70,8 +85,7 @@
   <div class="upload-zone">
     <h3>Seleziona immagini o video da inviare</h3>
     <input type="file" id="fileInput" multiple accept="image/*,video/*" />
-    <p class="info">⚠️ Puoi inviare massimo <span id="maxFiles">3</span> file nella versione free.</p>
-    <p class="info">💡 Versione Pro in arrivo: più file, durata illimitata, protezione avanzata!</p>
+    <p class="info">⚠️ Puoi inviare massimo <span id="maxFiles">3</span> file nel tuo piano.</p>
   </div>
 
   <div>
@@ -95,9 +109,23 @@
     <div id="uploadStatus"></div>
   </div>
 
-  <p class="info" id="termFooter">⚠️ Questo sistema riduce il rischio di copia, ma nessun sistema è infallibile. L’utente si assume la piena responsabilità per l’uso dei file.</p>
-  <p class="info">🧠 Piano attivo: <span id="userPlan">Loading...</span></p>
+  <p class="info">🧠 Piano attivo: <span id="userPlan">Caricamento...</span></p>
+  <p class="info">📅 Scadenza: <span id="userExpiry">--</span></p>
+
   <div id="preview"></div>
+
+  <h3>Piani Disponibili</h3>
+  <table>
+    <tr>
+      <th>Piano</th>
+      <th>Prezzo</th>
+      <th>Funzionalità</th>
+    </tr>
+    <tr><td>Free</td><td>Gratis</td><td>3 file, 24h max, protezione base</td></tr>
+    <tr><td>Pass Pro 24h</td><td>€1</td><td>10 file, autodistruzione, link monouso</td></tr>
+    <tr><td>Pro</td><td>€3,90/mese</td><td>20 file, log accessi, durata avanzata</td></tr>
+    <tr><td>Creator</td><td>€6,90/mese</td><td>Tracking aperture, watermark invisibile</td></tr>
+  </table>
 
 <script>
 const supabase = window.supabase.createClient(
@@ -110,6 +138,7 @@ const preview = document.getElementById('preview');
 const uploadStatus = document.getElementById('uploadStatus');
 const maxFilesSpan = document.getElementById('maxFiles');
 const userPlanSpan = document.getElementById('userPlan');
+const userExpirySpan = document.getElementById('userExpiry');
 
 let fingerprint = localStorage.getItem("invione_fp");
 if (!fingerprint) {
@@ -122,11 +151,18 @@ let maxFiles = 3;
 async function checkPlan() {
   const { data } = await supabase.from('user_plans').select('*').eq('fingerprint', fingerprint).maybeSingle();
   const now = new Date();
-  if (data && data.expires_at && new Date(data.expires_at) > now) {
-    maxFiles = 10;
-    userPlanSpan.textContent = data.plan + ' (attivo)';
+  if (data && data.expires_at) {
+    const expiry = new Date(data.expires_at);
+    userExpirySpan.textContent = expiry.toLocaleString();
+    if (expiry > now) {
+      maxFiles = 10;
+      userPlanSpan.textContent = data.plan + ' (attivo)';
+    } else {
+      userPlanSpan.textContent = 'Free';
+    }
   } else {
     userPlanSpan.textContent = 'Free';
+    userExpirySpan.textContent = '--';
   }
   maxFilesSpan.textContent = maxFiles;
 }

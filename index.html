@@ -5,151 +5,120 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>InviOne</title>
   <script src="https://unpkg.com/@supabase/supabase-js@2.39.6/dist/umd/supabase.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
     body {
       background: repeating-linear-gradient(45deg, #000, #000 10px, #111 10px, #111 20px);
       color: #fff;
       font-family: Arial, sans-serif;
       text-align: center;
-      padding: 20px;
       user-select: none;
-      overflow-x: hidden;
       margin: 0;
+      overflow-x: hidden;
     }
     .upload-zone {
       border: 2px dashed #4ade80;
       padding: 20px;
-      margin-bottom: 10px;
+      margin: 20px;
       border-radius: 15px;
       background: #1a1a1a;
       transition: 0.3s;
     }
-    .upload-zone:hover {
-      background: #222;
-    }
+    .upload-zone:hover { background: #222; }
     .preview-card {
       background: #111;
       padding: 10px;
       margin: 10px;
       display: inline-block;
       max-width: 300px;
-      vertical-align: top;
       border-radius: 10px;
       box-shadow: 0 0 10px #000;
     }
-    .remove-button {
-      background: crimson;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      margin-top: 10px;
-      cursor: pointer;
-      border-radius: 5px;
-    }
-    .info {
-      font-size: 14px;
-      color: #fbbf24;
-      margin-top: 5px;
-    }
-    a {
-      color: #4ade80;
-    }
-    select, input[type="checkbox"] {
-      margin: 10px;
-    }
-    img, video {
-      max-width: 100%;
-      border-radius: 10px;
-    }
-    table {
-      border-collapse: separate;
-      border-spacing: 0;
-      overflow: hidden;
-      border-radius: 10px;
-      background: #111;
-      box-shadow: 0 0 10px rgba(0,0,0,0.5);
-      margin: 20px auto;
-      width: 90%;
-    }
-    table th, table td {
-      padding: 10px;
-      font-size: 14px;
-      border: 1px solid #444;
-    }
-    table thead tr {
-      background: #222;
-    }
+    .info { font-size: 14px; color: #fbbf24; margin-top: 5px; }
+    a { color: #4ade80; }
+    img, video { max-width: 100%; border-radius: 10px; }
   </style>
 </head>
 <body>
-  <h1>InviOne</h1>
+  <h1 class="text-3xl font-bold mt-4">InviOne</h1>
   <p><strong>Send it. Own it.</strong></p>
 
   <div class="upload-zone">
-    <h3>Seleziona immagini o video da inviare</h3>
-    <input type="file" id="fileInput" multiple accept="image/*,video/*" />
+    <h3 class="text-xl">Seleziona immagini o video da inviare</h3>
+    <input type="file" id="fileInput" multiple accept="image/*,video/*" class="mt-2" />
     <p class="info">⚠️ Puoi inviare massimo <span id="maxFiles">3</span> file nel tuo piano.</p>
   </div>
 
   <div>
-    <label>⏳ Durata Link:
-      <select id="duration">
+    <label class="block">⏳ Durata Link:
+      <select id="duration" class="text-black ml-2">
         <option value="10">10 min</option>
         <option value="60">1 ora</option>
         <option value="1440">24 ore</option>
         <option value="0">Sempre</option>
       </select>
     </label>
-    <label>
-      <input type="checkbox" id="singleView" /> Visualizzazione singola
-    </label>
-    <label>
-      <input type="checkbox" id="terms" /> Accetto i <a href="termini.html" target="_blank">Termini e Condizioni</a>
-    </label>
+    <label><input type="checkbox" id="singleView" class="ml-2" /> Visualizzazione singola</label>
+    <label><input type="checkbox" id="terms" class="ml-2" /> Accetto i <a href="termini.html" target="_blank">Termini e Condizioni</a></label>
     <br />
-    <button onclick="uploadAndGenerateLink()">Genera Link Protetto</button>
-    <button onclick="attivaPro24h()">⚡ Attiva Pro 24h</button>
-    <div id="uploadStatus"></div>
+    <button onclick="uploadAndGenerateLink()" class="bg-green-500 text-black font-bold px-4 py-2 rounded mt-2">Genera Link Protetto</button>
+    <button onclick="attivaPro24h()" class="bg-yellow-400 text-black font-bold px-4 py-2 rounded ml-2">⚡ Attiva Pro 24h</button>
+    <div id="uploadStatus" class="mt-2"></div>
   </div>
 
-  <p class="info">🧠 Piano attivo: <span id="userPlan">Caricamento...</span></p>
+  <p class="info mt-4">🧠 Piano attivo: <span id="userPlan">Caricamento...</span></p>
   <p class="info">📅 Scadenza: <span id="userExpiry">--</span></p>
 
   <div id="preview"></div>
 
-  <h3>Piani Disponibili</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>Piano</th>
-        <th>Prezzo</th>
-        <th>Funzionalità</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr style="background-color: #063; color: #d1fae5;">
-        <td><strong>Free</strong></td>
-        <td>Gratis</td>
-        <td>3 file, 24h max, protezione base</td>
-      </tr>
-      <tr style="background-color: #7c2d12; color: #fde68a;">
-        <td><strong>Pass Pro 24h</strong></td>
-        <td>€1</td>
-        <td>10 file, autodistruzione, link monouso</td>
-      </tr>
-      <tr style="background-color: #1e3a8a; color: #c7d2fe;">
-        <td><strong>Pro</strong></td>
-        <td>€3,90/mese</td>
-        <td>20 file, log accessi, durata avanzata</td>
-      </tr>
-      <tr style="background-color: #6b21a8; color: #f3e8ff;">
-        <td><strong>Creator</strong></td>
-        <td>€6,90/mese</td>
-        <td>Tracking aperture, watermark invisibile</td>
-      </tr>
-    </tbody>
-  </table>
+  <h3 class="text-2xl font-bold mt-8">Piani Disponibili</h3>
+  <div class="flex flex-wrap justify-center gap-4 p-4">
+    <div class="bg-green-700 text-white rounded-lg shadow-lg p-6 w-64">
+      <h4 class="text-lg font-bold">Free</h4>
+      <p class="text-2xl font-bold mt-2">€0</p>
+      <ul class="text-sm mt-2">
+        <li>✅ 3 file</li>
+        <li>✅ Protezione base</li>
+        <li>⏱️ 24h link</li>
+      </ul>
+      <button disabled class="bg-gray-600 text-white px-3 py-1 rounded mt-4 opacity-50">Attivo</button>
+    </div>
+    <div class="bg-orange-700 text-white rounded-lg shadow-lg p-6 w-64">
+      <h4 class="text-lg font-bold">Pass Pro 24h</h4>
+      <p class="text-2xl font-bold mt-2">€1</p>
+      <ul class="text-sm mt-2">
+        <li>✅ 10 file</li>
+        <li>🔥 Autodistruzione</li>
+        <li>🔗 Link monouso</li>
+      </ul>
+      <button onclick="attivaPro24h()" class="bg-white text-black px-3 py-1 rounded mt-4 font-bold">Attiva</button>
+    </div>
+    <div class="bg-blue-700 text-white rounded-lg shadow-lg p-6 w-64">
+      <h4 class="text-lg font-bold">Pro</h4>
+      <p class="text-2xl font-bold mt-2">€3,90/mese</p>
+      <ul class="text-sm mt-2">
+        <li>✅ 20 file</li>
+        <li>📊 Log accessi</li>
+        <li>🕒 Durata avanzata</li>
+      </ul>
+      <button class="bg-white text-black px-3 py-1 rounded mt-4 font-bold">Presto</button>
+    </div>
+    <div class="bg-purple-700 text-white rounded-lg shadow-lg p-6 w-64">
+      <h4 class="text-lg font-bold">Creator</h4>
+      <p class="text-2xl font-bold mt-2">€6,90/mese</p>
+      <ul class="text-sm mt-2">
+        <li>🎯 Tracking aperture</li>
+        <li>👻 Watermark invisibile</li>
+      </ul>
+      <button class="bg-white text-black px-3 py-1 rounded mt-4 font-bold">Presto</button>
+    </div>
+  </div>
 
+<script>
+// JS rimane invariato: lo reintegro nella seconda parte
+</script>
+</body>
+</html>
 <script>
 const supabase = window.supabase.createClient(
   'https://opsvjksjatksezmhygdz.supabase.co',
@@ -289,5 +258,3 @@ async function attivaPro24h() {
   alert("✅ Pro attivato per 24 ore! Ricarica la pagina per vedere le nuove funzionalità.");
 }
 </script>
-</body>
-</html>

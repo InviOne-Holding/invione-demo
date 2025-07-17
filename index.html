@@ -1,4 +1,4 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
@@ -62,18 +62,21 @@
       border-radius: 10px;
     }
     table {
+      border-collapse: separate;
+      border-spacing: 0;
+      overflow: hidden;
+      border-radius: 10px;
+      background: #111;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
       margin: 20px auto;
-      border-collapse: collapse;
       width: 90%;
     }
-    table, th, td {
-      border: 1px solid #444;
-    }
-    th, td {
+    table th, table td {
       padding: 10px;
       font-size: 14px;
+      border: 1px solid #444;
     }
-    th {
+    table thead tr {
       background: #222;
     }
   </style>
@@ -116,15 +119,35 @@
 
   <h3>Piani Disponibili</h3>
   <table>
-    <tr>
-      <th>Piano</th>
-      <th>Prezzo</th>
-      <th>Funzionalità</th>
-    </tr>
-    <tr><td>Free</td><td>Gratis</td><td>3 file, 24h max, protezione base</td></tr>
-    <tr><td>Pass Pro 24h</td><td>€1</td><td>10 file, autodistruzione, link monouso</td></tr>
-    <tr><td>Pro</td><td>€3,90/mese</td><td>20 file, log accessi, durata avanzata</td></tr>
-    <tr><td>Creator</td><td>€6,90/mese</td><td>Tracking aperture, watermark invisibile</td></tr>
+    <thead>
+      <tr>
+        <th>Piano</th>
+        <th>Prezzo</th>
+        <th>Funzionalità</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="background-color: #063; color: #d1fae5;">
+        <td><strong>Free</strong></td>
+        <td>Gratis</td>
+        <td>3 file, 24h max, protezione base</td>
+      </tr>
+      <tr style="background-color: #7c2d12; color: #fde68a;">
+        <td><strong>Pass Pro 24h</strong></td>
+        <td>€1</td>
+        <td>10 file, autodistruzione, link monouso</td>
+      </tr>
+      <tr style="background-color: #1e3a8a; color: #c7d2fe;">
+        <td><strong>Pro</strong></td>
+        <td>€3,90/mese</td>
+        <td>20 file, log accessi, durata avanzata</td>
+      </tr>
+      <tr style="background-color: #6b21a8; color: #f3e8ff;">
+        <td><strong>Creator</strong></td>
+        <td>€6,90/mese</td>
+        <td>Tracking aperture, watermark invisibile</td>
+      </tr>
+    </tbody>
   </table>
 
 <script>

@@ -1,27 +1,270 @@
-<!DOCTYPE html>
+!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>InviOne™ - Deploy in corso</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InviOne</title>
+  <script src="https://unpkg.com/@supabase/supabase-js@2.39.6/dist/umd/supabase.js"></script>
   <style>
     body {
-      background-color: #000;
-      color: #4ade80;
+      background: repeating-linear-gradient(45deg, #000, #000 10px, #111 10px, #111 20px);
+      color: #fff;
       font-family: Arial, sans-serif;
       text-align: center;
-      padding-top: 20%;
+      padding: 20px;
+      user-select: none;
+      overflow-x: hidden;
+      margin: 0;
     }
-    h1 {
-      font-size: 2rem;
+    .upload-zone {
+      border: 2px dashed #4ade80;
+      padding: 20px;
+      margin-bottom: 10px;
+      border-radius: 15px;
+      background: #1a1a1a;
+      transition: 0.3s;
+    }
+    .upload-zone:hover {
+      background: #222;
+    }
+    .preview-card {
+      background: #111;
+      padding: 10px;
+      margin: 10px;
+      display: inline-block;
+      max-width: 300px;
+      vertical-align: top;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #000;
+    }
+    .remove-button {
+      background: crimson;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      margin-top: 10px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    .info {
+      font-size: 14px;
+      color: #fbbf24;
+      margin-top: 5px;
+    }
+    a {
+      color: #4ade80;
+    }
+    select, input[type="checkbox"] {
+      margin: 10px;
+    }
+    img, video {
+      max-width: 100%;
+      border-radius: 10px;
+    }
+    table {
+      margin: 20px auto;
+      border-collapse: collapse;
+      width: 90%;
+    }
+    table, th, td {
+      border: 1px solid #444;
+    }
+    th, td {
+      padding: 10px;
+      font-size: 14px;
+    }
+    th {
+      background: #222;
     }
   </style>
 </head>
 <body>
-  <h1>🚧 InviOne™ si sta caricando...<br>Riprova tra qualche minuto!</h1>
+  <h1>InviOne</h1>
+  <p><strong>Send it. Own it.</strong></p>
+
+  <div class="upload-zone">
+    <h3>Seleziona immagini o video da inviare</h3>
+    <input type="file" id="fileInput" multiple accept="image/*,video/*" />
+    <p class="info">⚠️ Puoi inviare massimo <span id="maxFiles">3</span> file nel tuo piano.</p>
+  </div>
+
+  <div>
+    <label>⏳ Durata Link:
+      <select id="duration">
+        <option value="10">10 min</option>
+        <option value="60">1 ora</option>
+        <option value="1440">24 ore</option>
+        <option value="0">Sempre</option>
+      </select>
+    </label>
+    <label>
+      <input type="checkbox" id="singleView" /> Visualizzazione singola
+    </label>
+    <label>
+      <input type="checkbox" id="terms" /> Accetto i <a href="termini.html" target="_blank">Termini e Condizioni</a>
+    </label>
+    <br />
+    <button onclick="uploadAndGenerateLink()">Genera Link Protetto</button>
+    <button onclick="attivaPro24h()">⚡ Attiva Pro 24h</button>
+    <div id="uploadStatus"></div>
+  </div>
+
+  <p class="info">🧠 Piano attivo: <span id="userPlan">Caricamento...</span></p>
+  <p class="info">📅 Scadenza: <span id="userExpiry">--</span></p>
+
+  <div id="preview"></div>
+
+  <h3>Piani Disponibili</h3>
+  <table>
+    <tr>
+      <th>Piano</th>
+      <th>Prezzo</th>
+      <th>Funzionalità</th>
+    </tr>
+    <tr><td>Free</td><td>Gratis</td><td>3 file, 24h max, protezione base</td></tr>
+    <tr><td>Pass Pro 24h</td><td>€1</td><td>10 file, autodistruzione, link monouso</td></tr>
+    <tr><td>Pro</td><td>€3,90/mese</td><td>20 file, log accessi, durata avanzata</td></tr>
+    <tr><td>Creator</td><td>€6,90/mese</td><td>Tracking aperture, watermark invisibile</td></tr>
+  </table>
+
+<script>
+const supabase = window.supabase.createClient(
+  'https://opsvjksjatksezmhygdz.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wc3Zqa3NqYXRrc2V6bWh5Z2R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MjIwMDUsImV4cCI6MjA2NjE5ODAwNX0.04AwPujY-uMEfjywnryX8Rf-U5HPfwc9F1-yTLBWIiw'
+);
+
+const fileInput = document.getElementById('fileInput');
+const preview = document.getElementById('preview');
+const uploadStatus = document.getElementById('uploadStatus');
+const maxFilesSpan = document.getElementById('maxFiles');
+const userPlanSpan = document.getElementById('userPlan');
+const userExpirySpan = document.getElementById('userExpiry');
+
+let fingerprint = localStorage.getItem("invione_fp");
+if (!fingerprint) {
+  fingerprint = crypto.randomUUID();
+  localStorage.setItem("invione_fp", fingerprint);
+}
+
+let maxFiles = 3;
+
+async function checkPlan() {
+  const { data } = await supabase.from('user_plans').select('*').eq('fingerprint', fingerprint).maybeSingle();
+  const now = new Date();
+  if (data && data.expires_at) {
+    const expiry = new Date(data.expires_at);
+    userExpirySpan.textContent = expiry.toLocaleString();
+    if (expiry > now) {
+      maxFiles = 10;
+      userPlanSpan.textContent = data.plan + ' (attivo)';
+    } else {
+      userPlanSpan.textContent = 'Free';
+    }
+  } else {
+    userPlanSpan.textContent = 'Free';
+    userExpirySpan.textContent = '--';
+  }
+  maxFilesSpan.textContent = maxFiles;
+}
+
+checkPlan();
+
+fileInput.addEventListener('change', () => {
+  preview.innerHTML = '';
+  const files = fileInput.files;
+  if (files.length > maxFiles) {
+    alert(`Puoi inviare massimo ${maxFiles} file nel tuo piano.`);
+    fileInput.value = '';
+    return;
+  }
+  for (let file of files) {
+    const card = document.createElement('div');
+    card.className = 'preview-card';
+
+    if (file.type.startsWith('image/')) {
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(file);
+      card.appendChild(img);
+    } else if (file.type.startsWith('video/')) {
+      const video = document.createElement('video');
+      video.src = URL.createObjectURL(file);
+      video.controls = true;
+      card.appendChild(video);
+    }
+
+    const caption = document.createElement('p');
+    caption.textContent = file.name;
+    card.appendChild(caption);
+
+    preview.appendChild(card);
+  }
+});
+
+async function uploadAndGenerateLink() {
+  const files = fileInput.files;
+  const acceptTerms = document.getElementById('terms').checked;
+  if (!acceptTerms) {
+    alert("Devi accettare i Termini e Condizioni per procedere.");
+    return;
+  }
+  if (files.length === 0) {
+    alert("Seleziona almeno un file.");
+    return;
+  }
+
+  const token = Math.random().toString(36).substring(2);
+  const userFolder = `anon/${token}`;
+  const duration = document.getElementById('duration').value;
+  const singleView = document.getElementById('singleView').checked;
+  let publicLinks = [];
+
+  for (let file of files) {
+    const filePath = `${userFolder}/${file.name}`;
+    const { error: uploadError } = await supabase.storage
+      .from('invione-bucket')
+      .upload(filePath, file, { cacheControl: '3600', upsert: false });
+
+    if (uploadError) {
+      alert(`Errore durante l'upload: ${uploadError.message}`);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage
+      .from('invione-bucket')
+      .getPublicUrl(filePath);
+    if (urlData?.publicUrl) publicLinks.push(urlData.publicUrl);
+  }
+
+  const displayLinks = publicLinks
+    .map(url => `<a href="${url}" target="_blank">🔗 ${url.split('/').pop()}</a>`) 
+    .join("<br>");
+
+  try {
+    await navigator.clipboard.writeText(publicLinks.join("\n"));
+    uploadStatus.innerHTML = `✅ Upload completato. Link copiati:<br>${displayLinks}`;
+  } catch {
+    uploadStatus.innerHTML = `✅ Upload completato. Copia manuale:<br>${displayLinks}`;
+  }
+
+  await supabase.from('link_metadata').insert({
+    token,
+    expires_in_minutes: parseInt(duration),
+    single_view: singleView,
+    created_at: new Date().toISOString(),
+    fingerprint
+  });
+}
+
+async function attivaPro24h() {
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+  await supabase.from('user_plans').upsert({
+    fingerprint,
+    plan: 'Pass Pro 24h',
+    expires_at: expiresAt,
+    created_at: new Date().toISOString()
+  });
+  alert("✅ Pro attivato per 24 ore! Ricarica la pagina per vedere le nuove funzionalità.");
+}
+</script>
 </body>
 </html>
-<!-- rebuild trigger -->
-<!-- Trigger deploy 2 -->
-<!-- aggiornamento riattivazione -->
-

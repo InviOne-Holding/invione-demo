@@ -8,117 +8,142 @@
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
     body {
-      background: repeating-linear-gradient(45deg, #000, #000 10px, #111 10px, #111 20px);
-      color: #fff;
+      background: linear-gradient(135deg, #000000, #111111);
+      color: white;
       font-family: Arial, sans-serif;
-      text-align: center;
       user-select: none;
-      margin: 0;
       overflow-x: hidden;
+      margin: 0;
+      padding: 0;
     }
     .upload-zone {
       border: 2px dashed #4ade80;
+      background-color: #1a1a1a;
       padding: 20px;
-      margin: 20px;
+      margin: 20px auto;
       border-radius: 15px;
-      background: #1a1a1a;
+      max-width: 600px;
       transition: 0.3s;
     }
-    .upload-zone:hover { background: #222; }
+    .upload-zone:hover {
+      background-color: #222;
+    }
     .preview-card {
-      background: #111;
+      background-color: #111;
       padding: 10px;
       margin: 10px;
-      display: inline-block;
-      max-width: 300px;
       border-radius: 10px;
       box-shadow: 0 0 10px #000;
+      display: inline-block;
+      max-width: 300px;
     }
-    .info { font-size: 14px; color: #fbbf24; margin-top: 5px; }
-    a { color: #4ade80; }
-    img, video { max-width: 100%; border-radius: 10px; }
+    .info {
+      font-size: 14px;
+      color: #facc15;
+      margin-top: 5px;
+    }
+    a {
+      color: #4ade80;
+    }
+    img, video {
+      max-width: 100%;
+      border-radius: 10px;
+    }
   </style>
 </head>
 <body>
-  <h1 class="text-3xl font-bold mt-4">InviOne</h1>
-  <p><strong>Send it. Own it.</strong></p>
 
-  <div class="upload-zone">
-    <h3 class="text-xl">Seleziona immagini o video da inviare</h3>
-    <input type="file" id="fileInput" multiple accept="image/*,video/*" class="mt-2" />
-    <p class="info">⚠️ Puoi inviare massimo <span id="maxFiles">3</span> file nel tuo piano.</p>
+  <div class="text-center mt-6">
+    <h1 class="text-4xl font-bold">InviOne</h1>
+    <p class="text-lg italic">Send it. Own it.</p>
   </div>
 
-  <div>
-    <label class="block">⏳ Durata Link:
-      <select id="duration" class="text-black ml-2">
-        <option value="10">10 min</option>
+  <div class="upload-zone">
+    <h3 class="text-xl font-semibold mb-2">📤 Seleziona immagini o video da inviare</h3>
+    <input type="file" id="fileInput" multiple accept="image/*,video/*" class="mt-2" />
+    <p class="info mt-2">⚠️ Puoi inviare massimo <span id="maxFiles">3</span> file nel tuo piano.</p>
+  </div>
+
+  <div class="text-center mb-4">
+    <label class="block mb-1">⏳ Durata Link:
+      <select id="duration" class="text-black ml-2 px-2 py-1 rounded">
+        <option value="10">10 minuti</option>
         <option value="60">1 ora</option>
         <option value="1440">24 ore</option>
         <option value="0">Sempre</option>
       </select>
     </label>
-    <label><input type="checkbox" id="singleView" class="ml-2" /> Visualizzazione singola</label>
-    <label><input type="checkbox" id="terms" class="ml-2" /> Accetto i <a href="termini.html" target="_blank">Termini e Condizioni</a></label>
+
+    <label class="inline-flex items-center mt-2">
+      <input type="checkbox" id="singleView" class="mr-2">Visualizzazione singola
+    </label>
     <br />
-    <button onclick="uploadAndGenerateLink()" class="bg-green-500 text-black font-bold px-4 py-2 rounded mt-2">Genera Link Protetto</button>
-    <button onclick="attivaPro24h()" class="bg-yellow-400 text-black font-bold px-4 py-2 rounded ml-2">⚡ Attiva Pro 24h</button>
-    <div id="uploadStatus" class="mt-2"></div>
+    <label class="inline-flex items-center mt-2">
+      <input type="checkbox" id="terms" class="mr-2">Accetto i <a href="termini.html" target="_blank" class="underline">Termini e Condizioni</a>
+    </label>
+
+    <div class="mt-4">
+      <button onclick="uploadAndGenerateLink()" class="bg-green-500 hover:bg-green-400 text-black font-bold px-4 py-2 rounded">Genera Link Protetto</button>
+      <button onclick="attivaPro24h()" class="bg-yellow-400 hover:bg-yellow-300 text-black font-bold px-4 py-2 rounded ml-2">⚡ Attiva Pro 24h</button>
+    </div>
+
+    <div id="uploadStatus" class="mt-3"></div>
   </div>
 
-  <p class="info mt-4">🧠 Piano attivo: <span id="userPlan">Caricamento...</span></p>
-  <p class="info">📅 Scadenza: <span id="userExpiry">--</span></p>
+  <div class="text-center">
+    <p class="info">🧠 Piano attivo: <span id="userPlan">Caricamento...</span></p>
+    <p class="info">📅 Scadenza: <span id="userExpiry">--</span></p>
+  </div>
 
-  <div id="preview"></div>
+  <div id="preview" class="flex flex-wrap justify-center mt-4"></div>
 
-  <h3 class="text-2xl font-bold mt-8">Piani Disponibili</h3>
+  <h3 class="text-3xl text-center font-bold mt-10">Piani Disponibili</h3>
   <div class="flex flex-wrap justify-center gap-4 p-4">
+
     <div class="bg-green-700 text-white rounded-lg shadow-lg p-6 w-64">
-      <h4 class="text-lg font-bold">Free</h4>
+      <h4 class="text-xl font-bold">Free</h4>
       <p class="text-2xl font-bold mt-2">€0</p>
-      <ul class="text-sm mt-2">
+      <ul class="text-sm mt-2 space-y-1">
         <li>✅ 3 file</li>
         <li>✅ Protezione base</li>
         <li>⏱️ 24h link</li>
       </ul>
       <button disabled class="bg-gray-600 text-white px-3 py-1 rounded mt-4 opacity-50">Attivo</button>
     </div>
+
     <div class="bg-orange-700 text-white rounded-lg shadow-lg p-6 w-64">
-      <h4 class="text-lg font-bold">Pass Pro 24h</h4>
+      <h4 class="text-xl font-bold">Pass Pro 24h</h4>
       <p class="text-2xl font-bold mt-2">€1</p>
-      <ul class="text-sm mt-2">
+      <ul class="text-sm mt-2 space-y-1">
         <li>✅ 10 file</li>
         <li>🔥 Autodistruzione</li>
         <li>🔗 Link monouso</li>
       </ul>
       <button onclick="attivaPro24h()" class="bg-white text-black px-3 py-1 rounded mt-4 font-bold">Attiva</button>
     </div>
+
     <div class="bg-blue-700 text-white rounded-lg shadow-lg p-6 w-64">
-      <h4 class="text-lg font-bold">Pro</h4>
+      <h4 class="text-xl font-bold">Pro</h4>
       <p class="text-2xl font-bold mt-2">€3,90/mese</p>
-      <ul class="text-sm mt-2">
+      <ul class="text-sm mt-2 space-y-1">
         <li>✅ 20 file</li>
         <li>📊 Log accessi</li>
         <li>🕒 Durata avanzata</li>
       </ul>
       <button class="bg-white text-black px-3 py-1 rounded mt-4 font-bold">Presto</button>
     </div>
+
     <div class="bg-purple-700 text-white rounded-lg shadow-lg p-6 w-64">
-      <h4 class="text-lg font-bold">Creator</h4>
+      <h4 class="text-xl font-bold">Creator</h4>
       <p class="text-2xl font-bold mt-2">€6,90/mese</p>
-      <ul class="text-sm mt-2">
+      <ul class="text-sm mt-2 space-y-1">
         <li>🎯 Tracking aperture</li>
         <li>👻 Watermark invisibile</li>
       </ul>
       <button class="bg-white text-black px-3 py-1 rounded mt-4 font-bold">Presto</button>
     </div>
-  </div>
 
-<script>
-// JS rimane invariato: lo reintegro nella seconda parte
-</script>
-</body>
-</html>
+  </div>
 <script>
 const supabase = window.supabase.createClient(
   'https://opsvjksjatksezmhygdz.supabase.co',

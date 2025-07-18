@@ -36,6 +36,7 @@
       box-shadow: 0 0 10px #000;
       display: inline-block;
       max-width: 300px;
+      position: relative;
     }
     .info {
       font-size: 14px;
@@ -59,6 +60,16 @@
       z-index: 9999;
       pointer-events: none;
       display: none;
+    }
+    .watermark {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0.2;
+      color: white;
+      font-size: 20px;
+      pointer-events: none;
     }
     .hidden { display: none; }
     @media (max-width: 640px) {
@@ -211,6 +222,7 @@ if (!fingerprint) {
 }
 
 let maxFiles = 3;
+let userPlan = 'Free';
 
 async function checkPlan() {
   const { data } = await supabase.from('user_plans').select('*').eq('fingerprint', fingerprint).maybeSingle();
@@ -220,6 +232,7 @@ async function checkPlan() {
     userExpirySpan.textContent = expiry.toLocaleString();
     if (expiry > now) {
       maxFiles = data.plan === 'Pass Pro 24h' ? 10 : 20;
+      userPlan = data.plan;
       userPlanSpan.textContent = data.plan + ' (attivo)';
     } else {
       userPlanSpan.textContent = 'Free';
@@ -246,7 +259,7 @@ async function checkLinkToken() {
   try {
     const { data, error } = await supabase
       .from('link_metadata')
-      .select('token, single_view, used, expires_in_minutes, created_at')
+      .select('token, single_view, used, expires_in_minutes, created_at, fingerprint')
       .eq('token', token)
       .single();
 
@@ -268,6 +281,14 @@ async function checkLinkToken() {
       return;
     }
 
+    // Registra accesso
+    await supabase.from('access_logs').insert({
+      token,
+      fingerprint: data.fingerprint,
+      accessed_at: new Date().toISOString(),
+      ip_address: await fetch('https://api.ipify.org?format=json').then(res => res.json()).then(data => data.ip)
+    });
+
     const { data: files } = await supabase.storage
       .from('invione-bucket')
       .list(`anon/${token}`);
@@ -287,12 +308,26 @@ async function checkLinkToken() {
       if (file.name.match(/\.(jpg|jpeg|png|gif)$/i)) {
         const img = document.createElement('img');
         img.src = fileData.publicUrl;
+        img.className = 'no-download';
         card.appendChild(img);
+        if (userPlan === 'Creator') {
+          const watermark = document.createElement('div');
+          watermark.className = 'watermark';
+          watermark.textContent = `InviOne ${token}`;
+          card.appendChild(watermark);
+        }
       } else if (file.name.match(/\.(mp4|webm)$/i)) {
         const video = document.createElement('video');
         video.src = fileData.publicUrl;
         video.controls = true;
+        video.className = 'no-download';
         card.appendChild(video);
+        if (userPlan === 'Creator') {
+          const watermark = document.createElement('div');
+          watermark.className = 'watermark';
+          watermark.textContent = `InviOne ${token}`;
+          card.appendChild(watermark);
+        }
       }
       const caption = document.createElement('p');
       caption.textContent = file.name;
@@ -300,16 +335,9 @@ async function checkLinkToken() {
       viewContent.appendChild(card);
     }
 
-    if (data.single_view) {
-      await supabase
-        .from('link_metadata')
-        .update({ used: true })
-        .eq('token', token);
-
-      if (data.plan === 'Pass Pro 24h' || data.plan === 'Pro') {
-        antiScreenOverlay.style.display = 'block';
-        startTimer(30);
-      }
+    if (data.single_view && (userPlan === 'Pass Pro 24h' || userPlan === 'Pro' || userPlan === 'Creator')) {
+      antiScreenOverlay.style.display = 'block';
+      startTimer(30);
     }
 
     viewLoading.classList.add('hidden');
@@ -420,7 +448,8 @@ async function uploadAndGenerateLink() {
     single_view: singleView,
     used: false,
     created_at: new Date().toISOString(),
-    fingerprint
+    fingerprint,
+    plan: userPlan
   });
 }
 
@@ -436,7 +465,7 @@ async function attivaPro24h() {
   checkPlan();
 }
 
-// Blocco screenshot (base)
+// Blocco screenshot e click destro
 document.addEventListener('keydown', (e) => {
   if (e.key === 'PrintScreen' && antiScreenOverlay.style.display === 'block') {
     alert('Gli screenshot non sono consentiti!');
@@ -444,7 +473,21 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// Inizializza il controllo del piano e del link
+document.addEventListener('contextmenu', (e) => {
+  if (e.target.classList.contains('no-download')) {
+    e.preventDefault();
+  }
+});
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden' && antiScreenOverlay.style.display === 'block') {
+    viewContent.classList.add('hidden');
+  } else if (document.visibilityState === 'visible' && antiScreenOverlay.style.display === 'block') {
+    viewContent.classList.remove('hidden');
+  }
+});
+
+// Inizializza
 checkPlan();
 checkLinkToken();
 </script>

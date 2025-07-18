@@ -72,6 +72,10 @@
       pointer-events: none;
     }
     .hidden { display: none; }
+    #fileInput {
+      color: white;
+      background-color: #333;
+    }
     @media (max-width: 640px) {
       .upload-zone {
         margin: 10px;
@@ -308,7 +312,7 @@ async function checkLinkToken() {
       if (file.name.match(/\.(jpg|jpeg|png|gif)$/i)) {
         const img = document.createElement('img');
         img.src = fileData.publicUrl;
-        img.className = 'no-download';
+        if (data.single_view) img.className = 'no-download';
         card.appendChild(img);
         if (userPlan === 'Creator') {
           const watermark = document.createElement('div');
@@ -320,7 +324,7 @@ async function checkLinkToken() {
         const video = document.createElement('video');
         video.src = fileData.publicUrl;
         video.controls = true;
-        video.className = 'no-download';
+        if (data.single_view) video.className = 'no-download';
         card.appendChild(video);
         if (userPlan === 'Creator') {
           const watermark = document.createElement('div');
@@ -341,7 +345,7 @@ async function checkLinkToken() {
         .update({ used: true })
         .eq('token', token);
 
-      if (userPlan === 'Pass Pro 24h' || userPlan = 'Pro' || userPlan === 'Creator') {
+      if (userPlan === 'Pass Pro 24h' || userPlan === 'Pro' || userPlan === 'Creator') {
         antiScreenOverlay.style.display = 'block';
         startTimer(30);
       }
@@ -369,7 +373,7 @@ function startTimer(seconds) {
     timeLeftElement.textContent = timeLeft;
     if (timeLeft <= 0) {
       clearInterval(timer);
-      viewContent.innerHTML = '<p class="text-red-500">Contenuto autodistrutto!</p>';
+      document.getElementById('viewContent').innerHTML = '<p class="text-red-500">Contenuto autodistrutto!</p>';
       antiScreenOverlay.style.display = 'none';
     }
   }, 1000);
@@ -499,7 +503,7 @@ document.addEventListener('contextmenu', (e) => {
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden' && antiScreenOverlay.style.display === 'block') {
     viewContent.classList.add('hidden');
-  } else if (document.visibilityState = 'visible' && antiScreenOverlay.style.display === 'block') {
+  } else if (document.visibilityState === 'visible' && antiScreenOverlay.style.display === 'block') {
     viewContent.classList.remove('hidden');
   }
 });

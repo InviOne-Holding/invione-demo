@@ -341,7 +341,7 @@ async function checkLinkToken() {
         .update({ used: true })
         .eq('token', token);
 
-      if (userPlan === 'Pass Pro 24h' || userPlan === 'Pro' || userPlan === 'Creator') {
+      if (userPlan === 'Pass Pro 24h' || userPlan = 'Pro' || userPlan === 'Creator') {
         antiScreenOverlay.style.display = 'block';
         startTimer(30);
       }
@@ -491,7 +491,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 document.addEventListener('contextmenu', (e) => {
-  if (e.target.classList.contains('no-download')) {
+  if (e.target.tagName === 'IMG' || e.target.tagName === 'VIDEO') {
     e.preventDefault();
   }
 });
@@ -499,7 +499,7 @@ document.addEventListener('contextmenu', (e) => {
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden' && antiScreenOverlay.style.display === 'block') {
     viewContent.classList.add('hidden');
-  } else if (document.visibilityState === 'visible' && antiScreenOverlay.style.display === 'block') {
+  } else if (document.visibilityState = 'visible' && antiScreenOverlay.style.display === 'block') {
     viewContent.classList.remove('hidden');
   }
 });

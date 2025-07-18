@@ -92,58 +92,10 @@
 
   <div class="text-center">
     <p class="info">🧠 Piano attivo: <span id="userPlan">Caricamento...</span></p>
-    <p class="info">📅 Scadenza: <span id="userExpiry">--</span></p>
+    <p class="info">🗕️ Scadenza: <span id="userExpiry">--</span></p>
   </div>
 
   <div id="preview" class="flex flex-wrap justify-center mt-4"></div>
-
-  <h3 class="text-3xl text-center font-bold mt-10">Piani Disponibili</h3>
-  <div class="flex flex-wrap justify-center gap-4 p-4">
-
-    <div class="bg-green-700 text-white rounded-lg shadow-lg p-6 w-64">
-      <h4 class="text-xl font-bold">Free</h4>
-      <p class="text-2xl font-bold mt-2">€0</p>
-      <ul class="text-sm mt-2 space-y-1">
-        <li>✅ 3 file</li>
-        <li>✅ Protezione base</li>
-        <li>⏱️ 24h link</li>
-      </ul>
-      <button disabled class="bg-gray-600 text-white px-3 py-1 rounded mt-4 opacity-50">Attivo</button>
-    </div>
-
-    <div class="bg-orange-700 text-white rounded-lg shadow-lg p-6 w-64">
-      <h4 class="text-xl font-bold">Pass Pro 24h</h4>
-      <p class="text-2xl font-bold mt-2">€1</p>
-      <ul class="text-sm mt-2 space-y-1">
-        <li>✅ 10 file</li>
-        <li>🔥 Autodistruzione</li>
-        <li>🔗 Link monouso</li>
-      </ul>
-      <button onclick="attivaPro24h()" class="bg-white text-black px-3 py-1 rounded mt-4 font-bold">Attiva</button>
-    </div>
-
-    <div class="bg-blue-700 text-white rounded-lg shadow-lg p-6 w-64">
-      <h4 class="text-xl font-bold">Pro</h4>
-      <p class="text-2xl font-bold mt-2">€3,90/mese</p>
-      <ul class="text-sm mt-2 space-y-1">
-        <li>✅ 20 file</li>
-        <li>📊 Log accessi</li>
-        <li>🕒 Durata avanzata</li>
-      </ul>
-      <button class="bg-white text-black px-3 py-1 rounded mt-4 font-bold">Presto</button>
-    </div>
-
-    <div class="bg-purple-700 text-white rounded-lg shadow-lg p-6 w-64">
-      <h4 class="text-xl font-bold">Creator</h4>
-      <p class="text-2xl font-bold mt-2">€6,90/mese</p>
-      <ul class="text-sm mt-2 space-y-1">
-        <li>🎯 Tracking aperture</li>
-        <li>👻 Watermark invisibile</li>
-      </ul>
-      <button class="bg-white text-black px-3 py-1 rounded mt-4 font-bold">Presto</button>
-    </div>
-
-  </div>
 <script>
 const supabase = window.supabase.createClient(
   'https://opsvjksjatksezmhygdz.supabase.co',
@@ -263,12 +215,14 @@ async function uploadAndGenerateLink() {
     uploadStatus.innerHTML = `✅ Upload completato. Copia manuale:<br>${displayLinks}`;
   }
 
+  // Salvataggio metadati
   await supabase.from('link_metadata').insert({
     token,
     expires_in_minutes: parseInt(duration),
     single_view: singleView,
     created_at: new Date().toISOString(),
-    fingerprint
+    fingerprint,
+    opened: false  // Protezione visualizzazione singola (inizialmente non aperto)
   });
 }
 
@@ -283,3 +237,5 @@ async function attivaPro24h() {
   alert("✅ Pro attivato per 24 ore! Ricarica la pagina per vedere le nuove funzionalità.");
 }
 </script>
+</body>
+</html>

@@ -353,7 +353,7 @@ async function checkLinkToken() {
         .eq('token', token);
 
       if (userPlan === 'Pass Pro 24h' || userPlan === 'Pro' || userPlan === 'Creator') {
-        antiScreenOverlay.style.display = 'block';
+        antiScreenOverlay.style.display = 'flex';
         startTimer(30);
       }
     }
@@ -511,6 +511,19 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden' && antiScreenOverlay.style.display === 'block') {
     viewContent.classList.add('hidden');
   } else if (document.visibilityState === 'visible' && antiScreenOverlay.style.display === 'block') {
+    viewContent.classList.remove('hidden');
+  }
+});
+
+// Aggiungi listener per blur (perdo focus finestra)
+window.addEventListener('blur', () => {
+  if (antiScreenOverlay.style.display === 'block') {
+    viewContent.classList.add('hidden');
+  }
+});
+
+window.addEventListener('focus', () => {
+  if (antiScreenOverlay.style.display === 'block') {
     viewContent.classList.remove('hidden');
   }
 });

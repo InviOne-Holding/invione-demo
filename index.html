@@ -49,53 +49,140 @@
       max-width: 100%;
       border-radius: 10px;
     }
+    #antiScreenOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      z-index: 9999;
+      pointer-events: none;
+      display: none;
+    }
+    .hidden { display: none; }
+    @media (max-width: 640px) {
+      .upload-zone {
+        margin: 10px;
+        padding: 15px;
+      }
+      .preview-card {
+        max-width: 100%;
+        margin: 5px;
+      }
+      .text-4xl {
+        font-size: 2rem;
+      }
+      .text-xl {
+        font-size: 1.25rem;
+      }
+      .text-lg {
+        font-size: 1rem;
+      }
+    }
   </style>
 </head>
 <body>
+  <div id="antiScreenOverlay"></div>
 
-  <div class="text-center mt-6">
+  <div id="uploadSection" class="text-center mt-6">
     <h1 class="text-4xl font-bold">InviOne</h1>
     <p class="text-lg italic">Send it. Own it.</p>
-  </div>
 
-  <div class="upload-zone">
-    <h3 class="text-xl font-semibold mb-2">📤 Seleziona immagini o video da inviare</h3>
-    <input type="file" id="fileInput" multiple accept="image/*,video/*" class="mt-2" />
-    <p class="info mt-2">⚠️ Puoi inviare massimo <span id="maxFiles">3</span> file nel tuo piano.</p>
-  </div>
-
-  <div class="text-center mb-4">
-    <label class="block mb-1">⏳ Durata Link:
-      <select id="duration" class="text-black ml-2 px-2 py-1 rounded">
-        <option value="10">10 minuti</option>
-        <option value="60">1 ora</option>
-        <option value="1440">24 ore</option>
-        <option value="0">Sempre</option>
-      </select>
-    </label>
-
-    <label class="inline-flex items-center mt-2">
-      <input type="checkbox" id="singleView" class="mr-2">Visualizzazione singola
-    </label>
-    <br />
-    <label class="inline-flex items-center mt-2">
-      <input type="checkbox" id="terms" class="mr-2">Accetto i <a href="termini.html" target="_blank" class="underline">Termini e Condizioni</a>
-    </label>
-
-    <div class="mt-4">
-      <button onclick="uploadAndGenerateLink()" class="bg-green-500 hover:bg-green-400 text-black font-bold px-4 py-2 rounded">Genera Link Protetto</button>
-      <button onclick="attivaPro24h()" class="bg-yellow-400 hover:bg-yellow-300 text-black font-bold px-4 py-2 rounded ml-2">⚡ Attiva Pro 24h</button>
+    <div class="upload-zone">
+      <h3 class="text-xl font-semibold mb-2">📤 Seleziona immagini o video da inviare</h3>
+      <input type="file" id="fileInput" multiple accept="image/*,video/*" class="mt-2 w-full px-3 py-2 rounded" />
+      <p class="info mt-2">⚠️ Puoi inviare massimo <span id="maxFiles">3</span> file nel tuo piano.</p>
     </div>
 
-    <div id="uploadStatus" class="mt-3"></div>
+    <div class="text-center mb-4">
+      <label class="block mb-1">⏳ Durata Link:
+        <select id="duration" class="text-black ml-2 px-2 py-1 rounded">
+          <option value="10">10 minuti</option>
+          <option value="60">1 ora</option>
+          <option value="1440">24 ore</option>
+          <option value="0">Sempre</option>
+        </select>
+      </label>
+
+      <label class="inline-flex items-center mt-2">
+        <input type="checkbox" id="singleView" class="mr-2">Visualizzazione singola
+      </label>
+      <br />
+      <label class="inline-flex items-center mt-2">
+        <input type="checkbox" id="terms" class="mr-2">Accetto i <a href="termini.html" target="_blank" class="underline">Termini e Condizioni</a>
+      </label>
+
+      <div class="mt-4">
+        <button onclick="uploadAndGenerateLink()" class="bg-green-500 hover:bg-green-400 text-black font-bold px-4 py-2 rounded">Genera Link Protetto</button>
+        <button onclick="attivaPro24h()" class="bg-yellow-400 hover:bg-yellow-300 text-black font-bold px-4 py-2 rounded ml-2">⚡ Attiva Pro 24h</button>
+      </div>
+
+      <div id="uploadStatus" class="mt-3"></div>
+    </div>
+
+    <div class="text-center">
+      <p class="info">🧠 Piano attivo: <span id="userPlan">Caricamento...</span></p>
+      <p class="info">📅 Scadenza: <span id="userExpiry">--</span></p>
+    </div>
+
+    <div id="preview" class="flex flex-wrap justify-center mt-4"></div>
   </div>
 
-  <div class="text-center">
-    <p class="info">🧠 Piano attivo: <span id="userPlan">Caricamento...</span></p>
-    <p class="info">🗕️ Scadenza: <span id="userExpiry">--</span></p>
+  <div id="viewSection" class="hidden text-center mt-6">
+    <h1 class="text-4xl font-bold">Contenuto Protetto</h1>
+    <p id="timer" class="text-lg text-red-500 mt-2 hidden">Tempo rimanente: <span id="timeLeft">30</span>s</p>
+    <div id="viewContent" class="flex flex-wrap justify-center mt-4"></div>
+    <div id="viewError" class="text-red-500 hidden mt-4">Errore: Link non valido o già utilizzato.</div>
+    <div id="viewLoading" class="text-lg mt-4">Caricamento...</div>
   </div>
 
-  <div id="preview" class="flex flex-wrap justify-center mt-4"></div>
+  <h3 class="text-3xl text-center font-bold mt-10">Piani Disponibili</h3>
+  <div class="flex flex-wrap justify-center gap-4 p-4">
+    <div class="bg-green-700 text-white rounded-lg shadow-lg p-6 w-64">
+      <h4 class="text-xl font-bold">Free</h4>
+      <p class="text-2xl font-bold mt-2">€0</p>
+      <ul class="text-sm mt-2 space-y-1">
+        <li>✅ 3 file</li>
+        <li>✅ Protezione base</li>
+        <li>⏱️ 24h link</li>
+      </ul>
+      <button disabled class="bg-gray-600 text-white px-3 py-1 rounded mt-4 opacity-50">Attivo</button>
+    </div>
+
+    <div class="bg-orange-700 text-white rounded-lg shadow-lg p-6 w-64">
+      <h4 class="text-xl font-bold">Pass Pro 24h</h4>
+      <p class="text-2xl font-bold mt-2">€1</p>
+      <ul class="text-sm mt-2 space-y-1">
+        <li>✅ 10 file</li>
+        <li>🔥 Autodistruzione</li>
+        <li>🔗 Link monouso</li>
+      </ul>
+      <button onclick="attivaPro24h()" class="bg-white text-black px-3 py-1 rounded mt-4 font-bold">Attiva</button>
+    </div>
+
+    <div class="bg-blue-700 text-white rounded-lg shadow-lg p-6 w-64">
+      <h4 class="text-xl font-bold">Pro</h4>
+      <p class="text-2xl font-bold mt-2">€3,90/mese</p>
+      <ul class="text-sm mt-2 space-y-1">
+        <li>✅ 20 file</li>
+        <li>📊 Log accessi</li>
+        <li>🕒 Durata avanzata</li>
+      </ul>
+      <button class="bg-white text-black px-3 py-1 rounded mt-4 font-bold">Presto</button>
+    </div>
+
+    <div class="bg-purple-700 text-white rounded-lg shadow-lg p-6 w-64">
+      <h4 class="text-xl font-bold">Creator</h4>
+      <p class="text-2xl font-bold mt-2">€6,90/mese</p>
+      <ul class="text-sm mt-2 space-y-1">
+        <li>🎯 Tracking aperture</li>
+        <li>👻 Watermark invisibile</li>
+      </ul>
+      <button class="bg-white text-black px-3 py-1 rounded mt-4 font-bold">Presto</button>
+    </div>
+  </div>
+
 <script>
 const supabase = window.supabase.createClient(
   'https://opsvjksjatksezmhygdz.supabase.co',
@@ -108,6 +195,14 @@ const uploadStatus = document.getElementById('uploadStatus');
 const maxFilesSpan = document.getElementById('maxFiles');
 const userPlanSpan = document.getElementById('userPlan');
 const userExpirySpan = document.getElementById('userExpiry');
+const viewSection = document.getElementById('viewSection');
+const uploadSection = document.getElementById('uploadSection');
+const viewContent = document.getElementById('viewContent');
+const viewError = document.getElementById('viewError');
+const viewLoading = document.getElementById('viewLoading');
+const timerElement = document.getElementById('timer');
+const timeLeftElement = document.getElementById('timeLeft');
+const antiScreenOverlay = document.getElementById('antiScreenOverlay');
 
 let fingerprint = localStorage.getItem("invione_fp");
 if (!fingerprint) {
@@ -124,7 +219,7 @@ async function checkPlan() {
     const expiry = new Date(data.expires_at);
     userExpirySpan.textContent = expiry.toLocaleString();
     if (expiry > now) {
-      maxFiles = 10;
+      maxFiles = data.plan === 'Pass Pro 24h' ? 10 : 20;
       userPlanSpan.textContent = data.plan + ' (attivo)';
     } else {
       userPlanSpan.textContent = 'Free';
@@ -136,7 +231,114 @@ async function checkPlan() {
   maxFilesSpan.textContent = maxFiles;
 }
 
-checkPlan();
+async function checkLinkToken() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const token = urlParams.get('token');
+  if (!token) {
+    uploadSection.classList.remove('hidden');
+    viewSection.classList.add('hidden');
+    return;
+  }
+
+  uploadSection.classList.add('hidden');
+  viewSection.classList.remove('hidden');
+
+  try {
+    const { data, error } = await supabase
+      .from('link_metadata')
+      .select('token, single_view, used, expires_in_minutes, created_at')
+      .eq('token', token)
+      .single();
+
+    if (error || !data) {
+      showViewError();
+      return;
+    }
+
+    const createdAt = new Date(data.created_at);
+    const expiresInMs = data.expires_in_minutes === 0 ? Infinity : data.expires_in_minutes * 60 * 1000;
+    const now = new Date();
+    if (expiresInMs !== Infinity && now > new Date(createdAt.getTime() + expiresInMs)) {
+      showViewError('Link scaduto.');
+      return;
+    }
+
+    if (data.single_view && data.used) {
+      showViewError('Link già utilizzato.');
+      return;
+    }
+
+    const { data: files } = await supabase.storage
+      .from('invione-bucket')
+      .list(`anon/${token}`);
+
+    if (!files || files.length === 0) {
+      showViewError('Nessun file trovato.');
+      return;
+    }
+
+    viewContent.innerHTML = '';
+    for (let file of files) {
+      const { data: fileData } = supabase.storage
+        .from('invione-bucket')
+        .getPublicUrl(`anon/${token}/${file.name}`);
+      const card = document.createElement('div');
+      card.className = 'preview-card';
+      if (file.name.match(/\.(jpg|jpeg|png|gif)$/i)) {
+        const img = document.createElement('img');
+        img.src = fileData.publicUrl;
+        card.appendChild(img);
+      } else if (file.name.match(/\.(mp4|webm)$/i)) {
+        const video = document.createElement('video');
+        video.src = fileData.publicUrl;
+        video.controls = true;
+        card.appendChild(video);
+      }
+      const caption = document.createElement('p');
+      caption.textContent = file.name;
+      card.appendChild(caption);
+      viewContent.appendChild(card);
+    }
+
+    if (data.single_view) {
+      await supabase
+        .from('link_metadata')
+        .update({ used: true })
+        .eq('token', token);
+
+      if (data.plan === 'Pass Pro 24h' || data.plan === 'Pro') {
+        antiScreenOverlay.style.display = 'block';
+        startTimer(30);
+      }
+    }
+
+    viewLoading.classList.add('hidden');
+  } catch (err) {
+    showViewError();
+  }
+}
+
+function showViewError(message = 'Errore: Link non valido o già utilizzato.') {
+  viewLoading.classList.add('hidden');
+  viewError.textContent = message;
+  viewError.classList.remove('hidden');
+}
+
+function startTimer(seconds) {
+  let timeLeft = seconds;
+  timerElement.classList.remove('hidden');
+  timeLeftElement.textContent = timeLeft;
+
+  const timer = setInterval(() => {
+    timeLeft--;
+    timeLeftElement.textContent = timeLeft;
+    if (timeLeft <= 0) {
+      clearInterval(timer);
+      viewContent.innerHTML = '<p class="text-red-500">Contenuto autodistrutto!</p>';
+      antiScreenOverlay.style.display = 'none';
+    }
+  }, 1000);
+}
 
 fileInput.addEventListener('change', () => {
   preview.innerHTML = '';
@@ -204,25 +406,21 @@ async function uploadAndGenerateLink() {
     if (urlData?.publicUrl) publicLinks.push(urlData.publicUrl);
   }
 
-  const displayLinks = publicLinks
-    .map(url => `<a href="${url}" target="_blank">🔗 ${url.split('/').pop()}</a>`) 
-    .join("<br>");
-
+  const linkUrl = `${window.location.origin}${window.location.pathname}?token=${token}`;
   try {
-    await navigator.clipboard.writeText(publicLinks.join("\n"));
-    uploadStatus.innerHTML = `✅ Upload completato. Link copiati:<br>${displayLinks}`;
+    await navigator.clipboard.writeText(linkUrl);
+    uploadStatus.innerHTML = `✅ Upload completato. Link copiato: <a href="${linkUrl}" target="_blank">🔗 ${linkUrl}</a>`;
   } catch {
-    uploadStatus.innerHTML = `✅ Upload completato. Copia manuale:<br>${displayLinks}`;
+    uploadStatus.innerHTML = `✅ Upload completato. Copia manuale: <a href="${linkUrl}" target="_blank">🔗 ${linkUrl}</a>`;
   }
 
-  // Salvataggio metadati
   await supabase.from('link_metadata').insert({
     token,
     expires_in_minutes: parseInt(duration),
     single_view: singleView,
+    used: false,
     created_at: new Date().toISOString(),
-    fingerprint,
-    opened: false  // Protezione visualizzazione singola (inizialmente non aperto)
+    fingerprint
   });
 }
 
@@ -235,7 +433,20 @@ async function attivaPro24h() {
     created_at: new Date().toISOString()
   });
   alert("✅ Pro attivato per 24 ore! Ricarica la pagina per vedere le nuove funzionalità.");
+  checkPlan();
 }
+
+// Blocco screenshot (base)
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'PrintScreen' && antiScreenOverlay.style.display === 'block') {
+    alert('Gli screenshot non sono consentiti!');
+    e.preventDefault();
+  }
+});
+
+// Inizializza il controllo del piano e del link
+checkPlan();
+checkLinkToken();
 </script>
 </body>
 </html>

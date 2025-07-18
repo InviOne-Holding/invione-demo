@@ -335,9 +335,16 @@ async function checkLinkToken() {
       viewContent.appendChild(card);
     }
 
-    if (data.single_view && (userPlan === 'Pass Pro 24h' || userPlan === 'Pro' || userPlan === 'Creator')) {
-      antiScreenOverlay.style.display = 'block';
-      startTimer(30);
+    if (data.single_view) {
+      await supabase
+        .from('link_metadata')
+        .update({ used: true })
+        .eq('token', token);
+
+      if (userPlan === 'Pass Pro 24h' || userPlan === 'Pro' || userPlan === 'Creator') {
+        antiScreenOverlay.style.display = 'block';
+        startTimer(30);
+      }
     }
 
     viewLoading.classList.add('hidden');
@@ -442,15 +449,25 @@ async function uploadAndGenerateLink() {
     uploadStatus.innerHTML = `✅ Upload completato. Copia manuale: <a href="${linkUrl}" target="_blank">🔗 ${linkUrl}</a>`;
   }
 
-  await supabase.from('link_metadata').insert({
-    token,
-    expires_in_minutes: parseInt(duration),
-    single_view: singleView,
-    used: false,
-    created_at: new Date().toISOString(),
-    fingerprint,
-    plan: userPlan
-  });
+  try {
+    const { data, error } = await supabase.from('link_metadata').insert({
+      token,
+      expires_in_minutes: parseInt(duration),
+      single_view: singleView,
+      used: false,
+      created_at: new Date().toISOString(),
+      fingerprint,
+      plan: userPlan
+    });
+    if (error) {
+      console.error('Error inserting metadata:', error);
+      alert('Errore salvataggio metadati: ' + error.message);
+      return;
+    }
+  } catch (err) {
+    console.error('Exception during insert:', err);
+    alert('Eccezione durante il salvataggio metadati: ' + err.message);
+  }
 }
 
 async function attivaPro24h() {

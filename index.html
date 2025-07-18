@@ -49,6 +49,11 @@
     img, video {
       max-width: 100%;
       border-radius: 10px;
+      user-select: none;
+      -webkit-user-drag: none;
+      -khtml-user-drag: none;
+      -moz-user-drag: none;
+      -o-user-drag: none;
     }
     #antiScreenOverlay {
       position: fixed;
@@ -56,18 +61,19 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.8); /* Opaco per oscurare */
+      background: rgba(0, 0, 0, 0.9); /* Oscuramento più forte */
       z-index: 9999;
-      pointer-events: none;
+      pointer-events: auto; /* Attiva interazione */
       display: none;
       justify-content: center;
       align-items: center;
-      font-size: 2rem;
+      font-size: 2.5rem;
       color: red;
       text-align: center;
     }
     #antiScreenOverlay p {
       font-weight: bold;
+      margin: 0;
     }
     .watermark {
       position: absolute;
@@ -81,7 +87,9 @@
     }
     .hidden { display: none; }
     .no-download {
-      pointer-events: none; /* Impedisce interazioni */
+      pointer-events: none;
+      user-select: none;
+      -webkit-user-drag: none;
     }
     @media (max-width: 640px) {
       .upload-zone {
@@ -319,7 +327,10 @@ async function checkLinkToken() {
       if (file.name.match(/\.(jpg|jpeg|png|gif)$/i)) {
         const img = document.createElement('img');
         img.src = fileData.publicUrl;
-        if (data.single_view) img.className = 'no-download';
+        if (data.single_view) {
+          img.className = 'no-download';
+          img.oncontextmenu = () => false; // Blocco click destro aggiuntivo
+        }
         card.appendChild(img);
         if (userPlan === 'Creator') {
           const watermark = document.createElement('div');
@@ -331,7 +342,10 @@ async function checkLinkToken() {
         const video = document.createElement('video');
         video.src = fileData.publicUrl;
         video.controls = true;
-        if (data.single_view) video.className = 'no-download';
+        if (data.single_view) {
+          video.className = 'no-download';
+          video.oncontextmenu = () => false; // Blocco click destro aggiuntivo
+        }
         card.appendChild(video);
         if (userPlan === 'Creator') {
           const watermark = document.createElement('div');
@@ -353,7 +367,7 @@ async function checkLinkToken() {
         .eq('token', token);
 
       if (userPlan === 'Pass Pro 24h' || userPlan === 'Pro' || userPlan === 'Creator') {
-        antiScreenOverlay.style.display = 'flex';
+        antiScreenOverlay.style.display = 'block';
         startTimer(30);
       }
     }
@@ -496,7 +510,7 @@ async function attivaPro24h() {
 // Blocco screenshot e click destro
 document.addEventListener('keydown', (e) => {
   if (e.key === 'PrintScreen' && antiScreenOverlay.style.display === 'block') {
-    alert('Gli screenshot non sono consentiti!');
+    antiScreenOverlay.style.display = 'flex'; // Forza overlay su cattura
     e.preventDefault();
   }
 });
@@ -509,24 +523,18 @@ document.addEventListener('contextmenu', (e) => {
 
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden' && antiScreenOverlay.style.display === 'block') {
+    antiScreenOverlay.style.display = 'flex'; // Oscura su blur
     viewContent.classList.add('hidden');
   } else if (document.visibilityState === 'visible' && antiScreenOverlay.style.display === 'block') {
     viewContent.classList.remove('hidden');
   }
 });
 
-// Aggiungi listener per blur (perdo focus finestra)
-window.addEventListener('blur', () => {
+document.addEventListener('blur', () => {
   if (antiScreenOverlay.style.display === 'block') {
-    viewContent.classList.add('hidden');
+    antiScreenOverlay.style.display = 'flex'; // Oscura su perdita focus
   }
-});
-
-window.addEventListener('focus', () => {
-  if (antiScreenOverlay.style.display === 'block') {
-    viewContent.classList.remove('hidden');
-  }
-});
+}, true);
 
 // Inizializza
 checkPlan();

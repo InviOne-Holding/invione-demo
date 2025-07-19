@@ -383,15 +383,24 @@ function startTimer(seconds) {
 function drawSecurityCanvas() {
   if (isSingleViewActive) {
     securityCanvas.style.display = 'block';
+    securityCanvas.width = window.innerWidth; // Imposta dimensioni dinamiche
+    securityCanvas.height = window.innerHeight;
     const ctx = securityCanvas.getContext('2d');
     if (ctx) {
-      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight); // Pulizia
+      ctx.clearRect(0, 0, securityCanvas.width, securityCanvas.height); // Pulizia
       ctx.fillStyle = 'rgba(0, 0, 0, 0.95)';
-      ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+      ctx.fillRect(0, 0, securityCanvas.width, securityCanvas.height);
       ctx.fillStyle = 'red';
       ctx.font = '2rem bold';
       ctx.textAlign = 'center';
-      ctx.fillText('CONTENUTO PROTETTO - Non cercare di fare screenshot o aggirare il sistema', window.innerWidth / 2, window.innerHeight / 2);
+      ctx.fillText('CONTENUTO PROTETTO - Non cercare di fare screenshot o aggirare il sistema', securityCanvas.width / 2, securityCanvas.height / 2);
+    } else {
+      alert('Errore nel rendering della protezione.'); // Fallback
+    }
+
+    // Alert su iPhone come avviso
+    if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+      alert('CONTENUTO PROTETTO - Non cercare di fare screenshot o aggirare il sistema. Questa protezione è limitata su iOS.');
     }
 
     // Ripristino dopo 5 secondi o su focus

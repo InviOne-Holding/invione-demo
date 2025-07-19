@@ -294,7 +294,7 @@ async function checkLinkToken() {
   try {
     const { data, error } = await supabase
       .from('link_metadata')
-      .select('token, single_view, used, expires_in_minutes, created_at, fingerprint, original_fingerprint')
+      .select('token, single_view, used, expires_in_minutes, created_at, fingerprint, original_fingerprint, viewer_fingerprint')
       .eq('token', token)
       .single();
 
@@ -304,7 +304,6 @@ async function checkLinkToken() {
     }
 
     const currentFingerprint = localStorage.getItem("invione_fp");
-    const originalFingerprint = data.original_fingerprint;
 
     if (data.used) {
       showViewError('Link già utilizzato.');
@@ -319,10 +318,17 @@ async function checkLinkToken() {
       return;
     }
 
-    // Commenta questa linea per test su dispositivi diversi
-    if (currentFingerprint !== originalFingerprint) {
-      showViewError('Accesso consentito solo dal dispositivo originale.');
-      return;
+    if (data.viewer_fingerprint) {
+      if (currentFingerprint !== data.viewer_fingerprint) {
+        showViewError('Accesso non autorizzato – il link è stato già aperto da un altro dispositivo');
+        return;
+      }
+    } else {
+      // Primo accesso: salva viewer_fingerprint
+      await supabase
+        .from('link_metadata')
+        .update({ viewer_fingerprint: currentFingerprint })
+        .eq('token', token);
     }
 
     await supabase.from('access_logs').insert({
@@ -343,14 +349,12 @@ async function checkLinkToken() {
 
     viewContent.innerHTML = '';
     for (let file of files) {
-      const { data: fileData } = supabase.storage
-        .from('invione-bucket')
-        .getPublicUrl(`anon/${token}/${file.name}`);
+      const { publicURL } = supabase.storage.from('invione-bucket').getPublicUrl(`anon/${token}/${file.name}`);
       const card = document.createElement('div');
       card.className = 'preview-card';
       if (file.name.match(/\.(jpg|jpeg|png|gif)$/i)) {
         const img = document.createElement('img');
-        img.src = fileData.publicUrl;
+        img.src = publicURL;
         if (data.single_view) {
           img.className = 'no-download';
           img.oncontextmenu = () => {
@@ -368,7 +372,7 @@ async function checkLinkToken() {
         }
       } else if (file.name.match(/\.(mp4|webm)$/i)) {
         const video = document.createElement('video');
-        video.src = fileData.publicUrl;
+        video.src = publicURL;
         video.controls = true;
         if (data.single_view) {
           video.className = 'no-download';

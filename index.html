@@ -208,10 +208,6 @@
     <button onclick="closePopup()" class="bg-blue-500 text-white px-3 py-1 rounded mt-2">OK</button>
   </div>
 
-<script type="module">
-  // Rimuoviamo il caricamento delle librerie di compressione
-  // Nessuna azione necessaria qui, lasciamo il fallback senza compressione
-</script>
 <script>
 const supabase = window.supabase.createClient(
   'https://opsvjksjatksezmhygdz.supabase.co',
@@ -261,7 +257,7 @@ async function checkPlan() {
           userPlan = 'Pro';
           break;
         case 'Creator':
-          maxFiles = 25; // Esempio per Creator
+          maxFiles = 25;
           userPlan = 'Creator';
           break;
         default:
@@ -320,7 +316,6 @@ async function checkLinkToken() {
       return;
     }
 
-    // Registra accesso
     await supabase.from('access_logs').insert({
       token,
       fingerprint: data.fingerprint,
@@ -401,6 +396,7 @@ async function checkLinkToken() {
     viewLoading.classList.add('hidden');
   } catch (err) {
     showViewError();
+    console.error('Errore checkLinkToken:', err);
   }
 }
 
@@ -510,7 +506,6 @@ async function uploadAndGenerateLink() {
   const singleView = document.getElementById('singleView').checked;
   let publicLinks = [];
 
-  // Nessuna compressione, carichiamo file originali
   for (let file of files) {
     const filePath = `${userFolder}/${file.name}`;
     try {
@@ -577,7 +572,6 @@ async function attivaPro24h() {
   checkPlan();
 }
 
-// Mostra popup di compressione (non influente)
 function showPopup() {
   compressionPopup.style.display = 'block';
 }
@@ -626,6 +620,5 @@ if (viewSection) {
 // Inizializza
 checkPlan();
 checkLinkToken();
-showPopup(); // Mostra il popup all'avvio (opzionale, puoi rimuoverlo)
 </script>
 </html>

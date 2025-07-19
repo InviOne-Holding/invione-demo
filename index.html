@@ -470,32 +470,59 @@ async function uploadAndGenerateLink() {
   let publicLinks = [];
 
   // Inizializza FFmpeg se non già caricata
-  if (!window.ffmpeg.isLoaded()) {
-    await window.ffmpeg.load();
+  let ffmpegLoaded = false;
+  try {
+    if (typeof window.ffmpeg !== 'undefined' && !window.ffmpeg.isLoaded()) {
+      console.log('Caricamento FFmpeg...');
+      await window.ffmpeg.load();
+      ffmpegLoaded = true;
+      console.log('FFmpeg caricata con successo.');
+    } else if (typeof window.ffmpeg !== 'undefined') {
+      ffmpegLoaded = true;
+    }
+  } catch (err) {
+    console.error('Errore caricamento FFmpeg:', err);
+    alert('Errore nell\'inizializzazione della compressione video. Procedo senza compressione video.');
   }
 
   for (let file of files) {
     let compressedFile = file;
-    if (file.type.startsWith('image/') && typeof imageCompression !== 'undefined') {
-      const options = { maxSizeMB: 1, maxWidthOrHeight: 1920 };
-      compressedFile = await imageCompression(file, options);
-      console.log(`Immagine compressa da ${file.size} a ${compressedFile.size} bytes`);
-    } else if (file.type.startsWith('video/') && typeof window.ffmpeg !== 'undefined') {
-      const inputFile = await fetchFile(file);
-      window.ffmpeg.FS('writeFile', 'input.mp4', inputFile);
-      await window.ffmpeg.run('-i', 'input.mp4', '-vf', 'scale=1280:720', '-b:v', '1M', '-c:a', 'copy', 'output.mp4');
-      const data = window.ffmpeg.FS('readFile', 'output.mp4');
-      compressedFile = new Blob([data.buffer], { type: 'video/mp4' });
-      console.log(`Video compresso da ${file.size} a ${compressedFile.size} bytes`);
+    try {
+      if (file.type.startsWith('image/') && typeof imageCompression !== 'undefined') {
+        const options = { maxSizeMB: 1, maxWidthOrHeight: 1920 };
+        compressedFile = await imageCompression(file, options);
+        console.log(`Immagine ${file.name} compressa da ${file.size} a ${compressedFile.size} bytes`);
+      } else if (file.type.startsWith('video/') && ffmpegLoaded) {
+        console.log(`Compressione video ${file.name} in corso...`);
+        const inputFile = await fetchFile(file);
+        window.ffmpeg.FS('writeFile', 'input.mp4', inputFile);
+        await window.ffmpeg.run('-i', 'input.mp4', '-vf', 'scale=1280:720', '-b:v', '1M', '-c:a', 'copy', 'output.mp4');
+        const data = window.ffmpeg.FS('readFile', 'output.mp4');
+        compressedFile = new Blob([data.buffer], { type: 'video/mp4' });
+        console.log(`Video ${file.name} compresso da ${file.size} a ${compressedFile.size} bytes`);
+      } else {
+        console.log(`Nessuna compressione per ${file.name} (ffmpeg non disponibile o non video).`);
+      }
+    } catch (err) {
+      console.error(`Errore compressione ${file.name}:`, err);
+      compressedFile = file; // Fallback al file originale
+      alert(`Errore nella compressione di ${file.name}. Caricato senza compressione.`);
     }
 
     const filePath = `${userFolder}/${file.name}`;
-    const { error: uploadError } = await supabase.storage
-      .from('invione-bucket')
-      .upload(filePath, compressedFile, { cacheControl: '3600', upsert: false });
+    try {
+      const { error: uploadError } = await supabase.storage
+        .from('invione-bucket')
+        .upload(filePath, compressedFile, { cacheControl: '3600', upsert: false });
 
-    if (uploadError) {
-      alert(`Errore durante l'upload: ${uploadError.message}`);
+      if (uploadError) {
+        console.error('Errore upload:', uploadError);
+        alert(`Errore durante l'upload di ${file.name}: ${uploadError.message}`);
+        return;
+      }
+    } catch (err) {
+      console.error('Eccezione upload:', err);
+      alert(`Eccezione durante l'upload di ${file.name}: ${err.message}`);
       return;
     }
 
@@ -509,7 +536,8 @@ async function uploadAndGenerateLink() {
   try {
     await navigator.clipboard.writeText(linkUrl);
     uploadStatus.innerHTML = `✅ Upload completato. Link copiato: <a href="${linkUrl}" target="_blank">🔗 ${linkUrl}</a>`;
-  } catch {
+  } catch (err) {
+    console.error('Errore copia negli appunti:', err);
     uploadStatus.innerHTML = `✅ Upload completato. Copia manuale: <a href="${linkUrl}" target="_blank">🔗 ${linkUrl}</a>`;
   }
 

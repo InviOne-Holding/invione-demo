@@ -294,7 +294,7 @@ async function checkLinkToken() {
   try {
     const { data, error } = await supabase
       .from('link_metadata')
-      .select('token, single_view, used, expires_in_minutes, created_at, fingerprint, original_fingerprint, viewer_fingerprint')
+      .select('token, single_view, used, expires_in_minutes, created_at, fingerprint, original_fingerprint')
       .eq('token', token)
       .single();
 
@@ -304,6 +304,7 @@ async function checkLinkToken() {
     }
 
     const currentFingerprint = localStorage.getItem("invione_fp");
+    const originalFingerprint = data.original_fingerprint;
 
     if (data.used) {
       showViewError('Link già utilizzato.');
@@ -318,14 +319,8 @@ async function checkLinkToken() {
       return;
     }
 
-    // Logica per primo visualizzatore
-    if (!data.viewer_fingerprint) {
-      // Primo accesso: salva il fingerprint del primo visualizzatore
-      await supabase
-        .from('link_metadata')
-        .update({ viewer_fingerprint: currentFingerprint })
-        .eq('token', token);
-    } else if (currentFingerprint !== data.viewer_fingerprint) {
+    // Commenta questa linea per test su dispositivi diversi
+    if (currentFingerprint !== originalFingerprint) {
       showViewError('Accesso consentito solo dal dispositivo originale.');
       return;
     }

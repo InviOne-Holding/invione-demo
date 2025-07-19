@@ -489,6 +489,7 @@ async function uploadAndGenerateLink() {
   let publicLinks = [];
 
   // Verifica librerie
+  console.log('Stato librerie - imageCompressionLoaded:', imageCompressionLoaded, 'ffmpegLoaded:', ffmpegLoaded);
   if (!imageCompressionLoaded && !ffmpegLoaded) {
     console.log('Nessuna libreria di compressione disponibile. Procedo senza compressione.');
   }

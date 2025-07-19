@@ -159,7 +159,7 @@
     <div id="preview" class="flex flex-wrap justify-center mt-4"></div>
   </div>
 
-  <div id="viewSection" class="hidden text-center mt-6">
+  <div id="viewSection" class="text-center mt-6">
     <h1 class="text-4xl font-bold">Contenuto Protetto</h1>
     <p id="timer" class="text-lg text-red-500 mt-2 hidden">Tempo rimanente: <span id="timeLeft">30</span>s</p>
     <div id="viewContent" class="flex flex-wrap justify-center mt-4"></div>
@@ -242,6 +242,7 @@ if (!fingerprint) {
 
 let maxFiles = 3;
 let userPlan = 'Free';
+let isSingleViewActive = false;
 
 async function checkPlan() {
   const { data } = await supabase.from('user_plans').select('*').eq('fingerprint', fingerprint).maybeSingle();
@@ -329,7 +330,10 @@ async function checkLinkToken() {
         img.src = fileData.publicUrl;
         if (data.single_view) {
           img.className = 'no-download';
-          img.oncontextmenu = () => false;
+          img.oncontextmenu = () => {
+            antiScreenOverlay.style.display = 'flex';
+            return false;
+          };
           img.ondragstart = () => false;
         }
         card.appendChild(img);
@@ -345,7 +349,10 @@ async function checkLinkToken() {
         video.controls = true;
         if (data.single_view) {
           video.className = 'no-download';
-          video.oncontextmenu = () => false;
+          video.oncontextmenu = () => {
+            antiScreenOverlay.style.display = 'flex';
+            return false;
+          };
           video.ondragstart = () => false;
         }
         card.appendChild(video);
@@ -362,13 +369,14 @@ async function checkLinkToken() {
       viewContent.appendChild(card);
     }
 
-    if (data.single_view) {
+    isSingleViewActive = data.single_view;
+    if (isSingleViewActive) {
       await supabase
         .from('link_metadata')
         .update({ used: true })
         .eq('token', token);
     } else if (userPlan === 'Pass Pro 24h' || userPlan === 'Pro' || userPlan === 'Creator') {
-      startTimer(30); // Timer solo per Pro senza overlay iniziale
+      startTimer(30);
     }
 
     viewLoading.classList.add('hidden');
@@ -505,34 +513,42 @@ async function attivaPro24h() {
   checkPlan();
 }
 
-// Blocco screenshot e click destro
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'PrintScreen') {
-    antiScreenOverlay.style.display = 'flex';
-    e.preventDefault();
-  }
-});
+// Blocco screenshot e click destro limitato a viewSection
+if (viewSection) {
+  viewSection.addEventListener('keydown', (e) => {
+    if (isSingleViewActive && e.key === 'PrintScreen') {
+      antiScreenOverlay.style.display = 'flex';
+      e.preventDefault();
+    }
+  });
 
-document.addEventListener('contextmenu', (e) => {
-  antiScreenOverlay.style.display = 'flex';
-  e.preventDefault();
-});
+  viewSection.addEventListener('contextmenu', (e) => {
+    if (isSingleViewActive) {
+      antiScreenOverlay.style.display = 'flex';
+      e.preventDefault();
+    }
+  });
 
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden') {
-    antiScreenOverlay.style.display = 'flex';
-  } else if (document.visibilityState === 'visible' && antiScreenOverlay.style.display === 'flex') {
-    antiScreenOverlay.style.display = 'none'; // Ripristina solo se overlay attivo
-  }
-});
+  viewSection.addEventListener('visibilitychange', () => {
+    if (isSingleViewActive && document.visibilityState === 'hidden') {
+      antiScreenOverlay.style.display = 'flex';
+    } else if (isSingleViewActive && document.visibilityState === 'visible' && antiScreenOverlay.style.display === 'flex') {
+      antiScreenOverlay.style.display = 'none';
+    }
+  });
 
-window.addEventListener('blur', () => {
-  antiScreenOverlay.style.display = 'flex';
-}, true);
+  window.addEventListener('blur', () => {
+    if (isSingleViewActive) {
+      antiScreenOverlay.style.display = 'flex';
+    }
+  }, true);
 
-window.addEventListener('focus', () => {
-  antiScreenOverlay.style.display = 'none';
-}, true);
+  window.addEventListener('focus', () => {
+    if (isSingleViewActive && antiScreenOverlay.style.display === 'flex') {
+      antiScreenOverlay.style.display = 'none';
+    }
+  }, true);
+}
 
 // Inizializza
 checkPlan();

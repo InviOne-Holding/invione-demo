@@ -187,6 +187,10 @@
     </div>
   </div>
 
+<script type="module">
+  import { default as imageCompression } from 'https://unpkg.com/browser-image-compression@2.0.2/dist/index.js';
+  window.imageCompression = imageCompression;
+</script>
 <script>
 const supabase = window.supabase.createClient(
   'https://opsvjksjatksezmhygdz.supabase.co',
@@ -383,7 +387,7 @@ function startTimer(seconds) {
 function drawSecurityCanvas() {
   if (isSingleViewActive) {
     securityCanvas.style.display = 'block';
-    securityCanvas.width = window.innerWidth; // Imposta dimensioni dinamiche
+    securityCanvas.width = window.innerWidth; // Dimensioni dinamiche
     securityCanvas.height = window.innerHeight;
     const ctx = securityCanvas.getContext('2d');
     if (ctx) {
@@ -393,9 +397,11 @@ function drawSecurityCanvas() {
       ctx.fillStyle = 'red';
       ctx.font = '2rem bold';
       ctx.textAlign = 'center';
-      ctx.fillText('CONTENUTO PROTETTO - Non cercare di fare screenshot o aggirare il sistema', securityCanvas.width / 2, securityCanvas.height / 2);
+      ctx.fillText('CONTENUTO PROTETTO - Non cercare di fare screenshot o aggirare il sistema', securityCanvas.width / 2, securityCanvas.height / 2 - 20);
+      ctx.font = '1.5rem';
+      ctx.fillText('Questa protezione è limitata su dispositivi mobili.', securityCanvas.width / 2, securityCanvas.height / 2 + 20);
     } else {
-      alert('Errore nel rendering della protezione.'); // Fallback
+      alert('Errore nel rendering della protezione.');
     }
 
     // Alert su iPhone come avviso
@@ -462,10 +468,17 @@ async function uploadAndGenerateLink() {
   let publicLinks = [];
 
   for (let file of files) {
+    let compressedFile = file;
+    if (file.type.startsWith('image/') && typeof imageCompression !== 'undefined') {
+      const options = { maxSizeMB: 1, maxWidthOrHeight: 1920 };
+      compressedFile = await imageCompression(file, options);
+      console.log(`Compresso da ${file.size} a ${compressedFile.size} bytes`);
+    }
+
     const filePath = `${userFolder}/${file.name}`;
     const { error: uploadError } = await supabase.storage
       .from('invione-bucket')
-      .upload(filePath, file, { cacheControl: '3600', upsert: false });
+      .upload(filePath, compressedFile, { cacheControl: '3600', upsert: false });
 
     if (uploadError) {
       alert(`Errore durante l'upload: ${uploadError.message}`);

@@ -250,13 +250,32 @@ async function checkPlan() {
     const expiry = new Date(data.expires_at);
     userExpirySpan.textContent = expiry.toLocaleString();
     if (expiry > now) {
-      maxFiles = data.plan === 'Pass Pro 24h' ? 10 : 20;
-      userPlan = data.plan;
-      userPlanSpan.textContent = data.plan + ' (attivo)';
+      switch (data.plan) {
+        case 'Pass Pro 24h':
+          maxFiles = 10;
+          userPlan = 'Pass Pro 24h';
+          break;
+        case 'Pro':
+          maxFiles = 20;
+          userPlan = 'Pro';
+          break;
+        case 'Creator':
+          maxFiles = 25; // Esempio per Creator, puoi ajustarlo
+          userPlan = 'Creator';
+          break;
+        default:
+          maxFiles = 3;
+          userPlan = 'Free';
+      }
+      userPlanSpan.textContent = `${userPlan} (attivo)`;
     } else {
+      maxFiles = 3;
+      userPlan = 'Free';
       userPlanSpan.textContent = 'Free';
     }
   } else {
+    maxFiles = 3;
+    userPlan = 'Free';
     userPlanSpan.textContent = 'Free';
     userExpirySpan.textContent = '--';
   }
@@ -443,7 +462,7 @@ fileInput.addEventListener('change', () => {
   preview.innerHTML = '';
   const files = fileInput.files;
   if (files.length > maxFiles) {
-    alert(`Puoi inviare massimo ${maxFiles} file nel tuo piano.`);
+    alert(`Puoi inviare massimo ${maxFiles} file nel tuo piano ${userPlan}.`);
     fileInput.value = '';
     return;
   }
@@ -479,6 +498,10 @@ async function uploadAndGenerateLink() {
   }
   if (files.length === 0) {
     alert("Seleziona almeno un file.");
+    return;
+  }
+  if (files.length > maxFiles) {
+    alert(`Limite superato: puoi inviare massimo ${maxFiles} file con il piano ${userPlan}.`);
     return;
   }
 
@@ -624,5 +647,4 @@ if (viewSection) {
 checkPlan();
 checkLinkToken();
 </script>
-</body>
 </html>

@@ -189,7 +189,9 @@
 
 <script type="module">
   import { default as imageCompression } from 'https://unpkg.com/browser-image-compression@2.0.2/dist/index.js';
+  import { createFFmpeg, fetchFile } from 'https://unpkg.com/@ffmpeg/ffmpeg@0.11.3/dist/ffmpeg.min.js';
   window.imageCompression = imageCompression;
+  window.ffmpeg = createFFmpeg({ log: true });
 </script>
 <script>
 const supabase = window.supabase.createClient(
@@ -467,12 +469,24 @@ async function uploadAndGenerateLink() {
   const singleView = document.getElementById('singleView').checked;
   let publicLinks = [];
 
+  // Inizializza FFmpeg se non già caricata
+  if (!window.ffmpeg.isLoaded()) {
+    await window.ffmpeg.load();
+  }
+
   for (let file of files) {
     let compressedFile = file;
     if (file.type.startsWith('image/') && typeof imageCompression !== 'undefined') {
       const options = { maxSizeMB: 1, maxWidthOrHeight: 1920 };
       compressedFile = await imageCompression(file, options);
-      console.log(`Compresso da ${file.size} a ${compressedFile.size} bytes`);
+      console.log(`Immagine compressa da ${file.size} a ${compressedFile.size} bytes`);
+    } else if (file.type.startsWith('video/') && typeof window.ffmpeg !== 'undefined') {
+      const inputFile = await fetchFile(file);
+      window.ffmpeg.FS('writeFile', 'input.mp4', inputFile);
+      await window.ffmpeg.run('-i', 'input.mp4', '-vf', 'scale=1280:720', '-b:v', '1M', '-c:a', 'copy', 'output.mp4');
+      const data = window.ffmpeg.FS('readFile', 'output.mp4');
+      compressedFile = new Blob([data.buffer], { type: 'video/mp4' });
+      console.log(`Video compresso da ${file.size} a ${compressedFile.size} bytes`);
     }
 
     const filePath = `${userFolder}/${file.name}`;

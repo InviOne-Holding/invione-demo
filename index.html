@@ -188,10 +188,29 @@
   </div>
 
 <script type="module">
-  import { default as imageCompression } from 'https://unpkg.com/browser-image-compression@2.0.2/dist/index.js';
-  import { createFFmpeg, fetchFile } from 'https://unpkg.com/@ffmpeg/ffmpeg@0.11.3/dist/ffmpeg.min.js';
-  window.imageCompression = imageCompression;
-  window.ffmpeg = createFFmpeg({ log: true });
+  // Tentativo di caricamento con fallback
+  let imageCompressionLoaded = false;
+  let ffmpegLoaded = false;
+  try {
+    const { default: imageCompression } = await import('https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/index.js');
+    window.imageCompression = imageCompression;
+    imageCompressionLoaded = true;
+    console.log('imageCompression caricata con successo.');
+  } catch (err) {
+    console.error('Errore caricamento imageCompression:', err);
+    alert('Errore nel caricamento della compressione immagini. Procedo senza compressione immagini.');
+  }
+
+  try {
+    const { createFFmpeg, fetchFile } = await import('https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.3/dist/ffmpeg.min.js');
+    window.ffmpeg = createFFmpeg({ log: true });
+    await window.ffmpeg.load();
+    ffmpegLoaded = true;
+    console.log('FFmpeg caricata con successo.');
+  } catch (err) {
+    console.error('Errore caricamento FFmpeg:', err);
+    alert('Errore nel caricamento della compressione video. Procedo senza compressione video.');
+  }
 </script>
 <script>
 const supabase = window.supabase.createClient(
@@ -469,28 +488,17 @@ async function uploadAndGenerateLink() {
   const singleView = document.getElementById('singleView').checked;
   let publicLinks = [];
 
-  // Inizializza FFmpeg se non già caricata
-  let ffmpegLoaded = false;
-  try {
-    if (typeof window.ffmpeg !== 'undefined' && !window.ffmpeg.isLoaded()) {
-      console.log('Caricamento FFmpeg...');
-      await window.ffmpeg.load();
-      ffmpegLoaded = true;
-      console.log('FFmpeg caricata con successo.');
-    } else if (typeof window.ffmpeg !== 'undefined') {
-      ffmpegLoaded = true;
-    }
-  } catch (err) {
-    console.error('Errore caricamento FFmpeg:', err);
-    alert('Errore nell\'inizializzazione della compressione video. Procedo senza compressione video.');
+  // Verifica librerie
+  if (!imageCompressionLoaded && !ffmpegLoaded) {
+    console.log('Nessuna libreria di compressione disponibile. Procedo senza compressione.');
   }
 
   for (let file of files) {
     let compressedFile = file;
     try {
-      if (file.type.startsWith('image/') && typeof imageCompression !== 'undefined') {
+      if (file.type.startsWith('image/') && imageCompressionLoaded) {
         const options = { maxSizeMB: 1, maxWidthOrHeight: 1920 };
-        compressedFile = await imageCompression(file, options);
+        compressedFile = await window.imageCompression(file, options);
         console.log(`Immagine ${file.name} compressa da ${file.size} a ${compressedFile.size} bytes`);
       } else if (file.type.startsWith('video/') && ffmpegLoaded) {
         console.log(`Compressione video ${file.name} in corso...`);
@@ -501,7 +509,7 @@ async function uploadAndGenerateLink() {
         compressedFile = new Blob([data.buffer], { type: 'video/mp4' });
         console.log(`Video ${file.name} compresso da ${file.size} a ${compressedFile.size} bytes`);
       } else {
-        console.log(`Nessuna compressione per ${file.name} (ffmpeg non disponibile o non video).`);
+        console.log(`Nessuna compressione per ${file.name} (librerie non caricate o tipo non supportato).`);
       }
     } catch (err) {
       console.error(`Errore compressione ${file.name}:`, err);

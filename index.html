@@ -162,7 +162,7 @@
       <ul class="text-sm mt-2 space-y-1">
         <li>✅ 3 file</li>
         <li>✅ Protezione base</li>
-        <li>⏱️ 24h link / Sempre</li>
+        <li>⏱️ 24h link / Sempre (one-time se singola)</li>
       </ul>
       <button disabled class="bg-gray-600 text-white px-3 py-1 rounded mt-4 opacity-50">Attivo</button>
     </div>
@@ -173,7 +173,7 @@
       <ul class="text-sm mt-2 space-y-1">
         <li>✅ 10 file</li>
         <li>🔥 Autodistruzione</li>
-        <li>🔗 Link monouso</li>
+        <li>🔗 Link monouso o durata scelta</li>
       </ul>
       <button onclick="attivaPro24h()" class="bg-white text-black px-3 py-1 rounded mt-4 font-bold">Attiva</button>
     </div>
@@ -184,7 +184,7 @@
       <ul class="text-sm mt-2 space-y-1">
         <li>✅ 20 file</li>
         <li>📊 Log accessi</li>
-        <li>🕒 Durata avanzata</li>
+        <li>🕒 Durata scelta</li>
       </ul>
       <button class="bg-white text-black px-3 py-1 rounded mt-4 font-bold">Presto</button>
     </div>
@@ -195,6 +195,7 @@
       <ul class="text-sm mt-2 space-y-1">
         <li>🎯 Tracking aperture</li>
         <li>👻 Watermark invisibile</li>
+        <li>🕒 Durata scelta</li>
       </ul>
       <button class="bg-white text-black px-3 py-1 rounded mt-4 font-bold">Presto</button>
     </div>
@@ -230,11 +231,8 @@ const timeLeftElement = document.getElementById('timeLeft');
 const securityCanvas = document.getElementById('securityCanvas');
 const compressionPopup = document.getElementById('compressionPopup');
 
-let fingerprint = localStorage.getItem("invione_fp");
-if (!fingerprint) {
-  fingerprint = crypto.randomUUID();
-  localStorage.setItem("invione_fp", fingerprint);
-}
+let fingerprint = localStorage.getItem("invione_fp") || crypto.randomUUID();
+localStorage.setItem("invione_fp", fingerprint);
 
 let maxFiles = 3;
 let userPlan = 'Free';
@@ -294,12 +292,20 @@ async function checkLinkToken() {
   try {
     const { data, error } = await supabase
       .from('link_metadata')
-      .select('token, single_view, used, expires_in_minutes, created_at, fingerprint')
+      .select('token, single_view, used, expires_in_minutes, created_at, fingerprint, original_fingerprint')
       .eq('token', token)
       .single();
 
     if (error || !data) {
       showViewError();
+      return;
+    }
+
+    const currentFingerprint = localStorage.getItem("invione_fp");
+    const originalFingerprint = data.original_fingerprint;
+
+    if (data.used) {
+      showViewError('Link già utilizzato.');
       return;
     }
 
@@ -311,14 +317,14 @@ async function checkLinkToken() {
       return;
     }
 
-    if (data.single_view && data.used) {
-      showViewError('Link già utilizzato.');
+    if (currentFingerprint !== originalFingerprint) {
+      showViewError('Accesso consentito solo dal dispositivo originale.');
       return;
     }
 
     await supabase.from('access_logs').insert({
       token,
-      fingerprint: data.fingerprint,
+      fingerprint: currentFingerprint,
       accessed_at: new Date().toISOString(),
       ip_address: await fetch('https://api.ipify.org?format=json').then(res => res.json()).then(data => data.ip)
     });
@@ -384,7 +390,12 @@ async function checkLinkToken() {
     }
 
     isSingleViewActive = data.single_view;
-    if (isSingleViewActive) {
+    if (isSingleViewActive && userPlan === 'Free') {
+      await supabase
+        .from('link_metadata')
+        .update({ used: true })
+        .eq('token', token);
+    } else if (isSingleViewActive && (userPlan === 'Pass Pro 24h' || userPlan === 'Pro' || userPlan === 'Creator')) {
       await supabase
         .from('link_metadata')
         .update({ used: true })
@@ -504,6 +515,16 @@ async function uploadAndGenerateLink() {
   const userFolder = `anon/${token}`;
   const duration = document.getElementById('duration').value;
   const singleView = document.getElementById('singleView').checked;
+  let effectiveDuration = parseInt(duration);
+
+  if (singleView && userPlan === 'Free') {
+    effectiveDuration = 0; // One-time obbligatorio per Free con single view
+  } else if (singleView && (userPlan === 'Pass Pro 24h' || userPlan === 'Pro' || userPlan === 'Creator')) {
+    effectiveDuration = parseInt(duration); // Durata scelta per piani premium
+  } else if (!singleView && (userPlan === 'Pass Pro 24h' || userPlan === 'Pro' || userPlan === 'Creator')) {
+    effectiveDuration = parseInt(duration); // Durata scelta senza single view
+  }
+
   let publicLinks = [];
 
   for (let file of files) {
@@ -542,12 +563,12 @@ async function uploadAndGenerateLink() {
   try {
     const { data, error } = await supabase.from('link_metadata').insert({
       token,
-      expires_in_minutes: parseInt(duration),
+      expires_in_minutes: effectiveDuration,
       single_view: singleView,
       used: false,
       created_at: new Date().toISOString(),
-      fingerprint,
-      plan: userPlan
+      fingerprint: localStorage.getItem("invione_fp"),
+      original_fingerprint: localStorage.getItem("invione_fp")
     });
     if (error) {
       console.error('Error inserting metadata:', error);

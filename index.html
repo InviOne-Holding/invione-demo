@@ -131,44 +131,10 @@
       from { opacity: 0; }
       to { opacity: 1; }
     }
-    #fullscreenModal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.9);
-      z-index: 10002;
-      justify-content: center;
-      align-items: center;
-      animation: fadeIn 0.3s ease-in-out;
-    }
-    #fullscreenContent {
-      max-width: 90%;
-      max-height: 90vh;
-      object-fit: contain;
-    }
-    #closeModal {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      font-size: 30px;
-      color: white;
-      cursor: pointer;
-    }
   </style>
 </head>
 <body>
   <canvas id="securityCanvas"></canvas>
-  <div id="fullscreenModal">
-    <span id="closeModal">X</span>
-    <img id="fullscreenContent" />
-  </div>
-  <div id="fullscreenModal">
-    <span id="closeModal">X</span>
-    <video id="fullscreenContent" controls playsinline></video>
-  </div>
 
   <div id="uploadSection" class="text-center mt-6">
     <h1 class="text-4xl font-bold">InviOne</h1>
@@ -428,6 +394,9 @@ async function checkLinkToken() {
           };
           img.ondragstart = () => false;
         }
+        img.onclick = () => {
+          openFullscreen(img.src, 'image');
+        };
         card.appendChild(img);
         if (userPlan === 'Creator') {
           const watermark = document.createElement('div');
@@ -439,9 +408,7 @@ async function checkLinkToken() {
         const video = document.createElement('video');
         video.src = fileData.publicUrl;
         video.controls = true;
-        video.playsinline = true;
-        video.preload = 'metadata';
-        video.style.maxHeight = '400px';
+        video.pause = true;
         if (data.single_view) {
           video.className = 'no-download';
           video.oncontextmenu = () => {
@@ -450,6 +417,9 @@ async function checkLinkToken() {
           };
           video.ondragstart = () => false;
         }
+        video.onclick = () => {
+          openFullscreen(video.src, 'video');
+        };
         card.appendChild(video);
         if (userPlan === 'Creator') {
           const watermark = document.createElement('div');
@@ -716,10 +686,19 @@ if (viewSection) {
 // Inizializza
 checkPlan();
 checkLinkToken();
-
-// Chiama updateActivePlan all'avvio e ogni 5 minuti per mantenere il piano aggiornato
-updateActivePlan();
-setInterval(updateActivePlan, 300000);
+</script>
+<script>
+document.querySelectorAll('video').forEach(video => {
+  video.addEventListener('dblclick', () => {
+    if (video.requestFullscreen) {
+      video.requestFullscreen();
+    } else if (video.webkitRequestFullscreen) {
+      video.webkitRequestFullscreen();
+    } else if (video.msRequestFullscreen) {
+      video.msRequestFullscreen();
+    }
+  });
+});
 </script>
 </body>
 </html>

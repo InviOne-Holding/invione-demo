@@ -97,6 +97,40 @@
         font-size: 1rem;
       }
     }
+    #sizeLimitPopup {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #1a1a1a;
+      color: white;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.8);
+      z-index: 10001;
+      text-align: center;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    #sizeLimitPopup p {
+      margin-bottom: 15px;
+    }
+    #sizeLimitPopup button {
+      background: #4ade80;
+      color: #000;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    #sizeLimitPopup button:hover {
+      background: #3bc76a;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
   </style>
 </head>
 <body>
@@ -266,28 +300,6 @@ async function checkPlan() {
   maxFilesSpan.textContent = maxFiles;
 }
 
-// Nuova funzione per aggiornare il piano attivo da Supabase
-async function updateActivePlan() {
-  const { data, error } = await supabase
-    .from('user_plans')
-    .select('plan, expires_at')
-    .eq('fingerprint', fingerprint)
-    .single();
-
-  const now = new Date();
-  const userPlanElement = document.getElementById('userPlan');
-  if (error || !data) {
-    userPlanElement.textContent = 'Free';
-  } else {
-    const expiry = new Date(data.expires_at);
-    if (expiry > now) {
-      userPlanElement.textContent = `${data.plan} (attivo)`;
-    } else {
-      userPlanElement.textContent = 'Free';
-    }
-  }
-}
-
 async function checkLinkToken() {
   const urlParams = new URLSearchParams(window.location.search);
   const token = urlParams.get('token');
@@ -371,6 +383,9 @@ async function checkLinkToken() {
         const video = document.createElement('video');
         video.src = fileData.publicUrl;
         video.controls = true;
+        video.playsinline = true;
+        video.preload = 'metadata';
+        video.style.maxHeight = '400px';
         if (data.single_view) {
           video.className = 'no-download';
           video.oncontextmenu = () => {

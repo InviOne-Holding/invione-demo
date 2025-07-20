@@ -197,6 +197,7 @@
         <li>✅ 3 file</li>
         <li>✅ Protezione base</li>
         <li>⏱️ 24h link / Sempre</li>
+        <li>📏 Max 50MB totali per invio</li>
       </ul>
       <button disabled class="bg-gray-600 text-white px-3 py-1 rounded mt-4 opacity-50">Attivo</button>
     </div>
@@ -208,6 +209,7 @@
         <li>✅ 10 file</li>
         <li>🔥 Autodistruzione</li>
         <li>🔗 Link monouso</li>
+        <li>📏 Max 500MB totali per invio</li>
       </ul>
       <button onclick="attivaPro24h()" class="bg-white text-black px-3 py-1 rounded mt-4 font-bold">Attiva</button>
     </div>
@@ -219,6 +221,7 @@
         <li>✅ 20 file</li>
         <li>📊 Log accessi</li>
         <li>🕒 Durata avanzata</li>
+        <li>📏 Max 1GB totali per invio</li>
       </ul>
       <button class="bg-white text-black px-3 py-1 rounded mt-4 font-bold">Presto</button>
     </div>
@@ -229,6 +232,7 @@
       <ul class="text-sm mt-2 space-y-1">
         <li>🎯 Tracking aperture</li>
         <li>👻 Watermark invisibile</li>
+        <li>📏 Max 2GB totali per invio</li>
       </ul>
       <button class="bg-white text-black px-3 py-1 rounded mt-4 font-bold">Presto</button>
     </div>
@@ -298,28 +302,6 @@ async function checkPlan() {
     userExpirySpan.textContent = '--';
   }
   maxFilesSpan.textContent = maxFiles;
-}
-
-// Nuova funzione per aggiornare il piano attivo da Supabase
-async function updateActivePlan() {
-  const { data, error } = await supabase
-    .from('user_plans')
-    .select('plan, expires_at')
-    .eq('fingerprint', fingerprint)
-    .single();
-
-  const now = new Date();
-  const userPlanElement = document.getElementById('userPlan');
-  if (error || !data) {
-    userPlanElement.textContent = 'Free';
-  } else {
-    const expiry = new Date(data.expires_at);
-    if (expiry > now) {
-      userPlanElement.textContent = `${data.plan} (attivo)`;
-    } else {
-      userPlanElement.textContent = 'Free';
-    }
-  }
 }
 
 async function checkLinkToken() {
@@ -679,10 +661,6 @@ if (viewSection) {
 // Inizializza
 checkPlan();
 checkLinkToken();
-
-// Chiama updateActivePlan all'avvio e ogni 5 minuti per mantenere il piano aggiornato
-updateActivePlan();
-setInterval(updateActivePlan, 300000);
 </script>
 </body>
 </html>

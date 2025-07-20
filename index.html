@@ -97,16 +97,39 @@
         font-size: 1rem;
       }
     }
-    .expand-icon {
-      position: absolute;
-      bottom: 5px;
-      right: 5px;
-      cursor: pointer;
-      font-size: 20px;
+    #sizeLimitPopup {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #1a1a1a;
       color: white;
-      background: rgba(0,0,0,0.5);
-      padding: 5px;
-      border-radius: 5px;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.8);
+      z-index: 10001;
+      text-align: center;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    #sizeLimitPopup p {
+      margin-bottom: 15px;
+    }
+    #sizeLimitPopup button {
+      background: #4ade80;
+      color: #000;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    #sizeLimitPopup button:hover {
+      background: #3bc76a;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
   </style>
 </head>
@@ -219,6 +242,11 @@
     <button onclick="closePopup()" class="bg-blue-500 text-white px-3 py-1 rounded mt-2">OK</button>
   </div>
 
+  <div id="sizeLimitPopup">
+    <p>❗️Il file selezionato supera i 50 MB, limite previsto per il piano Free. Passa a un piano superiore per inviare file di grandi dimensioni.</p>
+    <button onclick="closeSizeLimitPopup()">Chiudi</button>
+  </div>
+
 <script>
 const supabase = window.supabase.createClient(
   'https://opsvjksjatksezmhygdz.supabase.co',
@@ -240,6 +268,7 @@ const timerElement = document.getElementById('timer');
 const timeLeftElement = document.getElementById('timeLeft');
 const securityCanvas = document.getElementById('securityCanvas');
 const compressionPopup = document.getElementById('compressionPopup');
+const sizeLimitPopup = document.getElementById('sizeLimitPopup');
 
 let fingerprint = localStorage.getItem("invione_fp");
 if (!fingerprint) {
@@ -344,21 +373,6 @@ async function checkLinkToken() {
           img.ondragstart = () => false;
         }
         card.appendChild(img);
-        const expandIcon = document.createElement('span');
-        expandIcon.className = 'expand-icon';
-        expandIcon.textContent = '🔍';
-        expandIcon.onclick = () => {
-          if (img.requestFullscreen) {
-            img.requestFullscreen();
-          } else if (img.webkitRequestFullscreen) { /* Safari */
-            img.webkitRequestFullscreen();
-          } else if (img.msRequestFullscreen) { /* IE11 */
-            img.msRequestFullscreen();
-          } else {
-            alert('Fullscreen non supportato su questo browser.');
-          }
-        };
-        card.appendChild(expandIcon);
         if (userPlan === 'Creator') {
           const watermark = document.createElement('div');
           watermark.className = 'watermark';
@@ -378,21 +392,6 @@ async function checkLinkToken() {
           video.ondragstart = () => false;
         }
         card.appendChild(video);
-        const expandIcon = document.createElement('span');
-        expandIcon.className = 'expand-icon';
-        expandIcon.textContent = '🔍';
-        expandIcon.onclick = () => {
-          if (video.requestFullscreen) {
-            video.requestFullscreen();
-          } else if (video.webkitRequestFullscreen) { /* Safari */
-            video.webkitRequestFullscreen();
-          } else if (video.msRequestFullscreen) { /* IE11 */
-            video.msRequestFullscreen();
-          } else {
-            alert('Fullscreen non supportato su questo browser.');
-          }
-        };
-        card.appendChild(expandIcon);
         if (userPlan === 'Creator') {
           const watermark = document.createElement('div');
           watermark.className = 'watermark';
@@ -483,6 +482,18 @@ fileInput.addEventListener('change', () => {
     fileInput.value = '';
     return;
   }
+
+  // Controllo limite 50 MB per piano Free
+  if (userPlan === 'Free') {
+    for (let file of files) {
+      if (file.size > 52428800) { // 50 MB in byte
+        sizeLimitPopup.style.display = 'block';
+        fileInput.value = ''; // Resetta l'input
+        return;
+      }
+    }
+  }
+
   for (let file of files) {
     const card = document.createElement('div');
     card.className = 'preview-card';
@@ -600,6 +611,10 @@ function showPopup() {
 
 function closePopup() {
   compressionPopup.style.display = 'none';
+}
+
+function closeSizeLimitPopup() {
+  sizeLimitPopup.style.display = 'none';
 }
 
 // Blocco screenshot e click destro limitato a viewSection

@@ -97,7 +97,7 @@
         font-size: 1rem;
       }
     }
-    #accessErrorPopup {
+    #fingerprintErrorPopup {
       display: none;
       position: fixed;
       top: 50%;
@@ -112,10 +112,10 @@
       text-align: center;
       animation: fadeIn 0.3s ease-in-out;
     }
-    #accessErrorPopup p {
+    #fingerprintErrorPopup p {
       margin-bottom: 15px;
     }
-    #accessErrorPopup button {
+    #fingerprintErrorPopup button {
       background: #4ade80;
       color: #000;
       padding: 10px 20px;
@@ -124,7 +124,7 @@
       cursor: pointer;
       font-weight: bold;
     }
-    #accessErrorPopup button:hover {
+    #fingerprintErrorPopup button:hover {
       background: #3bc76a;
     }
     @keyframes fadeIn {
@@ -246,9 +246,9 @@
     <button onclick="closePopup()" class="bg-blue-500 text-white px-3 py-1 rounded mt-2">OK</button>
   </div>
 
-  <div id="accessErrorPopup">
-    <p id="errorMessage">Accesso negato – Questo link non è valido o è stato già usato.</p>
-    <button onclick="closeAccessErrorPopup()">OK</button>
+  <div id="fingerprintErrorPopup">
+    <p>⚠️ Accesso bloccato. Il contenuto è già stato aperto da un altro dispositivo. Per motivi di sicurezza, non è possibile visualizzarlo da questo device.</p>
+    <button onclick="closeFingerprintErrorPopup()">OK</button>
   </div>
 
 <script>
@@ -426,13 +426,13 @@ async function checkLinkToken() {
 
 function showViewError(message = 'Errore: Link non valido o già utilizzato.') {
   viewLoading.classList.add('hidden');
-  const popupMessage = document.querySelector('#accessErrorPopup p');
+  const popupMessage = document.querySelector('#fingerprintErrorPopup p');
   popupMessage.textContent = message;
-  document.getElementById('accessErrorPopup').style.display = 'block';
+  document.getElementById('fingerprintErrorPopup').style.display = 'block';
 }
 
-function closeAccessErrorPopup() {
-  document.getElementById('accessErrorPopup').style.display = 'none';
+function closeFingerprintErrorPopup() {
+  document.getElementById('fingerprintErrorPopup').style.display = 'none';
 }
 
 function startTimer(seconds) {
@@ -575,8 +575,8 @@ async function uploadAndGenerateLink() {
       single_view: singleView,
       used: false,
       created_at: new Date().toISOString(),
-      fingerprint: localStorage.getItem("invione_fp"),
-      original_fingerprint: localStorage.getItem("invione_fp")
+      fingerprint,
+      original_fingerprint: fingerprint
     });
     if (error) {
       console.error('Error inserting metadata:', error);

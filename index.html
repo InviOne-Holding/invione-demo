@@ -97,6 +97,44 @@
         font-size: 1rem;
       }
     }
+    #accessErrorPopup {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #1a1a1a;
+      color: white;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.8);
+      z-index: 10001;
+      text-align: center;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    #accessErrorPopup p {
+      margin-bottom: 15px;
+    }
+    #accessErrorPopup button {
+      background: #4ade80;
+      color: #000;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    #accessErrorPopup button:hover {
+      background: #3bc76a;
+    }
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
   </style>
 </head>
 <body>
@@ -200,12 +238,9 @@
     </div>
   </div>
 
-  <div id="compressionPopup" class="popup">
-    <p>invione-holding.github.io</p>
-    <p>Errore nel caricamento della compressione immagini.</p>
-    <p>Procedo senza compressione immagini.</p>
-    <p>Impedisci a invione-holding.github.io di richiedere ulteriori conferme</p>
-    <button onclick="closePopup()" class="bg-blue-500 text-white px-3 py-1 rounded mt-2">OK</button>
+  <div id="accessErrorPopup">
+    <p>Accesso negato – Questo link non è valido o è stato già usato.</p>
+    <button onclick="closeAccessErrorPopup()">OK</button>
   </div>
 
 <script>
@@ -247,32 +282,13 @@ async function checkPlan() {
     const expiry = new Date(data.expires_at);
     userExpirySpan.textContent = expiry.toLocaleString();
     if (expiry > now) {
-      switch (data.plan) {
-        case 'Pass Pro 24h':
-          maxFiles = 10;
-          userPlan = 'Pass Pro 24h';
-          break;
-        case 'Pro':
-          maxFiles = 20;
-          userPlan = 'Pro';
-          break;
-        case 'Creator':
-          maxFiles = 25;
-          userPlan = 'Creator';
-          break;
-        default:
-          maxFiles = 3;
-          userPlan = 'Free';
-      }
-      userPlanSpan.textContent = `${userPlan} (attivo)`;
+      maxFiles = data.plan === 'Pass Pro 24h' ? 10 : 20;
+      userPlan = data.plan;
+      userPlanSpan.textContent = data.plan + ' (attivo)';
     } else {
-      maxFiles = 3;
-      userPlan = 'Free';
       userPlanSpan.textContent = 'Free';
     }
   } else {
-    maxFiles = 3;
-    userPlan = 'Free';
     userPlanSpan.textContent = 'Free';
     userExpirySpan.textContent = '--';
   }
@@ -294,19 +310,12 @@ async function checkLinkToken() {
   try {
     const { data, error } = await supabase
       .from('link_metadata')
-      .select('token, single_view, used, expires_in_minutes, created_at, fingerprint, original_fingerprint, viewer_fingerprint')
+      .select('token, single_view, used, expires_in_minutes, created_at, fingerprint')
       .eq('token', token)
       .single();
 
     if (error || !data) {
       showViewError();
-      return;
-    }
-
-    const currentFingerprint = localStorage.getItem("invione_fp");
-
-    if (data.used) {
-      showViewError('Link già utilizzato.');
       return;
     }
 
@@ -318,22 +327,15 @@ async function checkLinkToken() {
       return;
     }
 
-    if (data.viewer_fingerprint) {
-      if (currentFingerprint !== data.viewer_fingerprint) {
-        showViewError('Accesso non autorizzato – il link è stato già aperto da un altro dispositivo');
-        return;
-      }
-    } else {
-      // Primo accesso: salva viewer_fingerprint
-      await supabase
-        .from('link_metadata')
-        .update({ viewer_fingerprint: currentFingerprint })
-        .eq('token', token);
+    if (data.single_view && data.used) {
+      showViewError('Link già utilizzato.');
+      return;
     }
 
+    // Registra accesso
     await supabase.from('access_logs').insert({
       token,
-      fingerprint: currentFingerprint,
+      fingerprint: data.fingerprint,
       accessed_at: new Date().toISOString(),
       ip_address: await fetch('https://api.ipify.org?format=json').then(res => res.json()).then(data => data.ip)
     });
@@ -349,12 +351,14 @@ async function checkLinkToken() {
 
     viewContent.innerHTML = '';
     for (let file of files) {
-      const { publicURL } = supabase.storage.from('invione-bucket').getPublicUrl(`anon/${token}/${file.name}`);
+      const { data: fileData } = supabase.storage
+        .from('invione-bucket')
+        .getPublicUrl(`anon/${token}/${file.name}`);
       const card = document.createElement('div');
       card.className = 'preview-card';
       if (file.name.match(/\.(jpg|jpeg|png|gif)$/i)) {
         const img = document.createElement('img');
-        img.src = publicURL;
+        img.src = fileData.publicUrl;
         if (data.single_view) {
           img.className = 'no-download';
           img.oncontextmenu = () => {
@@ -372,7 +376,7 @@ async function checkLinkToken() {
         }
       } else if (file.name.match(/\.(mp4|webm)$/i)) {
         const video = document.createElement('video');
-        video.src = publicURL;
+        video.src = fileData.publicUrl;
         video.controls = true;
         if (data.single_view) {
           video.className = 'no-download';
@@ -409,14 +413,17 @@ async function checkLinkToken() {
     viewLoading.classList.add('hidden');
   } catch (err) {
     showViewError();
-    console.error('Errore checkLinkToken:', err);
   }
 }
 
 function showViewError(message = 'Errore: Link non valido o già utilizzato.') {
   viewLoading.classList.add('hidden');
-  viewError.textContent = message;
-  viewError.classList.remove('hidden');
+  document.getElementById('errorMessage').textContent = message;
+  document.getElementById('accessErrorPopup').style.display = 'block';
+}
+
+function closeAccessErrorPopup() {
+  document.getElementById('accessErrorPopup').style.display = 'none';
 }
 
 function startTimer(seconds) {
@@ -517,6 +524,16 @@ async function uploadAndGenerateLink() {
   const userFolder = `anon/${token}`;
   const duration = document.getElementById('duration').value;
   const singleView = document.getElementById('singleView').checked;
+  let effectiveDuration = parseInt(duration);
+
+  if (singleView && userPlan === 'Free') {
+    effectiveDuration = 0; // One-time obbligatorio per Free con single view
+  } else if (singleView && (userPlan === 'Pass Pro 24h' || userPlan === 'Pro' || userPlan === 'Creator')) {
+    effectiveDuration = parseInt(duration); // Durata scelta per piani premium
+  } else if (!singleView && (userPlan === 'Pass Pro 24h' || userPlan === 'Pro' || userPlan === 'Creator')) {
+    effectiveDuration = parseInt(duration); // Durata scelta senza single view
+  }
+
   let publicLinks = [];
 
   for (let file of files) {
@@ -555,12 +572,12 @@ async function uploadAndGenerateLink() {
   try {
     const { data, error } = await supabase.from('link_metadata').insert({
       token,
-      expires_in_minutes: parseInt(duration),
+      expires_in_minutes: effectiveDuration,
       single_view: singleView,
       used: false,
       created_at: new Date().toISOString(),
-      fingerprint,
-      original_fingerprint: fingerprint
+      fingerprint: localStorage.getItem("invione_fp"),
+      original_fingerprint: localStorage.getItem("invione_fp")
     });
     if (error) {
       console.error('Error inserting metadata:', error);
@@ -617,7 +634,7 @@ if (viewSection) {
     }
   });
 
-  window.addEventListener('blur', () => {
+  window.addEventListener('blur', (e) => {
     if (isSingleViewActive) {
       drawSecurityCanvas();
     }

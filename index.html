@@ -238,8 +238,16 @@
     </div>
   </div>
 
+  <div id="compressionPopup" class="popup">
+    <p>invione-holding.github.io</p>
+    <p>Errore nel caricamento della compressione immagini.</p>
+    <p>Procedo senza compressione immagini.</p>
+    <p>Impedisci a invione-holding.github.io di richiedere ulteriori conferme</p>
+    <button onclick="closePopup()" class="bg-blue-500 text-white px-3 py-1 rounded mt-2">OK</button>
+  </div>
+
   <div id="accessErrorPopup">
-    <p>Accesso negato – Questo link non è valido o è stato già usato.</p>
+    <p id="errorMessage">Accesso negato – Questo link non è valido o è stato già usato.</p>
     <button onclick="closeAccessErrorPopup()">OK</button>
   </div>
 
@@ -418,7 +426,8 @@ async function checkLinkToken() {
 
 function showViewError(message = 'Errore: Link non valido o già utilizzato.') {
   viewLoading.classList.add('hidden');
-  document.getElementById('errorMessage').textContent = message;
+  const popupMessage = document.querySelector('#accessErrorPopup p');
+  popupMessage.textContent = message;
   document.getElementById('accessErrorPopup').style.display = 'block';
 }
 
@@ -524,16 +533,6 @@ async function uploadAndGenerateLink() {
   const userFolder = `anon/${token}`;
   const duration = document.getElementById('duration').value;
   const singleView = document.getElementById('singleView').checked;
-  let effectiveDuration = parseInt(duration);
-
-  if (singleView && userPlan === 'Free') {
-    effectiveDuration = 0; // One-time obbligatorio per Free con single view
-  } else if (singleView && (userPlan === 'Pass Pro 24h' || userPlan === 'Pro' || userPlan === 'Creator')) {
-    effectiveDuration = parseInt(duration); // Durata scelta per piani premium
-  } else if (!singleView && (userPlan === 'Pass Pro 24h' || userPlan === 'Pro' || userPlan === 'Creator')) {
-    effectiveDuration = parseInt(duration); // Durata scelta senza single view
-  }
-
   let publicLinks = [];
 
   for (let file of files) {
@@ -572,7 +571,7 @@ async function uploadAndGenerateLink() {
   try {
     const { data, error } = await supabase.from('link_metadata').insert({
       token,
-      expires_in_minutes: effectiveDuration,
+      expires_in_minutes: parseInt(duration),
       single_view: singleView,
       used: false,
       created_at: new Date().toISOString(),
